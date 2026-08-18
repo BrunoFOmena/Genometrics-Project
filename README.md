@@ -74,23 +74,30 @@ Backend tests use in-memory H2. Optional Postgres smoke (Docker): `RUN_TESTCONTA
 
 ## Git and CI
 
-Never push to `main`. Open a PR from a prefixed branch:
+`develop` is development. `main` is production. Never push to either: work lands on `develop` first, then `develop` is promoted to `main`.
 
 ```bash
+git checkout develop
+git pull
 git checkout -b feature/<name>   # or fix/<name> or hotfix/<name>
 # ... commit ...
 git push -u origin HEAD
 ```
 
-Then open a pull request targeting `main`.
+1. Open a PR **into `develop`** from `feature/*`, `fix/*` or `hotfix/*`.
+2. After CI is green and the PR is merged, open a PR **`develop` → `main`**.
+3. Image GHCR (`:latest` + `:sha`) publishes only on that production merge.
 
-| Event | Tests | GHCR image (`api:<sha>` and `:latest`) |
-|-------|--------|----------------------------------------|
-| Push to `feature/*`, `fix/*`, `hotfix/*` | Yes | No |
-| PR to `main` | Yes (required to merge) | No |
-| PR merged into `main` | Yes | Yes |
+| Event | Tests | GHCR production |
+|-------|--------|-----------------|
+| Push to `feature/*`, `fix/*`, `hotfix/*` or `develop` | Yes | No |
+| PR into `develop` from those prefixes | Yes | No |
+| PR into `develop` from any other branch | Gate fails | No |
+| PR `develop` → `main` | Yes (required) | No until merge |
+| PR into `main` from any branch other than `develop` | Gate fails | No |
+| Merge `develop` → `main` after backend, frontend and e2e pass | Yes | Yes |
 
-Direct pushes to `main` do not run CI/CD. Protect `main` in GitHub (**Settings → Rules → Rulesets**): require a pull request, require checks `backend` and `frontend`, block force pushes and branch deletion.
+Protect **both** `develop` and `main` (**Settings → Rules → Rulesets**): require a pull request; require checks `from-release-line`, `backend`, `frontend` and `e2e`; block force pushes and branch deletion.
 
 ## Hardware notes
 
