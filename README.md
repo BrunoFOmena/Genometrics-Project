@@ -72,6 +72,26 @@ cd ../frontend && npm test -- --watch=false --browsers=ChromeHeadless
 
 Backend tests use in-memory H2. Optional Postgres smoke (Docker): `RUN_TESTCONTAINERS=true mvn -Dtest=PostgresContainerIT test`.
 
+## Git and CI
+
+Never push to `main`. Open a PR from a prefixed branch:
+
+```bash
+git checkout -b feature/<name>   # or fix/<name> or hotfix/<name>
+# ... commit ...
+git push -u origin HEAD
+```
+
+Then open a pull request targeting `main`.
+
+| Event | Tests | GHCR image (`api:<sha>` and `:latest`) |
+|-------|--------|----------------------------------------|
+| Push to `feature/*`, `fix/*`, `hotfix/*` | Yes | No |
+| PR to `main` | Yes (required to merge) | No |
+| PR merged into `main` | Yes | Yes |
+
+Direct pushes to `main` do not run CI/CD. Protect `main` in GitHub (**Settings → Rules → Rulesets**): require a pull request, require checks `backend` and `frontend`, block force pushes and branch deletion.
+
 ## Hardware notes
 
 | Resource | Guidance |

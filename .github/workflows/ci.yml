@@ -1,12 +1,19 @@
 name: CI
 
 on:
-  push:
-    branches: [main, master]
   pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [main]
+  push:
+    branches: ['feature/**', 'fix/**', 'hotfix/**']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event.action != 'closed' }}
 
 jobs:
   backend:
+    if: github.event_name == 'push' || github.event.action != 'closed' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,6 +30,7 @@ jobs:
         run: mvn -B -DskipTests package
 
   frontend:
+    if: github.event_name == 'push' || github.event.action != 'closed' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,12 +47,11 @@ jobs:
       - name: Unit tests
         working-directory: frontend
         run: npm test -- --watch=false --browsers=ChromeHeadless
-        continue-on-error: true
 
   docker:
     needs: [backend, frontend]
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     permissions:
       contents: read
       packages: write
@@ -64,13 +71,18 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set lowercase image tag
+      - name: Set image tags
         id: image
-        run: echo "tag=ghcr.io/${GITHUB_REPOSITORY,,}/api:latest" >> "$GITHUB_OUTPUT"
+        run: |
+          repo="${GITHUB_REPOSITORY,,}"
+          echo "latest=ghcr.io/${repo}/api:latest" >> "$GITHUB_OUTPUT"
+          echo "sha=ghcr.io/${repo}/api:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
       - name: Build and push API image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/Dockerfile.api
           push: true
-          tags: ${{ steps.image.outputs.tag }}
+          tags: |
+            ${{ steps.image.outputs.latest }}
+            ${{ steps.image.outputs.sha }}
