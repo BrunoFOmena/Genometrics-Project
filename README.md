@@ -1,6 +1,8 @@
-# NGS Analytics Platform
+# GENOMETRICS
 
-Local-first platform for FASTQ/VCF quality and variant metrics, with a Spring Boot API and Angular dashboards.
+Local-first platform for FASTQ/VCF quality and variant metrics — by **Bruno Omena**.
+
+Spring Boot API + Angular SPA dashboard.
 
 Designed to run on a **16 GB RAM Windows laptop** (modular monolith with streaming Java parsers).
 
@@ -41,7 +43,7 @@ UI: `http://localhost:4200`
 
 ### 3. Try fixtures
 
-1. Register a user in the UI
+1. Open the UI (auth is temporarily disabled in dev — no login required)
 2. Create a project + sample
 3. Upload [`datasets/sample.fastq`](datasets/sample.fastq) and [`datasets/sample.vcf`](datasets/sample.vcf)
 4. Wait a few seconds for analysis status `DONE` and open charts
@@ -72,32 +74,32 @@ cd ../frontend && npm test -- --watch=false --browsers=ChromeHeadless
 
 Backend tests use in-memory H2. Optional Postgres smoke (Docker): `RUN_TESTCONTAINERS=true mvn -Dtest=PostgresContainerIT test`.
 
-## Git and CI
+## Git and CI (GitHub Flow)
 
-`develop` is development. `main` is production. Never push to either: work lands on `develop` first, then `develop` is promoted to `main`.
+**`main`** is the only long-lived branch and must stay deployable. All work merges via pull request.
 
 ```bash
-git checkout develop
+git checkout main
 git pull
 git checkout -b feature/<name>   # or fix/<name> or hotfix/<name>
 # ... commit ...
 git push -u origin HEAD
 ```
 
-1. Open a PR **into `develop`** from `feature/*`, `fix/*` or `hotfix/*`.
-2. After CI is green and the PR is merged, open a PR **`develop` → `main`**.
-3. Image GHCR (`:latest` + `:sha`) publishes only on that production merge.
+1. Open a PR **into `main`** from your branch.
+2. Wait for CI: `backend`, `frontend`, `e2e`.
+3. Merge when green. Delete the branch after merge.
+4. Push to `main` publishes the GHCR API image (`:latest` + `:sha`).
 
-| Event | Tests | GHCR production |
-|-------|--------|-----------------|
-| Push to `feature/*`, `fix/*`, `hotfix/*` or `develop` | Yes | No |
-| PR into `develop` from those prefixes | Yes | No |
-| PR into `develop` from any other branch | Gate fails | No |
-| PR `develop` → `main` | Yes (required) | No until merge |
-| PR into `main` from any branch other than `develop` | Gate fails | No |
-| Merge `develop` → `main` after backend, frontend and e2e pass | Yes | Yes |
+| Event | Tests | GHCR image |
+|-------|--------|------------|
+| PR into `main` | Yes | No |
+| Push to `feature/*`, `fix/*`, `hotfix/*` | Yes | No |
+| Push to `main` (after merge) | Yes | Yes |
 
-Protect **both** `develop` and `main` (**Settings → Rules → Rulesets**): require a pull request; require checks `from-release-line`, `backend`, `frontend` and `e2e`; block force pushes and branch deletion.
+Protect **`main`** (**Settings → Rules → Rulesets**): require pull request; require checks `backend`, `frontend`, `e2e`; block force pushes and branch deletion.
+
+AI agents: see [`AGENTS.md`](AGENTS.md) and [`.cursor/rules/`](.cursor/rules/) for project context and coprogramming rules.
 
 ## Hardware notes
 

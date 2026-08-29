@@ -99,7 +99,7 @@ public class ReportService {
             document.open();
             Font title = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
             Font body = FontFactory.getFont(FontFactory.HELVETICA, 11);
-            document.add(new Paragraph("NGS Analytics Report", title));
+            document.add(new Paragraph("GENOMETRICS Report", title));
             document.add(new Paragraph("Sample: " + json.get("sampleName"), body));
             document.add(new Paragraph(" ", body));
             document.add(new Paragraph(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(json), body));

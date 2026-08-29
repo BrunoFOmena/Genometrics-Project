@@ -1,7 +1,8 @@
-describe('NGS Analytics smoke', () => {
-  it('shows login page', () => {
-    cy.visit('/login');
-    cy.contains('NGS Analytics');
-    cy.contains('Sign in');
+describe('GENOMETRICS smoke', () => {
+  it('shows the app shell with sidebar', () => {
+    cy.visit('/projects');
+    cy.contains('GENOMETRICS');
+    cy.contains('by Bruno Omena');
+    cy.contains('Projects');
   });
 });

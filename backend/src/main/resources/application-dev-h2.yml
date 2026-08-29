@@ -15,5 +15,7 @@ spring:
       enabled: true
 
 ngs:
+  auth:
+    disabled: true
   storage:
     local-dir: ../data/uploads

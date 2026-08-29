@@ -11,7 +11,7 @@ import { AuthService } from '../../core/auth.service';
   template: `
     <section class="auth">
       <h1>Create account</h1>
-      <p>Join as a researcher on the local NGS platform.</p>
+      <p>Join the GENOMETRICS workspace.</p>
       <form (ngSubmit)="submit()">
         <label>Display name <input [(ngModel)]="displayName" name="displayName" required /></label>
         <label>Email <input type="email" [(ngModel)]="email" name="email" required /></label>

@@ -10,7 +10,7 @@ import { AuthService } from '../../core/auth.service';
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <section class="auth">
-      <h1>NGS Analytics</h1>
+      <h1>GENOMETRICS</h1>
       <p>Sign in to manage sequencing projects.</p>
       <form (ngSubmit)="submit()">
         <label>Email <input type="email" [(ngModel)]="email" name="email" required /></label>
