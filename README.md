@@ -1,10 +1,10 @@
-# 🧬 GENOMETRICS — Plataforma de QC e Métricas NGS
+# 🧬 GENOMETRICS — NGS QC & Metrics Platform
 
-**Plataforma local-first para análise de qualidade e variantes em arquivos FASTQ/VCF.**
+**Local-first platform for quality control and variant metrics on FASTQ/VCF files.**
 
-Desenvolvido por **Bruno Omena** · monólito modular pensado para rodar em um **laptop Windows de 16 GB RAM**.
+Built by **Bruno Omena** · modular monolith designed to run on a **16 GB RAM Windows laptop**.
 
-![Status](https://img.shields.io/badge/Status-Ativo-success)
+![Status](https://img.shields.io/badge/Status-Active-success)
 ![Angular](https://img.shields.io/badge/Angular-19-DD0031?logo=angular&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3-6DB33F?logo=springboot&logoColor=white)
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
@@ -12,113 +12,113 @@ Desenvolvido por **Bruno Omena** · monólito modular pensado para rodar em um *
 
 ---
 
-## 📖 Sobre o Projeto
+## 📖 About the Project
 
-O **GENOMETRICS** é uma aplicação **Full-Stack** focada em **Next-Generation Sequencing (NGS)**. Diferente de pipelines pesados que exigem clusters ou cloud, este projeto entrega um **dashboard analítico completo** rodando localmente — com parsers Java em streaming, jobs assíncronos in-process e armazenamento de arquivos no disco.
+**GENOMETRICS** is a **full-stack** application focused on **Next-Generation Sequencing (NGS)**. Unlike heavy pipelines that require clusters or cloud infrastructure, this project delivers a **complete analytics dashboard** running locally — with streaming Java parsers, in-process async jobs, and on-disk file storage.
 
-O objetivo é oferecer **visibilidade imediata sobre qualidade de sequenciamento (FASTQ)** e **métricas de variantes (VCF)**, com upload, análise automática, gráficos interativos e exportação de relatórios — tudo acessível via SPA moderna.
-
----
-
-## ✨ Funcionalidades
-
-### 📁 Gestão de Projetos e Amostras
-- Criação de **projetos** e **amostras** organizados por workspace.
-- Upload de arquivos **FASTQ** (single e paired-end) e **VCF** (até 2 GB).
-- Lista unificada de arquivos e análises com status em tempo real (`QUEUED` → `RUNNING` → `DONE`).
-
-### 🔬 QC FASTQ
-- Métricas de qualidade: **Phred**, **GC content**, **duplicação**, **N-content**.
-- Detecção de **adaptadores** e sequências **over-represented** (com link BLAST).
-- Suporte a **paired-end** com detecção automática de mates (`R1`/`R2`).
-- Avaliação **PASS / WARN / FAIL** com recomendações acionáveis.
-- Heatmaps 2D, gráficos por posição e abas **Charts · Detailed · Overrepresented**.
-
-### 🧪 Métricas VCF
-- Contagem de variantes por tipo, qualidade e distribuição cromossômica.
-- Visualizações ECharts integradas ao painel da amostra.
-
-### 📊 Dashboard & Comparativo
-- **Overview** com KPIs animados (GSAP): projetos, amostras, análises em fila e concluídas.
-- **Compare** side-by-side entre amostras/análises.
-- **History** com jobs recentes e navegação rápida.
-
-### 📄 Relatórios & Export
-- Download de métricas em **JSON**, **CSV** e **PDF** (FASTQ QC report).
-- Swagger UI para exploração da API REST.
-
-### 🔐 Autenticação *(opcional em dev)*
-- Login/cadastro com JWT (Spring Security).
-- **Auth desabilitado por padrão em dev** — basta abrir a UI e começar.
+The goal is to provide **immediate visibility into sequencing quality (FASTQ)** and **variant metrics (VCF)**, with upload, automatic analysis, interactive charts, and report export — all accessible through a modern SPA.
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## ✨ Features
+
+### 📁 Projects & Samples
+- Create **projects** and **samples** organized by workspace.
+- Upload **FASTQ** (single and paired-end) and **VCF** files (up to 2 GB).
+- Unified file and analysis list with real-time status (`QUEUED` → `RUNNING` → `DONE`).
+
+### 🔬 FASTQ QC
+- Quality metrics: **Phred**, **GC content**, **duplication**, **N-content**.
+- **Adapter** detection and **over-represented** sequences (with BLAST link).
+- **Paired-end** support with automatic mate detection (`R1`/`R2`).
+- **PASS / WARN / FAIL** evaluation with actionable recommendations.
+- 2D heatmaps, position charts, and **Charts · Detailed · Overrepresented** tabs.
+
+### 🧪 VCF Metrics
+- Variant counts by type, quality, and chromosomal distribution.
+- ECharts visualizations integrated into the sample panel.
+
+### 📊 Dashboard & Compare
+- **Overview** with animated KPIs (GSAP): projects, samples, queued and completed analyses.
+- **Compare** side-by-side across samples/analyses.
+- **History** with recent jobs and quick navigation.
+
+### 📄 Reports & Export
+- Download metrics as **JSON**, **CSV**, and **PDF** (FASTQ QC report).
+- Swagger UI for REST API exploration.
+
+### 🔐 Authentication *(optional in dev)*
+- Login/register with JWT (Spring Security).
+- **Auth disabled by default in dev** — open the UI and start immediately.
+
+---
+
+## 🛠️ Tech Stack
 
 ### Frontend
-| Tecnologia | Uso |
-|------------|-----|
-| **Angular 19** | SPA standalone, routing, animações |
-| **PrimeNG** | Cards, tabs, tabelas, chips, progress |
-| **Apache ECharts** | Gráficos de QC e variantes |
-| **GSAP** | Contadores animados no Overview |
-| **Lucide Angular** | Ícones |
-| **Tailwind CSS** | Utilitários de layout |
-| **TypeScript** | Tipagem estática |
-| **Cypress** | Testes E2E |
+| Technology | Role |
+|------------|------|
+| **Angular 19** | Standalone SPA, routing, animations |
+| **PrimeNG** | Cards, tabs, tables, chips, progress |
+| **Apache ECharts** | QC and variant charts |
+| **GSAP** | Animated counters on Overview |
+| **Lucide Angular** | Icons |
+| **Tailwind CSS** | Layout utilities |
+| **TypeScript** | Static typing |
+| **Cypress** | E2E tests |
 
 ### Backend
-| Tecnologia | Uso |
-|------------|-----|
+| Technology | Role |
+|------------|------|
 | **Java 21** | Runtime |
-| **Spring Boot 3.3** | API REST, segurança, JPA |
-| **FastqParser / VcfParser** | Parsers streaming in-process |
-| **SpringDoc OpenAPI** | Documentação Swagger |
-| **JWT (JJWT)** | Autenticação |
-| **H2** | Banco em dev/testes |
-| **PostgreSQL** | Banco em prod/staging |
-| **Testcontainers** | Smoke tests opcionais com Postgres |
+| **Spring Boot 3.3** | REST API, security, JPA |
+| **FastqParser / VcfParser** | In-process streaming parsers |
+| **SpringDoc OpenAPI** | Swagger documentation |
+| **JWT (JJWT)** | Authentication |
+| **H2** | Dev/test database |
+| **PostgreSQL** | Prod/staging database |
+| **Testcontainers** | Optional Postgres smoke tests |
 
 ### DevOps
-| Tecnologia | Uso |
-|------------|-----|
+| Technology | Role |
+|------------|------|
 | **GitHub Actions** | CI (`backend`, `frontend`, `e2e`) |
-| **GHCR** | Imagem Docker da API no merge em `main` |
-| **Docker Compose** | Postgres local (opcional) |
+| **GHCR** | API Docker image on merge to `main` |
+| **Docker Compose** | Local Postgres (optional) |
 
 ---
 
-## 🚀 Como Rodar o Projeto
+## 🚀 How to Run
 
-### Pré-requisitos
+### Prerequisites
 
 - **JDK 21**
 - **Maven 3.9+**
-- **Node.js 22+** e npm
-- *(Opcional)* Docker — apenas para Postgres em prod/staging local
+- **Node.js 22+** and npm
+- *(Optional)* Docker — only for local Postgres in prod/staging
 
-### 1. Clone o repositório
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/BrunoFOmena/Genometrics-Project.git
 cd Genometrics-Project
 ```
 
-### 2. Inicie a API (H2 — padrão)
+### 2. Start the API (H2 — default)
 
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-Sem Docker ou Postgres. O profile `dev-h2` é o default.
+No Docker or Postgres required. Profile `dev-h2` is the default.
 
-| Serviço | URL |
+| Service | URL |
 |---------|-----|
 | API | http://localhost:8080 |
 | Swagger | http://localhost:8080/swagger-ui.html |
 
-### 3. Inicie a UI
+### 3. Start the UI
 
 ```bash
 cd frontend
@@ -126,20 +126,20 @@ npm install
 npm start
 ```
 
-| Serviço | URL |
+| Service | URL |
 |---------|-----|
 | Dashboard | http://localhost:4200 |
 
-### 4. Teste com fixtures
+### 4. Try the fixtures
 
-1. Abra a UI (sem login em dev).
-2. Crie um **projeto** + **amostra**.
-3. Faça upload de [`datasets/sample.fastq`](datasets/sample.fastq) e [`datasets/sample.vcf`](datasets/sample.vcf) — ou paired-end: [`sample_R1.fastq`](datasets/sample_R1.fastq) + [`sample_R2.fastq`](datasets/sample_R2.fastq).
-4. Aguarde o status `DONE` e explore os gráficos e relatórios.
+1. Open the UI (no login required in dev).
+2. Create a **project** + **sample**.
+3. Upload [`datasets/sample.fastq`](datasets/sample.fastq) and [`datasets/sample.vcf`](datasets/sample.vcf) — or paired-end: [`sample_R1.fastq`](datasets/sample_R1.fastq) + [`sample_R2.fastq`](datasets/sample_R2.fastq).
+4. Wait for status `DONE` and explore charts and reports.
 
 ---
 
-## 🐘 PostgreSQL (prod / staging — opcional)
+## 🐘 PostgreSQL (prod / staging — optional)
 
 ```bash
 cd docker
@@ -148,66 +148,66 @@ cd ../backend
 mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
 ```
 
-Variáveis para cloud/staging (`prod`):
+Environment variables for cloud/staging (`prod`):
 
 - `SPRING_DATASOURCE_URL`
 - `SPRING_DATASOURCE_USERNAME`
 - `SPRING_DATASOURCE_PASSWORD`
 
-| Serviço | Usuário | Senha |
-|---------|---------|-------|
+| Service | User | Password |
+|---------|------|----------|
 | PostgreSQL (Compose) | `ngs` | `ngs` |
 
 ---
 
-## 🧪 Testes
+## 🧪 Tests
 
 ```bash
-# Backend (H2 in-memory)
+# Backend (in-memory H2)
 cd backend && mvn test
 
 # Frontend (headless)
 cd frontend && npm test -- --watch=false --browsers=ChromeHeadless
 
-# E2E (API + UI rodando)
+# E2E (API + UI running)
 cd frontend && npm run e2e
 ```
 
-Smoke Postgres com Docker: `RUN_TESTCONTAINERS=true mvn -Dtest=PostgresContainerIT test`
+Optional Postgres smoke test with Docker: `RUN_TESTCONTAINERS=true mvn -Dtest=PostgresContainerIT test`
 
 ---
 
 ## 🔀 Git & CI (GitHub Flow)
 
-**`main`** é a única branch de integração — sempre deployável. Todo trabalho entra via **Pull Request**.
+**`main`** is the only integration branch — always deployable. All work merges via **Pull Request**.
 
 ```bash
 git checkout main && git pull
-git checkout -b feature/<nome>
+git checkout -b feature/<name>
 # ... commits ...
 git push -u origin HEAD
-# Abrir PR → main · aguardar CI · merge · deletar branch
+# Open PR → main · wait for CI · merge · delete branch
 ```
 
-| Evento | Testes | Imagem GHCR |
-|--------|--------|-------------|
+| Event | Tests | GHCR image |
+|-------|-------|------------|
 | PR → `main` | ✅ | ❌ |
-| Push em `feature/*`, `fix/*`, `hotfix/*` | ✅ | ❌ |
-| Push em `main` (após merge) | ✅ | ✅ |
+| Push to `feature/*`, `fix/*`, `hotfix/*` | ✅ | ❌ |
+| Push to `main` (after merge) | ✅ | ✅ |
 
-Proteja **`main`**: exigir PR, checks `backend` / `frontend` / `e2e`, bloquear force-push.
+Protect **`main`**: require PR, checks `backend` / `frontend` / `e2e`, block force-push.
 
-Agentes de IA: contexto em [`AGENTS.md`](AGENTS.md) e [`.cursor/rules/`](.cursor/rules/).
+AI agents: see [`AGENTS.md`](AGENTS.md) and [`.cursor/rules/`](.cursor/rules/) for project context.
 
 ---
 
-## 💻 Notas de Hardware
+## 💻 Hardware Notes
 
-| Recurso | Orientação |
-|---------|------------|
-| **RAM** | Heap da API ~1 GB; Postgres Compose ≤ 512 MB |
-| **Disco** | Use fixtures em `datasets/`; limpe `data/uploads` periodicamente |
-| **GPU** | Não utilizada |
+| Resource | Guidance |
+|----------|----------|
+| **RAM** | API heap ~1 GB; Postgres Compose ≤ 512 MB |
+| **Disk** | Use fixtures in `datasets/`; prune `data/uploads` periodically |
+| **GPU** | Not used |
 
 ---
 
