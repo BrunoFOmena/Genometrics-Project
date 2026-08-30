@@ -15,6 +15,22 @@ const sample = {
   createdAt: '2026-01-01T00:00:00Z'
 };
 
+const uploadedFile = {
+  id: 'f1',
+  originalFilename: 'a.fastq',
+  fileType: 'FASTQ',
+  sizeBytes: 16,
+  uploadedAt: project.createdAt
+};
+
+const queuedAnalysis = {
+  id: 'a1',
+  fileAssetId: 'f1',
+  status: 'QUEUED',
+  engine: 'JAVA',
+  createdAt: project.createdAt
+};
+
 describe('project flow', () => {
   it('creates a project, sample, and uploads a file', () => {
     cy.intercept('GET', '**/api/projects', []).as('emptyProjects');
@@ -32,6 +48,7 @@ describe('project flow', () => {
     cy.intercept('GET', '**/api/projects/p1/samples', []).as('emptySamples');
     cy.contains('a', 'Cohort').click();
     cy.wait('@project');
+    cy.wait('@emptySamples');
 
     cy.intercept('POST', '**/api/projects/p1/samples', sample).as('createSample');
     cy.intercept('GET', '**/api/projects/p1/samples', [sample]).as('samples');
@@ -47,12 +64,11 @@ describe('project flow', () => {
     cy.contains('a', 'S1').click();
     cy.contains('Upload & analyze');
 
+    cy.intercept('GET', '**/api/samples/s1/files', [uploadedFile]).as('filesAfterUpload');
+    cy.intercept('GET', '**/api/samples/s1/analyses', [queuedAnalysis]).as('analysesAfterUpload');
     cy.intercept('POST', '**/api/samples/s1/files', {
       statusCode: 200,
-      body: {
-        file: { originalFilename: 'a.fastq', fileType: 'FASTQ', sizeBytes: 16, uploadedAt: project.createdAt },
-        analysis: { status: 'QUEUED', engine: 'JAVA' }
-      }
+      body: { file: uploadedFile, analysis: queuedAnalysis }
     }).as('upload');
     cy.get('input[type=file]').selectFile(
       { contents: Cypress.Buffer.from('@r1\nACGT\n+\nIIII\n'), fileName: 'a.fastq', mimeType: 'text/plain' },
@@ -60,6 +76,7 @@ describe('project flow', () => {
     );
     cy.contains('button', 'Upload & analyze').click();
     cy.wait('@upload');
-    cy.contains('Queued / running analysis');
+    cy.contains('File uploaded — analysis queued');
+    cy.contains('QUEUED');
   });
 });
