@@ -1,0 +1,12 @@
+.git
+.github
+.cursor
+data
+**/node_modules
+**/dist
+**/.angular
+**/target
+**/coverage
+**/*.log
+.env
+.env.*

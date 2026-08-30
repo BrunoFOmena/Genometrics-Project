@@ -83,7 +83,7 @@ The goal is to provide **immediate visibility into sequencing quality (FASTQ)** 
 | Technology | Role |
 |------------|------|
 | **GitHub Actions** | CI (`backend`, `frontend`, `e2e`) |
-| **GHCR** | API Docker image on merge to `main` |
+| **GHCR** | API + frontend Docker images on merge to `main` |
 | **Docker Compose** | Local Postgres (optional) |
 
 ---
@@ -139,24 +139,65 @@ npm start
 
 ---
 
-## 🐘 PostgreSQL (prod / staging — optional)
+## 🐘 Full stack with Docker Compose
+
+Runs **Postgres + API + nginx (Angular UI)**. The UI is served on port **4200** and proxies `/api` to the API container.
+
+### Local build
 
 ```bash
 cd docker
-docker compose up -d
-cd ../backend
-mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
+docker compose up --build -d
 ```
 
-Environment variables for cloud/staging (`prod`):
+| Service | URL |
+|---------|-----|
+| Dashboard | http://localhost:4200 |
+| API (internal) | proxied at http://localhost:4200/api |
+| Swagger | not exposed by default (optional: `docker compose exec api` + port mapping) |
+| PostgreSQL | localhost:5432 (`ngs` / `ngs`) |
 
-- `SPRING_DATASOURCE_URL`
-- `SPRING_DATASOURCE_USERNAME`
-- `SPRING_DATASOURCE_PASSWORD`
+Set a strong JWT secret before any shared/staging deploy:
+
+```bash
+export NGS_JWT_SECRET="your-32-byte-minimum-secret"
+cd docker && docker compose up --build -d
+```
+
+### Pull from GHCR (after merge to `main`)
+
+Images: `ghcr.io/<owner>/genometrics-project/api` and `.../frontend` (`:latest` + `:sha` on each push to `main`).
+
+```bash
+export GENOMETRICS_API_IMAGE=ghcr.io/<owner>/genometrics-project/api:latest
+export GENOMETRICS_FRONTEND_IMAGE=ghcr.io/<owner>/genometrics-project/frontend:latest
+export NGS_JWT_SECRET="your-32-byte-minimum-secret"
+cd docker
+docker compose pull
+docker compose up -d
+```
+
+Environment variables for cloud/staging (`prod` profile inside the API container):
+
+- `SPRING_DATASOURCE_URL` (default in compose: `jdbc:postgresql://postgres:5432/ngs`)
+- `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD`
+- `NGS_JWT_SECRET` (required for production auth)
+- `NGS_STORAGE_LOCAL_DIR` (default in compose: `/data/uploads`, persisted in volume `uploads_data`)
 
 | Service | User | Password |
 |---------|------|----------|
 | PostgreSQL (Compose) | `ngs` | `ngs` |
+
+### Postgres only (optional)
+
+To run only Postgres while developing the API/UI on the host:
+
+```bash
+cd docker
+docker compose up -d postgres
+cd ../backend
+mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
+```
 
 ---
 
