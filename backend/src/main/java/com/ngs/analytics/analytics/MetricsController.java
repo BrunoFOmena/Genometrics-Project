@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ngs.analytics.auth.SecurityUtils;
 import com.ngs.analytics.common.ApiException;
 import com.ngs.analytics.domain.*;
+import com.ngs.analytics.fastq.FastqMetricsMapper;
 import com.ngs.analytics.projects.ProjectService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ public class MetricsController {
     private final VcfMetricsRepository vcfMetricsRepository;
     private final AnalysisService analysisService;
     private final SampleRepository sampleRepository;
+    private final FastqMetricsMapper fastqMetricsMapper;
     private final ObjectMapper objectMapper;
 
     public MetricsController(
@@ -28,6 +30,7 @@ public class MetricsController {
             VcfMetricsRepository vcfMetricsRepository,
             AnalysisService analysisService,
             SampleRepository sampleRepository,
+            FastqMetricsMapper fastqMetricsMapper,
             ObjectMapper objectMapper
     ) {
         this.projectService = projectService;
@@ -35,6 +38,7 @@ public class MetricsController {
         this.vcfMetricsRepository = vcfMetricsRepository;
         this.analysisService = analysisService;
         this.sampleRepository = sampleRepository;
+        this.fastqMetricsMapper = fastqMetricsMapper;
         this.objectMapper = objectMapper;
     }
 
@@ -80,11 +84,33 @@ public class MetricsController {
         return mapFastq(m);
     }
 
+    @GetMapping("/analyses/{analysisId}/metrics/fastq")
+    public Map<String, Object> fastqMetricsByAnalysis(@PathVariable UUID analysisId) {
+        Analysis analysis = analysisService.get(analysisId, SecurityUtils.currentUser().getId());
+        if (analysis.getStatus() != AnalysisStatus.DONE) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "FASTQ metrics not available yet");
+        }
+        FastqMetrics m = fastqMetricsRepository.findByAnalysisId(analysisId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "FASTQ metrics not available yet"));
+        return mapFastq(m);
+    }
+
     @GetMapping("/samples/{sampleId}/metrics/vcf")
     public Map<String, Object> vcfMetrics(@PathVariable UUID sampleId) {
         projectService.getSampleOwned(sampleId, SecurityUtils.currentUser());
         VcfMetrics m = vcfMetricsRepository
                 .findTopByAnalysisSampleIdAndAnalysisStatusOrderByAnalysisFinishedAtDesc(sampleId, AnalysisStatus.DONE)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "VCF metrics not available yet"));
+        return mapVcf(m);
+    }
+
+    @GetMapping("/analyses/{analysisId}/metrics/vcf")
+    public Map<String, Object> vcfMetricsByAnalysis(@PathVariable UUID analysisId) {
+        Analysis analysis = analysisService.get(analysisId, SecurityUtils.currentUser().getId());
+        if (analysis.getStatus() != AnalysisStatus.DONE) {
+            throw new ApiException(HttpStatus.NOT_FOUND, "VCF metrics not available yet");
+        }
+        VcfMetrics m = vcfMetricsRepository.findByAnalysisId(analysisId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "VCF metrics not available yet"));
         return mapVcf(m);
     }
@@ -148,23 +174,7 @@ public class MetricsController {
     }
 
     private Map<String, Object> mapFastq(FastqMetrics m) {
-        Map<String, Object> map = new LinkedHashMap<>();
-        map.put("analysisId", m.getAnalysis().getId().toString());
-        map.put("readCount", m.getReadCount());
-        map.put("avgLength", m.getAvgLength());
-        map.put("minLength", m.getMinLength());
-        map.put("maxLength", m.getMaxLength());
-        map.put("gcContent", m.getGcContent());
-        map.put("atContent", m.getAtContent());
-        map.put("nContent", m.getNContent());
-        map.put("meanQuality", m.getMeanQuality());
-        map.put("duplicationRate", m.getDuplicationRate());
-        map.put("lengthDistribution", readJson(m.getLengthDistributionJson()));
-        map.put("baseComposition", readJson(m.getBaseCompositionJson()));
-        map.put("perPositionQuality", readJson(m.getPerPositionQualityJson()));
-        map.put("overrepresented", readJson(m.getOverrepresentedJson()));
-        map.put("phredSummary", readJson(m.getPhredSummaryJson()));
-        return map;
+        return fastqMetricsMapper.toApiMap(m);
     }
 
     private Map<String, Object> mapVcf(VcfMetrics m) {

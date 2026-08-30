@@ -44,7 +44,7 @@ public class NgsProperties {
 
     public static class Storage {
         private String localDir = "../data/uploads";
-        private long maxUploadBytes = 209715200L;
+        private long maxUploadBytes = 2147483648L;
 
         public String getLocalDir() {
             return localDir;

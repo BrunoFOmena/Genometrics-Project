@@ -3,6 +3,7 @@ package com.ngs.analytics.upload;
 import com.ngs.analytics.analytics.AnalysisService;
 import com.ngs.analytics.common.ApiException;
 import com.ngs.analytics.domain.*;
+import com.ngs.analytics.fastq.FastqMateDetector;
 import com.ngs.analytics.projects.ProjectService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class UploadService {
     private final StorageService storageService;
     private final FileTypeDetector fileTypeDetector;
     private final AnalysisService analysisService;
+    private final FastqMateDetector fastqMateDetector;
 
     public UploadService(
             ProjectService projectService,
@@ -28,7 +30,8 @@ public class UploadService {
             AnalysisRepository analysisRepository,
             StorageService storageService,
             FileTypeDetector fileTypeDetector,
-            AnalysisService analysisService
+            AnalysisService analysisService,
+            FastqMateDetector fastqMateDetector
     ) {
         this.projectService = projectService;
         this.fileAssetRepository = fileAssetRepository;
@@ -36,6 +39,7 @@ public class UploadService {
         this.storageService = storageService;
         this.fileTypeDetector = fileTypeDetector;
         this.analysisService = analysisService;
+        this.fastqMateDetector = fastqMateDetector;
     }
 
     @Transactional
@@ -56,12 +60,24 @@ public class UploadService {
         asset.setFileType(type);
         asset.setStoragePath(stored.path());
         asset.setSizeBytes(stored.sizeBytes());
+        if (fileTypeDetector.isFastq(type)) {
+            asset.setReadEnd(fastqMateDetector.detectReadEnd(file.getOriginalFilename()));
+        }
         fileAssetRepository.save(asset);
 
         if (fileTypeDetector.isFasta(type)) {
             projectService.updateFastaMetadata(sampleId, owner, file.getOriginalFilename(), stored.path());
             Analysis analysis = analysisService.enqueue(sample, asset);
             return new UploadResult(asset, analysis);
+        }
+
+        if (fileTypeDetector.isFastq(type) && asset.getReadEnd() == FastqReadEnd.R2) {
+            var mates = fileAssetRepository.findBySampleIdOrderByUploadedAtDesc(sampleId);
+            var mate = fastqMateDetector.findMate(asset, mates);
+            if (mate.isPresent()) {
+                Analysis analysis = analysisService.enqueuePaired(sample, mate.get(), asset);
+                return new UploadResult(asset, analysis);
+            }
         }
 
         Analysis analysis = analysisService.enqueue(sample, asset);

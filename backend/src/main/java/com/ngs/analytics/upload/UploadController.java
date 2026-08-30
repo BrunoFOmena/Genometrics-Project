@@ -55,6 +55,7 @@ public class UploadController {
                 a.getId().toString(),
                 a.getSample().getId().toString(),
                 a.getFileAsset().getId().toString(),
+                a.getMateFileAsset() != null ? a.getMateFileAsset().getId().toString() : null,
                 a.getStatus().name(),
                 a.getEngine(),
                 a.getErrorMessage(),

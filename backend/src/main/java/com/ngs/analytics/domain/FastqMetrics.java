@@ -25,6 +25,10 @@ public class FastqMetrics {
     private double meanQuality;
     private double duplicationRate;
 
+    private boolean pairedEnd;
+    private long readCountR1;
+    private long readCountR2;
+
     @Column(columnDefinition = "TEXT")
     private String lengthDistributionJson;
 
@@ -39,6 +43,12 @@ public class FastqMetrics {
 
     @Column(columnDefinition = "TEXT")
     private String phredSummaryJson;
+
+    @Column(columnDefinition = "TEXT")
+    private String adapterHitsJson;
+
+    @Column(columnDefinition = "TEXT")
+    private String qualityHeatmapJson;
 
     public UUID getId() {
         return id;
@@ -128,6 +138,30 @@ public class FastqMetrics {
         this.duplicationRate = duplicationRate;
     }
 
+    public boolean isPairedEnd() {
+        return pairedEnd;
+    }
+
+    public void setPairedEnd(boolean pairedEnd) {
+        this.pairedEnd = pairedEnd;
+    }
+
+    public long getReadCountR1() {
+        return readCountR1;
+    }
+
+    public void setReadCountR1(long readCountR1) {
+        this.readCountR1 = readCountR1;
+    }
+
+    public long getReadCountR2() {
+        return readCountR2;
+    }
+
+    public void setReadCountR2(long readCountR2) {
+        this.readCountR2 = readCountR2;
+    }
+
     public String getLengthDistributionJson() {
         return lengthDistributionJson;
     }
@@ -166,5 +200,21 @@ public class FastqMetrics {
 
     public void setPhredSummaryJson(String phredSummaryJson) {
         this.phredSummaryJson = phredSummaryJson;
+    }
+
+    public String getAdapterHitsJson() {
+        return adapterHitsJson;
+    }
+
+    public void setAdapterHitsJson(String adapterHitsJson) {
+        this.adapterHitsJson = adapterHitsJson;
+    }
+
+    public String getQualityHeatmapJson() {
+        return qualityHeatmapJson;
+    }
+
+    public void setQualityHeatmapJson(String qualityHeatmapJson) {
+        this.qualityHeatmapJson = qualityHeatmapJson;
     }
 }

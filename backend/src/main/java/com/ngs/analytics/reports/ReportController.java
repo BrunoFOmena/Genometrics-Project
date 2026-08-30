@@ -14,9 +14,11 @@ import java.util.UUID;
 public class ReportController {
 
     private final ReportService reportService;
+    private final FastqReportService fastqReportService;
 
-    public ReportController(ReportService reportService) {
+    public ReportController(ReportService reportService, FastqReportService fastqReportService) {
         this.reportService = reportService;
+        this.fastqReportService = fastqReportService;
     }
 
     @GetMapping("/{sampleId}")
@@ -37,6 +39,22 @@ public class ReportController {
         byte[] body = reportService.buildPdf(sampleId, SecurityUtils.currentUser());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"report-" + sampleId + ".pdf\"")
+                .body(body);
+    }
+
+    @GetMapping(value = "/{sampleId}/fastq/html", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<byte[]> fastqHtml(@PathVariable UUID sampleId) {
+        byte[] body = fastqReportService.buildHtml(sampleId, SecurityUtils.currentUser());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"fastq-" + sampleId + ".html\"")
+                .body(body);
+    }
+
+    @GetMapping(value = "/{sampleId}/fastq/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> fastqPdf(@PathVariable UUID sampleId) {
+        byte[] body = fastqReportService.buildPdf(sampleId, SecurityUtils.currentUser());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"fastq-" + sampleId + ".pdf\"")
                 .body(body);
     }
 }

@@ -55,6 +55,7 @@ public final class ProjectDtos {
             String id,
             String sampleId,
             String fileAssetId,
+            String mateFileAssetId,
             String status,
             String engine,
             String errorMessage,

@@ -19,6 +19,9 @@ public class Analysis {
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
     private FileAsset fileAsset;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    private FileAsset mateFileAsset;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AnalysisStatus status = AnalysisStatus.QUEUED;
@@ -56,6 +59,14 @@ public class Analysis {
 
     public void setFileAsset(FileAsset fileAsset) {
         this.fileAsset = fileAsset;
+    }
+
+    public FileAsset getMateFileAsset() {
+        return mateFileAsset;
+    }
+
+    public void setMateFileAsset(FileAsset mateFileAsset) {
+        this.mateFileAsset = mateFileAsset;
     }
 
     public AnalysisStatus getStatus() {

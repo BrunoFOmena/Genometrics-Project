@@ -60,8 +60,16 @@ export class ApiService {
     return this.http.get<any>(`${this.base}/samples/${sampleId}/metrics/fastq`);
   }
 
+  fastqMetricsByAnalysis(analysisId: string) {
+    return this.http.get<any>(`${this.base}/analyses/${analysisId}/metrics/fastq`);
+  }
+
   vcfMetrics(sampleId: string) {
     return this.http.get<any>(`${this.base}/samples/${sampleId}/metrics/vcf`);
+  }
+
+  vcfMetricsByAnalysis(analysisId: string) {
+    return this.http.get<any>(`${this.base}/analyses/${analysisId}/metrics/vcf`);
   }
 
   compare(a: string, b: string) {
@@ -78,5 +86,13 @@ export class ApiService {
 
   reportPdfUrl(sampleId: string): string {
     return `${this.base}/reports/${sampleId}/pdf`;
+  }
+
+  fastqReportHtmlUrl(sampleId: string): string {
+    return `${this.base}/reports/${sampleId}/fastq/html`;
+  }
+
+  fastqReportPdfUrl(sampleId: string): string {
+    return `${this.base}/reports/${sampleId}/fastq/pdf`;
   }
 }
