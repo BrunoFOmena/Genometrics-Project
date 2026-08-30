@@ -16,9 +16,9 @@ public class OpenApiConfig {
         final String scheme = "bearerAuth";
         return new OpenAPI()
                 .info(new Info()
-                        .title("NGS Analytics API")
+                        .title("GENOMETRICS API")
                         .version("0.1.0")
-                        .description("Local-first NGS analytics platform for FASTQ/VCF metrics"))
+                        .description("GENOMETRICS — local-first sequencing analytics for FASTQ/VCF metrics by Bruno Omena"))
                 .addSecurityItem(new SecurityRequirement().addList(scheme))
                 .components(new Components().addSecuritySchemes(scheme,
                         new SecurityScheme()

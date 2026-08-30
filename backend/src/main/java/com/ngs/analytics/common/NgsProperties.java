@@ -7,6 +7,7 @@ public class NgsProperties {
 
     private final Jwt jwt = new Jwt();
     private final Storage storage = new Storage();
+    private final Auth auth = new Auth();
 
     public Jwt getJwt() {
         return jwt;
@@ -14,6 +15,10 @@ public class NgsProperties {
 
     public Storage getStorage() {
         return storage;
+    }
+
+    public Auth getAuth() {
+        return auth;
     }
 
     public static class Jwt {
@@ -55,6 +60,27 @@ public class NgsProperties {
 
         public void setMaxUploadBytes(long maxUploadBytes) {
             this.maxUploadBytes = maxUploadBytes;
+        }
+    }
+
+    public static class Auth {
+        private boolean disabled = false;
+        private String devEmail = "dev@genometrics.local";
+
+        public boolean isDisabled() {
+            return disabled;
+        }
+
+        public void setDisabled(boolean disabled) {
+            this.disabled = disabled;
+        }
+
+        public String getDevEmail() {
+            return devEmail;
+        }
+
+        public void setDevEmail(String devEmail) {
+            this.devEmail = devEmail;
         }
     }
 }

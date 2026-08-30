@@ -1,11 +1,3 @@
-const authBody = {
-  token: 'jwt-token',
-  email: 'a@b.com',
-  displayName: 'Ana',
-  role: 'RESEARCHER',
-  userId: 'u1'
-};
-
 const project = {
   id: 'p1',
   name: 'Cohort',
@@ -25,13 +17,9 @@ const sample = {
 
 describe('project flow', () => {
   it('creates a project, sample, and uploads a file', () => {
-    cy.intercept('POST', '**/api/auth/login', { statusCode: 200, body: authBody }).as('login');
     cy.intercept('GET', '**/api/projects', []).as('emptyProjects');
-    cy.visit('/login');
-    cy.get('input[name=email]').type('a@b.com');
-    cy.get('input[name=password]').type('secret12');
-    cy.contains('button', 'Sign in').click();
-    cy.wait('@login');
+    cy.visit('/projects');
+    cy.wait('@emptyProjects');
 
     cy.intercept('POST', '**/api/projects', { statusCode: 200, body: project }).as('createProject');
     cy.intercept('GET', '**/api/projects', [project]).as('projects');

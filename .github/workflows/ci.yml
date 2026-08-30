@@ -2,57 +2,16 @@ name: CI
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
-    branches: [develop, main]
+    branches: [main]
   push:
-    branches: [develop, 'feature/**', 'fix/**', 'hotfix/**']
+    branches: [main, 'feature/**', 'fix/**', 'hotfix/**']
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event.action != 'closed' }}
+  cancel-in-progress: true
 
 jobs:
-  from-release-line:
-    if: github.event_name == 'pull_request' && github.event.action != 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Enforce develop then main
-        env:
-          BASE_REF: ${{ github.base_ref }}
-          HEAD_REF: ${{ github.head_ref }}
-        run: |
-          if [ "$BASE_REF" = "develop" ]; then
-            case "$HEAD_REF" in
-              feature/*|fix/*|hotfix/*)
-                echo "OK: $HEAD_REF -> develop"
-                ;;
-              *)
-                echo "develop is the integration branch. Open the PR from feature/*, fix/* or hotfix/* (got: ${HEAD_REF:-empty})"
-                exit 1
-                ;;
-            esac
-          elif [ "$BASE_REF" = "main" ]; then
-            if [ "$HEAD_REF" != "develop" ]; then
-              echo "main is production. Promote only from develop after CI passed (got: ${HEAD_REF:-empty} -> main)"
-              exit 1
-            fi
-            echo "OK: develop -> main"
-          else
-            echo "Unexpected target: $BASE_REF"
-            exit 1
-          fi
-
   backend:
-    if: >
-      (github.event_name == 'push'
-        || github.event.action != 'closed'
-        || github.event.pull_request.merged == true)
-      && (github.event_name == 'push'
-        || (github.base_ref == 'develop'
-          && (startsWith(github.head_ref, 'feature/')
-            || startsWith(github.head_ref, 'fix/')
-            || startsWith(github.head_ref, 'hotfix/')))
-        || (github.base_ref == 'main' && github.head_ref == 'develop'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -69,16 +28,6 @@ jobs:
         run: mvn -B -DskipTests package
 
   frontend:
-    if: >
-      (github.event_name == 'push'
-        || github.event.action != 'closed'
-        || github.event.pull_request.merged == true)
-      && (github.event_name == 'push'
-        || (github.base_ref == 'develop'
-          && (startsWith(github.head_ref, 'feature/')
-            || startsWith(github.head_ref, 'fix/')
-            || startsWith(github.head_ref, 'hotfix/')))
-        || (github.base_ref == 'main' && github.head_ref == 'develop'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -97,16 +46,6 @@ jobs:
         run: npm test -- --watch=false --browsers=ChromeHeadless
 
   e2e:
-    if: >
-      (github.event_name == 'push'
-        || github.event.action != 'closed'
-        || github.event.pull_request.merged == true)
-      && (github.event_name == 'push'
-        || (github.base_ref == 'develop'
-          && (startsWith(github.head_ref, 'feature/')
-            || startsWith(github.head_ref, 'fix/')
-            || startsWith(github.head_ref, 'hotfix/')))
-        || (github.base_ref == 'main' && github.head_ref == 'develop'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -124,12 +63,7 @@ jobs:
 
   docker:
     needs: [backend, frontend, e2e]
-    if: >
-      github.event_name == 'pull_request'
-      && github.event.action == 'closed'
-      && github.event.pull_request.merged == true
-      && github.base_ref == 'main'
-      && github.head_ref == 'develop'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read

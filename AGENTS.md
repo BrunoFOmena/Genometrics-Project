@@ -1,55 +1,131 @@
-# AGENTS.md
+# AGENTS.md — GENOMETRICS
 
-## Coding principles (priority order)
+**GENOMETRICS** by Bruno Omena — local-first FASTQ/VCF analytics (Spring Boot + Angular SPA).
 
-1. **Simplicity first** — smallest change that solves the request. Prefer clear straight-line code over clever abstractions.
-2. **Token economy** — keep diffs, files, comments, and docs short. Less surface area = cheaper future agent turns.
-3. **No over-engineering** — no new layers, frameworks, patterns, or config unless the task needs them now.
-4. **No dual / duplicate code** — reuse existing services, DTOs, parsers, and UI helpers. Do not fork parallel paths for the same concern.
+Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 
-### Do
+---
 
-- Match existing package/layout style (`backend/...` modular packages; `frontend/src/app/{core,pages}`).
-- Extend the nearest existing class/component before adding a new file.
-- Prefer one obvious implementation path (e.g. one upload flow, one metrics API shape).
-- Delete dead code you replace; do not leave unused alternates.
-- Write only tests that cover the changed behavior.
+## Project map
+
+| Area | Path | Notes |
+|------|------|-------|
+| API | `backend/` | Java 21, Spring Boot 3, modular packages under `com.ngs.analytics.*` |
+| UI | `frontend/` | Angular 19 SPA, sidebar shell in `app.component.ts`, pages in `src/app/pages/` |
+| Business logic | `backend/.../fastq/FastqParser.java`, `vcf/VcfParser.java`, `analytics/AnalysisService.java` | Streaming parsers + async analysis |
+| Domain | `backend/.../domain/` | JPA entities and repositories |
+| Fixtures | `datasets/` | Tiny FASTQ/VCF/FASTA samples for manual tests |
+| CI | `.github/workflows/ci.yml` | Tests on PR/push; GHCR image on merge to `main` |
+
+### Run locally
+
+| Service | Command | URL |
+|---------|---------|-----|
+| API | `cd backend && mvn spring-boot:run` | http://localhost:8080 (Swagger `/swagger-ui.html`) |
+| UI | `cd frontend && npm start` | http://localhost:4200 |
+
+- Default DB: H2 (`dev-h2` profile). Postgres only with `prod` + Compose.
+- **Auth is temporarily disabled** for dev: `ngs.auth.disabled=true` (backend), `authDisabled: true` (frontend `environment.ts`). Re-enable before production.
+- H2/uploads persist in `data/` (gitignored). Delete to reset.
+- No `mvnw`; use system `mvn`. Cloud Agents: no Docker — do not run Compose or `prod` profile there.
+
+---
+
+## GitHub Flow (classic)
+
+Single integration branch: **`main`** (always deployable).
+
+```
+main ─────────────────────────────► deploy (GHCR on push)
+  ▲
+  │ PR (CI must pass)
+  │
+feature/*  fix/*  hotfix/*
+```
+
+### Workflow
+
+1. Branch from latest `main`: `git checkout main && git pull && git checkout -b feature/<short-name>`
+2. Small commits; run tests locally before pushing.
+3. Open PR **into `main`**. Wait for `backend`, `frontend`, `e2e`.
+4. Merge (squash or merge commit — team default). Delete the branch after merge.
+5. `main` push triggers GHCR API image (`:latest` + `:sha`).
 
 ### Do not
 
-- Add wrappers, adapters, facades, or “future-proof” interfaces for a single caller.
-- Duplicate DTO/mapper/parser logic across packages or FE/BE copies of the same rules.
-- Introduce optional feature flags, strategy enums, or config toggles unless requested.
-- Add large comments, READMEs, or design docs unless asked.
-- Refactor unrelated code “while here.”
+- Push directly to `main` (branch protection should enforce PRs).
+- Use a long-lived `develop` branch — deprecated in this repo.
+- Force-push `main` or skip CI.
 
-### Token-saving engineering habits
+### Branch names
+
+| Prefix | Use |
+|--------|-----|
+| `feature/` | New capability |
+| `fix/` | Bug fix |
+| `hotfix/` | Urgent production fix |
+
+---
+
+## AI coprogramming rules
+
+### Before coding
+
+1. **Scope the task** — one concern per PR/session when possible.
+2. **Read nearest existing code** — extend before creating files.
+3. **Check auth flags** — dev mode may hide login; do not assume JWT is required locally.
+
+### While coding
+
+1. **Smallest correct diff** — no drive-by refactors or new abstractions for one caller.
+2. **Match conventions** — package layout, naming, patterns already in the file you edit.
+3. **English only** — UI strings, API messages, docs, commits, PR text.
+4. **Reuse** — one upload flow, one metrics API shape; no duplicate parsers/DTOs FE↔BE.
+5. **Tests** — add/update only for behavior you changed; run `mvn test` / `npm test` when touching those areas.
+6. **No secrets** — never commit `.env`, keys, or real credentials.
+
+### Before finishing
+
+1. **Delete dead code** you replaced.
+2. **Do not commit or push** unless the user explicitly asks.
+3. **Do not edit README/AGENTS** unless the task requires it.
+4. Summarize what changed, how to test, and any flags (auth, profiles).
+
+### Token economy
 
 | Habit | Why |
 |-------|-----|
-| Touch few files | Smaller context for the next agent |
-| Short names already used in repo | Avoid new vocabulary agents must relearn |
-| Colocate related logic | Less jumping between files |
-| Keep public APIs stable | Avoid cascading FE/BE edits |
-| Prefer editing over generating scaffolding | Less boilerplate in the window |
+| Touch few files | Less context for the next agent |
+| Prefer edit over scaffold | Less boilerplate |
+| Keep public APIs stable | Avoid FE/BE cascade |
+| Short comments only when non-obvious | Less noise |
 
-## Cursor Cloud specific instructions
+---
 
-NGS Analytics Platform = Spring Boot (Java 21) API in `backend/` + Angular 19 dashboard in `frontend/`. See `README.md` for the full stack and standard commands.
+## Coding principles (priority order)
 
-### Services
+1. **Simplicity first**
+2. **Token economy**
+3. **No over-engineering**
+4. **No duplicate code paths**
 
-| Service | Dir | Run (dev) | URL |
-|---------|-----|-----------|-----|
-| API | `backend/` | `mvn spring-boot:run` (profile `dev-h2`) | http://localhost:8080 (Swagger: `/swagger-ui.html`) |
-| Web UI | `frontend/` | `npm start` (`ng serve`) | http://localhost:4200 |
+### Do
 
-### Non-obvious notes
+- Extend nearest class/component before adding files.
+- Colocate related logic.
+- Use `backend/...` modular packages and `frontend/src/app/{core,pages}`.
 
-- **DB split:** H2 for tests and Cloud Agents (`dev-h2` is the default profile). PostgreSQL only when activating `prod` (Compose or cloud). Do not introduce other databases.
-- Docker is NOT available in this Cloud Agent environment. Do not start Compose or profile `prod` here — `mvn spring-boot:run` (H2) is enough; the full pipeline works on H2.
-- Maven is required but there is no `mvnw` wrapper; the `mvn` binary is provided by the environment.
-- `mvn test` uses in-memory H2. `PostgresContainerIT` is opt-in (`RUN_TESTCONTAINERS=true`) and needs Docker.
-- `frontend` unit tests need a Chrome binary: run `CHROME_BIN=$(which google-chrome) npm test -- --watch=false --browsers=ChromeHeadless`.
-- Angular CLI analytics prompt: `ng serve`/`ng test` will block on an interactive analytics consent prompt on a fresh machine. It has been disabled globally (`ng analytics disable --global`, stored in `~/.config/angular/config.json`). If you hit the prompt again, answer `N` or re-run that command.
-- H2 data persists in `data/ngs-h2*` (gitignored) and uploads in `data/uploads/`; delete these to reset local state.
+### Do not
+
+- Wrappers/adapters for a single caller.
+- Feature flags or strategy enums unless requested.
+- Large unsolicited docs or comments.
+
+---
+
+## Stack reference
+
+- **Backend:** Java 21, Spring Boot 3, JWT (optional), JPA, in-process `@Async` jobs
+- **Frontend:** Angular 19, Apache ECharts, sidebar SPA shell
+- **DB:** H2 (dev/test) · PostgreSQL (prod)
+- **Deploy:** `docker/Dockerfile.api` → GHCR on `main`

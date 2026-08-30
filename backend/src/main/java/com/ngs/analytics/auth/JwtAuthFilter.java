@@ -1,5 +1,6 @@
 package com.ngs.analytics.auth;
 
+import com.ngs.analytics.common.NgsProperties;
 import com.ngs.analytics.domain.Role;
 import com.ngs.analytics.domain.UserAccountRepository;
 import jakarta.servlet.FilterChain;
@@ -22,10 +23,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserAccountRepository userRepository;
+    private final NgsProperties properties;
 
-    public JwtAuthFilter(JwtService jwtService, UserAccountRepository userRepository) {
+    public JwtAuthFilter(JwtService jwtService, UserAccountRepository userRepository, NgsProperties properties) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
+        this.properties = properties;
     }
 
     @Override
@@ -46,6 +49,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 });
             }
+        }
+        if (properties.getAuth().isDisabled() && SecurityContextHolder.getContext().getAuthentication() == null) {
+            userRepository.findByEmailIgnoreCase(properties.getAuth().getDevEmail()).ifPresent(user -> {
+                var auth = new UsernamePasswordAuthenticationToken(
+                        user,
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+                );
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            });
         }
         filterChain.doFilter(request, response);
     }

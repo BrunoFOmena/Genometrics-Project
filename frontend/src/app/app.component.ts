@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AuthService } from './core/auth.service';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -9,17 +9,19 @@ import { AuthService } from './core/auth.service';
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   template: `
     <div class="shell">
-      <aside class="nav" *ngIf="auth.isLoggedIn()">
-        <div class="brand">NGS Analytics</div>
+      <aside class="nav">
+        <div class="brand-block">
+          <div class="brand">GENOMETRICS</div>
+          <div class="brand-sub">by Bruno Omena</div>
+        </div>
         <nav>
           <a routerLink="/overview" routerLinkActive="active">Overview</a>
           <a routerLink="/projects" routerLinkActive="active">Projects</a>
           <a routerLink="/compare" routerLinkActive="active">Compare</a>
           <a routerLink="/history" routerLinkActive="active">History</a>
         </nav>
-        <div class="user">
-          <span>{{ auth.user()?.displayName }}</span>
-          <button type="button" (click)="auth.logout()">Sign out</button>
+        <div class="sidebar-foot">
+          <span class="dev-badge" *ngIf="authDisabled">Auth disabled · dev mode</span>
         </div>
       </aside>
       <main>
@@ -29,5 +31,5 @@ import { AuthService } from './core/auth.service';
   `
 })
 export class AppComponent {
-  constructor(public auth: AuthService) {}
+  readonly authDisabled = environment.authDisabled;
 }

@@ -1,10 +1,15 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, UrlTree } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 import { authGuard } from './auth.guard';
 import { AuthService } from './auth.service';
 
 describe('authGuard', () => {
+  afterEach(() => {
+    environment.authDisabled = true;
+  });
+
   it('allows navigation when logged in', () => {
     TestBed.configureTestingModule({
       providers: [
@@ -17,7 +22,8 @@ describe('authGuard', () => {
     expect(result).toBeTrue();
   });
 
-  it('redirects to login when logged out', () => {
+  it('redirects to login when logged out and auth is enabled', () => {
+    environment.authDisabled = false;
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
