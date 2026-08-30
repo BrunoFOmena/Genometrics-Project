@@ -128,7 +128,7 @@ feature/*  fix/*  hotfix/*
 - **Backend:** Java 21, Spring Boot 3, JWT (optional), JPA, in-process `@Async` jobs
 - **Frontend:** Angular 19, Apache ECharts, sidebar SPA shell
 - **DB:** H2 (dev/test) · PostgreSQL (prod)
-- **Deploy:** `docker/Dockerfile.api` → GHCR on `main`
+- **Deploy:** `docker/Dockerfile.api` + `docker/Dockerfile.frontend` → GHCR (`api`, `frontend`) on `main`; full stack via `docker/docker-compose.yml`
 
 ---
 

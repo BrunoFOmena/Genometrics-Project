@@ -1,6 +1,15 @@
+FROM maven:3.9-eclipse-temurin-21-alpine AS build
+WORKDIR /src
+COPY backend/pom.xml backend/pom.xml
+COPY backend/src backend/src
+RUN mvn -B -DskipTests package -f backend/pom.xml
+
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY backend/target/ngs-analytics-api-0.1.0-SNAPSHOT.jar app.jar
+RUN apk add --no-cache curl
+COPY --from=build /src/backend/target/ngs-analytics-api-0.1.0-SNAPSHOT.jar app.jar
 EXPOSE 8080
 ENV JAVA_OPTS="-Xms256m -Xmx1024m"
+HEALTHCHECK --interval=10s --timeout=5s --retries=12 --start-period=60s \
+  CMD curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"' || exit 1
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
