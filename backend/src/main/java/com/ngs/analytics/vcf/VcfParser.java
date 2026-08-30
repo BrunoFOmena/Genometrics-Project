@@ -18,6 +18,13 @@ import java.util.zip.GZIPInputStream;
 public class VcfParser {
 
     private static final Set<String> TRANSITIONS = Set.of("AG", "GA", "CT", "TC");
+    static final int INDEL_DELTA_MAX = 20;
+    static final int QUAL_MAX = 100;
+    static final int DP_MAX = 200;
+    static final int BIN_WIDTH = 5;
+    static final int MAX_CONTIGS = 50;
+    static final int MAX_TAG_IDS = 40;
+    static final int MAX_SAMPLES = 20;
 
     private final ObjectMapper objectMapper;
 
@@ -45,11 +52,29 @@ public class VcfParser {
         Map<String, Long> chromDist = new TreeMap<>();
         Map<String, Long> filterDist = new TreeMap<>();
         Map<String, Long> geneDist = new TreeMap<>();
+        Map<String, long[]> tsTvByChrom = new TreeMap<>();
         List<Double> alleleFreqs = new ArrayList<>();
+        long[] indelBins = new long[INDEL_DELTA_MAX * 2 + 1];
+        long indelOverflowLow = 0;
+        long indelOverflowHigh = 0;
+        BinnedHistogram qualHist = BinnedHistogram.ofRange(0, QUAL_MAX, BIN_WIDTH);
+        BinnedHistogram dpHist = BinnedHistogram.ofRange(0, DP_MAX, BIN_WIDTH);
+        HeaderCapture header = new HeaderCapture();
 
         String line;
         while ((line = reader.readLine()) != null) {
-            if (line.isBlank() || line.startsWith("#")) {
+            if (line.isBlank()) {
+                continue;
+            }
+            if (line.startsWith("##")) {
+                header.acceptMeta(line);
+                continue;
+            }
+            if (line.startsWith("#CHROM")) {
+                header.acceptColumnHeader(line);
+                continue;
+            }
+            if (line.startsWith("#")) {
                 continue;
             }
             String[] cols = line.split("\t");
@@ -74,8 +99,10 @@ public class VcfParser {
 
             if (!".".equals(qualStr)) {
                 try {
-                    qualSum += Double.parseDouble(qualStr);
+                    double qual = Double.parseDouble(qualStr);
+                    qualSum += qual;
                     qualCount++;
+                    qualHist.add(qual);
                 } catch (NumberFormatException ignored) {
                 }
             }
@@ -84,6 +111,7 @@ public class VcfParser {
             if (dp != null) {
                 dpSum += dp;
                 dpCount++;
+                dpHist.add(dp);
             }
             Double af = extractFloatInfo(info, "AF");
             if (af != null) {
@@ -95,19 +123,27 @@ public class VcfParser {
             }
 
             String firstAlt = altField.split(",")[0];
-            classify(ref, firstAlt, counts -> {
-                // unused
-            });
             if (ref.length() == 1 && firstAlt.length() == 1) {
                 snp++;
                 String pair = ref + firstAlt;
-                if (TRANSITIONS.contains(pair)) {
+                boolean ts = TRANSITIONS.contains(pair);
+                if (ts) {
                     transitions++;
                 } else {
                     transversions++;
                 }
+                long[] counts = tsTvByChrom.computeIfAbsent(chrom, k -> new long[2]);
+                counts[ts ? 0 : 1]++;
             } else if (ref.length() != firstAlt.length()) {
                 indel++;
+                int delta = firstAlt.length() - ref.length();
+                if (delta < -INDEL_DELTA_MAX) {
+                    indelOverflowLow++;
+                } else if (delta > INDEL_DELTA_MAX) {
+                    indelOverflowHigh++;
+                } else {
+                    indelBins[delta + INDEL_DELTA_MAX]++;
+                }
             } else {
                 mnp++;
             }
@@ -132,6 +168,11 @@ public class VcfParser {
         metrics.setChromosomeDistributionJson(toJson(chromDist));
         metrics.setFilterDistributionJson(toJson(filterDist));
         metrics.setGeneDistributionJson(toJson(geneDist));
+        metrics.setIndelLengthDistributionJson(toJson(indelLengthMap(indelBins, indelOverflowLow, indelOverflowHigh)));
+        metrics.setTsTvByChromosomeJson(toJson(tsTvByChromMap(tsTvByChrom)));
+        metrics.setHeaderJson(toJson(header.toMap()));
+        metrics.setQualHistogramJson(toJson(qualHist.toMap()));
+        metrics.setDpHistogramJson(toJson(dpHist.toMap()));
 
         Map<String, Object> afSummary = new LinkedHashMap<>();
         if (!alleleFreqs.isEmpty()) {
@@ -148,8 +189,35 @@ public class VcfParser {
         return metrics;
     }
 
-    private void classify(String ref, String alt, java.util.function.Consumer<String> unused) {
-        // kept for clarity / future extension
+    private static Map<String, Object> indelLengthMap(long[] bins, long overflowLow, long overflowHigh) {
+        List<String> labels = new ArrayList<>(bins.length + 2);
+        List<Long> counts = new ArrayList<>(bins.length + 2);
+        labels.add("≤-21");
+        counts.add(overflowLow);
+        for (int delta = -INDEL_DELTA_MAX; delta <= INDEL_DELTA_MAX; delta++) {
+            labels.add(String.valueOf(delta));
+            counts.add(bins[delta + INDEL_DELTA_MAX]);
+        }
+        labels.add("≥21");
+        counts.add(overflowHigh);
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("labels", labels);
+        map.put("counts", counts);
+        return map;
+    }
+
+    private static Map<String, Object> tsTvByChromMap(Map<String, long[]> tsTvByChrom) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        for (Map.Entry<String, long[]> entry : tsTvByChrom.entrySet()) {
+            long ts = entry.getValue()[0];
+            long tv = entry.getValue()[1];
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("ts", ts);
+            row.put("tv", tv);
+            row.put("tsTvRatio", tv == 0 ? ts : ts / (double) tv);
+            map.put(entry.getKey(), row);
+        }
+        return map;
     }
 
     private Integer extractIntInfo(String info, String key) {
@@ -191,6 +259,146 @@ public class VcfParser {
             return objectMapper.writeValueAsString(value);
         } catch (Exception ex) {
             throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "JSON serialization failed");
+        }
+    }
+
+    static final class BinnedHistogram {
+        private final int maxInclusive;
+        private final int binWidth;
+        private final long[] bins;
+        private long overflow;
+
+        private BinnedHistogram(int maxInclusive, int binWidth, int binCount) {
+            this.maxInclusive = maxInclusive;
+            this.binWidth = binWidth;
+            this.bins = new long[binCount];
+        }
+
+        static BinnedHistogram ofRange(int min, int maxInclusive, int binWidth) {
+            int binCount = (maxInclusive - min) / binWidth;
+            return new BinnedHistogram(maxInclusive, binWidth, binCount);
+        }
+
+        void add(double value) {
+            if (value > maxInclusive) {
+                overflow++;
+                return;
+            }
+            if (value < 0) {
+                return;
+            }
+            int idx = (int) (value / binWidth);
+            if (idx >= bins.length) {
+                idx = bins.length - 1;
+            }
+            bins[idx]++;
+        }
+
+        Map<String, Object> toMap() {
+            List<String> labels = new ArrayList<>(bins.length + 1);
+            List<Long> counts = new ArrayList<>(bins.length + 1);
+            for (int i = 0; i < bins.length; i++) {
+                int from = i * binWidth;
+                int to = from + binWidth;
+                labels.add(from + "–" + to);
+                counts.add(bins[i]);
+            }
+            labels.add(">" + maxInclusive);
+            counts.add(overflow);
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("binWidth", binWidth);
+            map.put("labels", labels);
+            map.put("counts", counts);
+            return map;
+        }
+    }
+
+    static final class HeaderCapture {
+        private String fileformat;
+        private String reference;
+        private String source;
+        private final LinkedHashSet<String> contigs = new LinkedHashSet<>();
+        private int contigCount;
+        private final LinkedHashSet<String> infoIds = new LinkedHashSet<>();
+        private int infoCount;
+        private final LinkedHashSet<String> formatIds = new LinkedHashSet<>();
+        private int formatCount;
+        private final LinkedHashSet<String> samples = new LinkedHashSet<>();
+
+        void acceptMeta(String line) {
+            if (line.startsWith("##fileformat=")) {
+                fileformat = valueAfterEquals(line);
+            } else if (line.startsWith("##reference=")) {
+                reference = valueAfterEquals(line);
+            } else if (line.startsWith("##source=")) {
+                source = valueAfterEquals(line);
+            } else if (line.startsWith("##contig=")) {
+                contigCount++;
+                addCapped(contigs, extractAngleId(line), MAX_CONTIGS);
+            } else if (line.startsWith("##INFO=")) {
+                infoCount++;
+                addCapped(infoIds, extractAngleId(line), MAX_TAG_IDS);
+            } else if (line.startsWith("##FORMAT=")) {
+                formatCount++;
+                addCapped(formatIds, extractAngleId(line), MAX_TAG_IDS);
+            }
+        }
+
+        void acceptColumnHeader(String line) {
+            String[] cols = line.split("\t");
+            for (int i = 9; i < cols.length && samples.size() < MAX_SAMPLES; i++) {
+                String name = cols[i].trim();
+                if (!name.isEmpty()) {
+                    samples.add(name);
+                }
+            }
+        }
+
+        Map<String, Object> toMap() {
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("fileformat", fileformat);
+            map.put("reference", reference);
+            map.put("source", source);
+            map.put("contigs", List.copyOf(contigs));
+            map.put("contigCount", contigCount);
+            map.put("infoIds", List.copyOf(infoIds));
+            map.put("infoCount", infoCount);
+            map.put("formatIds", List.copyOf(formatIds));
+            map.put("formatCount", formatCount);
+            map.put("samples", List.copyOf(samples));
+            return map;
+        }
+
+        private static String valueAfterEquals(String line) {
+            int eq = line.indexOf('=');
+            if (eq < 0 || eq == line.length() - 1) {
+                return null;
+            }
+            String value = line.substring(eq + 1).trim();
+            return value.isEmpty() ? null : value;
+        }
+
+        private static String extractAngleId(String line) {
+            int id = line.indexOf("ID=");
+            if (id < 0) {
+                return null;
+            }
+            int start = id + 3;
+            int end = start;
+            while (end < line.length()) {
+                char c = line.charAt(end);
+                if (c == ',' || c == '>' || c == ' ') {
+                    break;
+                }
+                end++;
+            }
+            return end > start ? line.substring(start, end) : null;
+        }
+
+        private static void addCapped(Set<String> set, String value, int cap) {
+            if (value != null && !value.isBlank() && set.size() < cap) {
+                set.add(value);
+            }
         }
     }
 }

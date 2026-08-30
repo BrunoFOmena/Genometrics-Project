@@ -39,6 +39,21 @@ public class VcfMetrics {
     @Column(columnDefinition = "TEXT")
     private String filterDistributionJson;
 
+    @Column(columnDefinition = "TEXT")
+    private String indelLengthDistributionJson;
+
+    @Column(columnDefinition = "TEXT")
+    private String tsTvByChromosomeJson;
+
+    @Column(columnDefinition = "TEXT")
+    private String headerJson;
+
+    @Column(columnDefinition = "TEXT")
+    private String qualHistogramJson;
+
+    @Column(columnDefinition = "TEXT")
+    private String dpHistogramJson;
+
     public UUID getId() {
         return id;
     }
@@ -173,5 +188,45 @@ public class VcfMetrics {
 
     public void setFilterDistributionJson(String filterDistributionJson) {
         this.filterDistributionJson = filterDistributionJson;
+    }
+
+    public String getIndelLengthDistributionJson() {
+        return indelLengthDistributionJson;
+    }
+
+    public void setIndelLengthDistributionJson(String indelLengthDistributionJson) {
+        this.indelLengthDistributionJson = indelLengthDistributionJson;
+    }
+
+    public String getTsTvByChromosomeJson() {
+        return tsTvByChromosomeJson;
+    }
+
+    public void setTsTvByChromosomeJson(String tsTvByChromosomeJson) {
+        this.tsTvByChromosomeJson = tsTvByChromosomeJson;
+    }
+
+    public String getHeaderJson() {
+        return headerJson;
+    }
+
+    public void setHeaderJson(String headerJson) {
+        this.headerJson = headerJson;
+    }
+
+    public String getQualHistogramJson() {
+        return qualHistogramJson;
+    }
+
+    public void setQualHistogramJson(String qualHistogramJson) {
+        this.qualHistogramJson = qualHistogramJson;
+    }
+
+    public String getDpHistogramJson() {
+        return dpHistogramJson;
+    }
+
+    public void setDpHistogramJson(String dpHistogramJson) {
+        this.dpHistogramJson = dpHistogramJson;
     }
 }
