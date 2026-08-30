@@ -129,3 +129,19 @@ feature/*  fix/*  hotfix/*
 - **Frontend:** Angular 19, Apache ECharts, sidebar SPA shell
 - **DB:** H2 (dev/test) · PostgreSQL (prod)
 - **Deploy:** `docker/Dockerfile.api` → GHCR on `main`
+
+---
+
+## Cursor harness
+
+Rules and subagents live in `.cursor/` (versioned in git).
+
+| Layer | Path | When it applies |
+|-------|------|-----------------|
+| Always-on | `.cursor/rules/genometrics-core.mdc` | Every agent session |
+| Backend | `.cursor/rules/backend.mdc` | Editing `backend/**` |
+| Frontend | `.cursor/rules/frontend.mdc` | Editing `frontend/**` |
+| Verifier | `.cursor/agents/verifier.md` | Invoke `/verifier` after implementation |
+| Debugger | `.cursor/agents/debugger.md` | Invoke `/debugger` on errors or test failures |
+
+Specialize by **function** (verify, debug), not by architecture layer. Backend and frontend conventions are rules with globs — do not create separate back/front/QA agents.
