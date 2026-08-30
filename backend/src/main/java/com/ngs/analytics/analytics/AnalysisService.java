@@ -80,6 +80,32 @@ public class AnalysisService {
     }
 
     @Transactional
+    public Analysis enqueuePaired(Sample sample, FileAsset r1Asset, FileAsset r2Asset) {
+        Analysis analysis = new Analysis();
+        analysis.setSample(sample);
+        analysis.setFileAsset(r1Asset);
+        analysis.setMateFileAsset(r2Asset);
+        analysis.setStatus(AnalysisStatus.QUEUED);
+        analysis.setEngine("JAVA");
+        analysisRepository.save(analysis);
+
+        UUID analysisId = analysis.getId();
+        Runnable dispatch = () -> analysisRunner.runAsync(analysisId);
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    dispatch.run();
+                }
+            });
+        } else {
+            dispatch.run();
+        }
+        return analysis;
+    }
+
+    @Transactional
     public void process(UUID analysisId) {
         Analysis analysis = analysisRepository.findById(analysisId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Analysis not found"));
@@ -93,10 +119,21 @@ public class AnalysisService {
             boolean gzipped = fileTypeDetector.isGzipped(type);
 
             if (fileTypeDetector.isFastq(type)) {
-                try (InputStream in = storageService.open(file.getStoragePath())) {
-                    FastqMetrics metrics = fastqParser.parse(in, gzipped);
-                    metrics.setAnalysis(analysis);
-                    fastqMetricsRepository.save(metrics);
+                FileAsset mate = analysis.getMateFileAsset();
+                if (mate != null) {
+                    boolean r2Gz = fileTypeDetector.isGzipped(mate.getFileType());
+                    try (InputStream r1In = storageService.open(file.getStoragePath());
+                         InputStream r2In = storageService.open(mate.getStoragePath())) {
+                        FastqMetrics metrics = fastqParser.parsePaired(r1In, r2In, gzipped, r2Gz);
+                        metrics.setAnalysis(analysis);
+                        fastqMetricsRepository.save(metrics);
+                    }
+                } else {
+                    try (InputStream in = storageService.open(file.getStoragePath())) {
+                        FastqMetrics metrics = fastqParser.parse(in, gzipped);
+                        metrics.setAnalysis(analysis);
+                        fastqMetricsRepository.save(metrics);
+                    }
                 }
                 analysis.setEngine("JAVA");
             } else if (fileTypeDetector.isVcf(type)) {

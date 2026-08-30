@@ -23,6 +23,10 @@ public class FileAsset {
     @Column(nullable = false)
     private FileType fileType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private FastqReadEnd readEnd = FastqReadEnd.SINGLE;
+
     @Column(nullable = false)
     private String storagePath;
 
@@ -61,6 +65,14 @@ public class FileAsset {
 
     public void setFileType(FileType fileType) {
         this.fileType = fileType;
+    }
+
+    public FastqReadEnd getReadEnd() {
+        return readEnd;
+    }
+
+    public void setReadEnd(FastqReadEnd readEnd) {
+        this.readEnd = readEnd;
     }
 
     public String getStoragePath() {

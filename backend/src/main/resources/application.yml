@@ -14,8 +14,8 @@ spring:
           time_zone: UTC
   servlet:
     multipart:
-      max-file-size: 200MB
-      max-request-size: 200MB
+      max-file-size: 2GB
+      max-request-size: 2GB
   profiles:
     default: dev-h2
 
@@ -37,7 +37,7 @@ ngs:
     expiration-ms: 86400000
   storage:
     local-dir: ../data/uploads
-    max-upload-bytes: 209715200
+    max-upload-bytes: 2147483648
 
 springdoc:
   api-docs:

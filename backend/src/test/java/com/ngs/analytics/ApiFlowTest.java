@@ -57,6 +57,8 @@ class ApiFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sampleName").value("S1"))
                 .andExpect(jsonPath("$.fastq.readCount").exists())
+                .andExpect(jsonPath("$.fastq.qc.overall").exists())
+                .andExpect(jsonPath("$.fastq.recommendations").isArray())
                 .andExpect(jsonPath("$.vcf.variantCount").exists());
 
         byte[] csv = mockMvc.perform(get("/api/reports/" + sampleId + "/csv").header("Authorization", bearer(token)))
@@ -65,6 +67,17 @@ class ApiFlowTest {
                 .getResponse()
                 .getContentAsByteArray();
         assertTrue(new String(csv).startsWith("section,metric,value"));
+        assertTrue(new String(csv).contains("fastq_qc,"));
+
+        mockMvc.perform(get("/api/reports/" + sampleId + "/fastq/html").header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                        .string(org.hamcrest.Matchers.containsString("Overall QC")));
+
+        mockMvc.perform(get("/api/reports/" + sampleId + "/fastq/pdf").header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                        .contentType(org.springframework.http.MediaType.APPLICATION_PDF));
 
         byte[] pdf = mockMvc.perform(get("/api/reports/" + sampleId + "/pdf").header("Authorization", bearer(token)))
                 .andExpect(status().isOk())
@@ -95,6 +108,22 @@ class ApiFlowTest {
                         .header("Authorization", bearer(token)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Unsupported file type. Use FASTQ/VCF/FASTA (+ .gz)"));
+    }
+
+    @Test
+    void pairedEndUploadProducesPairedMetrics() throws Exception {
+        String token = register("paired" + System.nanoTime() + "@example.com");
+        String sampleId = createSample(token, createProject(token, "Paired"), "PE");
+
+        upload(token, sampleId, "sample_R1.fastq", Files.readAllBytes(fixture("sample_R1.fastq")));
+        upload(token, sampleId, "sample_R2.fastq", Files.readAllBytes(fixture("sample_R2.fastq")));
+        awaitDone(token, sampleId);
+
+        mockMvc.perform(get("/api/samples/" + sampleId + "/metrics/fastq").header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pairedEnd").value(true))
+                .andExpect(jsonPath("$.readCountR1").value(4))
+                .andExpect(jsonPath("$.readCountR2").value(4));
     }
 
     private String register(String email) throws Exception {
