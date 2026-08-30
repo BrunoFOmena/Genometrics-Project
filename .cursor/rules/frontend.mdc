@@ -1,0 +1,38 @@
+---
+description: Angular frontend conventions for GENOMETRICS
+globs: frontend/**
+alwaysApply: false
+---
+
+# Frontend (Angular 19)
+
+Path: `frontend/src/app/`. Bootstrap: `main.ts` → `bootstrapApplication` (no NgModules).
+
+## Layout
+
+- Shell: `app.component.ts` (sidebar, `<router-outlet>`, PrimeNG toast)
+- Routes: `app.routes.ts`; pages in `pages/<name>/<name>.component.ts`
+- Shared: `core/` (api, auth, notify, help-hint, animations)
+
+## HTTP
+
+- All REST via `core/api.service.ts` (`environment.apiUrl`); do not duplicate API clients
+- Auth: `core/auth.service.ts` + `core/auth.interceptor.ts` (Bearer token)
+- Blob downloads only: direct `HttpClient` (see `sample-detail.component.ts`)
+
+## Auth dev flag
+
+`environment.authDisabled` (true in `environment.ts`, false in `environment.production.ts`). `auth.guard.ts` bypasses when disabled.
+
+## Charts
+
+ngx-echarts tree-shaken per component: `echarts.use(...)`, `provideEchartsCore`, `NgxEchartsDirective`. Reference: `sample-detail.component.ts`, `compare.component.ts`. Build options from API metrics — no FE metric math.
+
+## Tests
+
+- Unit: `cd frontend && npm test` (CI: `--watch=false --browsers=ChromeHeadless`)
+- E2E: Cypress in `frontend/cypress/e2e/`; `npm run e2e`
+
+## Conventions
+
+Standalone components, inline templates, English UI strings. PrimeNG + Lucide icons. Presentation only — consume backend metrics endpoints.
