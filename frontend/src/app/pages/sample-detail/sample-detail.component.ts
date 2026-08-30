@@ -33,7 +33,8 @@ import {
   LucideCircleAlert,
   LucideTriangleAlert,
   LucideCopy,
-  LucideExternalLink
+  LucideExternalLink,
+  LucideChevronDown
 } from '@lucide/angular';
 import { ApiService } from '../../core/api.service';
 import { HelpHintComponent } from '../../core/help-hint.component';
@@ -87,7 +88,8 @@ type FileAnalysisRow = {
     LucideCircleAlert,
     LucideTriangleAlert,
     LucideCopy,
-    LucideExternalLink
+    LucideExternalLink,
+    LucideChevronDown
   ],
   providers: [provideEchartsCore({ echarts })],
   animations: [fadeIn, slideUp],
@@ -124,34 +126,39 @@ type FileAnalysisRow = {
       </p-card>
 
       <div *ngIf="fileAnalysisRows.length" class="file-analysis-section">
-        <div class="section-head">
+        <div class="section-head collapsible" role="button" tabindex="0"
+             (click)="togglePanel('files')" (keydown.enter)="togglePanel('files')"
+             [attr.aria-expanded]="isOpen('files')">
+          <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isOpen('files')"></svg>
           <h2>Files &amp; analyses</h2>
           <app-help-hint text="Click a row to view metrics for that file's analysis. Paired-end R2 files link to the joint R1+R2 analysis." />
         </div>
-        <ul class="list compact analysis-picker">
-          <li *ngFor="let row of fileAnalysisRows"
-              class="file-analysis-row"
-              role="button"
-              tabindex="0"
-              (click)="selectRow(row)"
-              (keydown.enter)="selectRow(row)"
-              [class.selected]="selectedAnalysisId === row.analysis?.id"
-              [class.pending]="row.analysis && row.analysis.status !== 'DONE'">
-            <span class="row-file label-row" [ngSwitch]="fileIcon(row.file.fileType)">
-              <svg *ngSwitchCase="'fastq'" lucideFileText size="17" class="row-icon"></svg>
-              <svg *ngSwitchCase="'vcf'" lucideMicroscope size="17" class="row-icon"></svg>
-              <svg *ngSwitchDefault lucideArchive size="17" class="row-icon"></svg>
-              {{ row.file.originalFilename }} · {{ row.file.fileType }} · {{ row.file.sizeBytes }} B
-            </span>
-            <span class="row-status" *ngIf="row.analysis">
-              <p-tag [value]="row.analysis.status" [severity]="statusSeverity(row.analysis.status)" />
-              {{ row.analysis.engine }}
-              <span *ngIf="row.analysis.errorMessage" class="error"> — {{ row.analysis.errorMessage }}</span>
-            </span>
-            <span class="row-status muted" *ngIf="!row.analysis">No analysis yet</span>
-          </li>
-        </ul>
-        <p class="muted selection-hint" *ngIf="selectionStatus">{{ selectionStatus }}</p>
+        <ng-container *ngIf="isOpen('files')">
+          <ul class="list compact analysis-picker">
+            <li *ngFor="let row of fileAnalysisRows"
+                class="file-analysis-row"
+                role="button"
+                tabindex="0"
+                (click)="selectRow(row)"
+                (keydown.enter)="selectRow(row)"
+                [class.selected]="selectedAnalysisId === row.analysis?.id"
+                [class.pending]="row.analysis && row.analysis.status !== 'DONE'">
+              <span class="row-file label-row" [ngSwitch]="fileIcon(row.file.fileType)">
+                <svg *ngSwitchCase="'fastq'" lucideFileText size="17" class="row-icon"></svg>
+                <svg *ngSwitchCase="'vcf'" lucideMicroscope size="17" class="row-icon"></svg>
+                <svg *ngSwitchDefault lucideArchive size="17" class="row-icon"></svg>
+                {{ row.file.originalFilename }} · {{ row.file.fileType }} · {{ row.file.sizeBytes }} B
+              </span>
+              <span class="row-status" *ngIf="row.analysis">
+                <p-tag [value]="row.analysis.status" [severity]="statusSeverity(row.analysis.status)" />
+                {{ row.analysis.engine }}
+                <span *ngIf="row.analysis.errorMessage" class="error"> — {{ row.analysis.errorMessage }}</span>
+              </span>
+              <span class="row-status muted" *ngIf="!row.analysis">No analysis yet</span>
+            </li>
+          </ul>
+          <p class="muted selection-hint" *ngIf="selectionStatus">{{ selectionStatus }}</p>
+        </ng-container>
       </div>
 
       <div class="metrics-actions" *ngIf="sampleId">
@@ -166,13 +173,17 @@ type FileAnalysisRow = {
       </div>
 
       <div class="metrics metrics-panel" *ngIf="fastq" @slideUp>
-        <div class="section-head">
+        <div class="section-head collapsible" role="button" tabindex="0"
+             (click)="togglePanel('fastq')" (keydown.enter)="togglePanel('fastq')"
+             [attr.aria-expanded]="isOpen('fastq')">
+          <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isOpen('fastq')"></svg>
           <h2>Sequencing (FASTQ)</h2>
           <p-tag *ngIf="fastq.pairedEnd" value="Paired-end" severity="info" />
           <p-tag [value]="'Overall QC: ' + (fastq.qc?.overall || 'PASS')" [severity]="qcSeverity()" />
           <app-help-hint text="Quality metrics from raw reads with FastQC-style pass/warn/fail flags." />
         </div>
 
+        <ng-container *ngIf="isOpen('fastq')">
         <div class="stat-chips">
           <span class="stat-chip" [ngClass]="statClass('readCount')">
             Reads {{ fastq.readCount }}
@@ -184,10 +195,14 @@ type FileAnalysisRow = {
         </div>
 
         <div class="qc-recommendations" *ngIf="fastq.recommendations?.length">
-          <div class="section-head">
+          <div class="section-head collapsible" role="button" tabindex="0"
+               (click)="togglePanel('recs'); $event.stopPropagation()"
+               (keydown.enter)="togglePanel('recs'); $event.stopPropagation()"
+               [attr.aria-expanded]="isOpen('recs')">
+            <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isOpen('recs')"></svg>
             <h3>Suggested actions</h3>
           </div>
-          <ul class="rec-items">
+          <ul class="rec-items" *ngIf="isOpen('recs')">
             <li *ngFor="let r of fastq.recommendations" [ngSwitch]="recIcon(r.severity)">
               <svg *ngSwitchCase="'fail'" lucideCircleAlert size="18" class="rec-icon rec-icon-fail"></svg>
               <svg *ngSwitchCase="'warn'" lucideTriangleAlert size="18" class="rec-icon rec-icon-warn"></svg>
@@ -303,13 +318,18 @@ type FileAnalysisRow = {
             </p-tabpanel>
           </p-tabpanels>
         </p-tabs>
+        </ng-container>
       </div>
 
       <div class="metrics metrics-panel" *ngIf="vcf" @slideUp>
-        <div class="section-head">
+        <div class="section-head collapsible" role="button" tabindex="0"
+             (click)="togglePanel('vcf')" (keydown.enter)="togglePanel('vcf')"
+             [attr.aria-expanded]="isOpen('vcf')">
+          <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isOpen('vcf')"></svg>
           <h2>Variants (VCF)</h2>
             <app-help-hint text="Variant calling summary: type and chromosome counts, filter status, indel length, Ts/Tv by chromosome, QUAL/DP histograms, and VCF header provenance." />
         </div>
+        <ng-container *ngIf="isOpen('vcf')">
         <div class="stat-chips">
           <span class="stat-chip">Variants {{ vcf.variantCount }}</span>
           <span class="stat-chip">SNPs {{ vcf.snpCount }}</span>
@@ -317,11 +337,15 @@ type FileAnalysisRow = {
           <span class="stat-chip">Ts/Tv {{ vcf.tsTvRatio | number:'1.2-2' }}</span>
         </div>
         <div class="vcf-header-meta" *ngIf="vcf.header">
-          <div class="section-head">
+          <div class="section-head collapsible" role="button" tabindex="0"
+               (click)="togglePanel('vcfHeader'); $event.stopPropagation()"
+               (keydown.enter)="togglePanel('vcfHeader'); $event.stopPropagation()"
+               [attr.aria-expanded]="isOpen('vcfHeader')">
+            <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isOpen('vcfHeader')"></svg>
             <h3>File provenance</h3>
             <app-help-hint text="Metadata from the VCF header: file format, reference, caller source, contig/INFO/FORMAT tags, and sample column names. Use this to confirm the file matches the expected genome build and pipeline." />
           </div>
-          <div class="stat-chips">
+          <div class="stat-chips" *ngIf="isOpen('vcfHeader')">
             <span class="stat-chip" *ngIf="vcf.header.fileformat">{{ vcf.header.fileformat }}</span>
             <span class="stat-chip" *ngIf="vcf.header.reference">Ref {{ vcf.header.reference }}</span>
             <span class="stat-chip" *ngIf="vcf.header.source">{{ vcf.header.source }}</span>
@@ -338,6 +362,7 @@ type FileAnalysisRow = {
         <div echarts [options]="tsTvChromChart" class="chart" *ngIf="tsTvChromChart.series"></div>
         <div echarts [options]="qualHistChart" class="chart" *ngIf="qualHistChart.series"></div>
         <div echarts [options]="dpHistChart" class="chart" *ngIf="dpHistChart.series"></div>
+        </ng-container>
       </div>
     </section>
   `
@@ -370,6 +395,15 @@ export class SampleDetailComponent implements OnInit, OnDestroy {
   qualHistChart: EChartsOption = {};
   dpHistChart: EChartsOption = {};
   private timer?: ReturnType<typeof setInterval>;
+  collapsed: Record<string, boolean> = {};
+
+  isOpen(key: string): boolean {
+    return !this.collapsed[key];
+  }
+
+  togglePanel(key: string): void {
+    this.collapsed[key] = !this.collapsed[key];
+  }
 
   get analysisInProgress(): boolean {
     if (this.uploading) return true;

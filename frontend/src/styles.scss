@@ -563,6 +563,30 @@ a.btn-link {
   margin: 1rem 0 0.5rem;
 }
 
+.section-head.collapsible {
+  cursor: pointer;
+  user-select: none;
+  width: 100%;
+}
+
+.section-head.collapsible:hover {
+  color: var(--brand, #0f6a4d);
+}
+
+.section-head.collapsible h2,
+.section-head.collapsible h3 {
+  margin: 0;
+}
+
+.collapse-chevron {
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.collapse-chevron.closed {
+  transform: rotate(-90deg);
+}
+
 .section-head h2 {
   margin: 0;
 }
