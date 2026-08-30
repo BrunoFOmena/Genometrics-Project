@@ -308,7 +308,7 @@ type FileAnalysisRow = {
       <div class="metrics metrics-panel" *ngIf="vcf" @slideUp>
         <div class="section-head">
           <h2>Variants (VCF)</h2>
-          <app-help-hint text="Variant calling summary: counts by type, chromosome, and filter status." />
+            <app-help-hint text="Variant calling summary: type and chromosome counts, filter status, indel length, Ts/Tv by chromosome, QUAL/DP histograms, and VCF header provenance." />
         </div>
         <div class="stat-chips">
           <span class="stat-chip">Variants {{ vcf.variantCount }}</span>
@@ -316,9 +316,28 @@ type FileAnalysisRow = {
           <span class="stat-chip">INDELs {{ vcf.indelCount }}</span>
           <span class="stat-chip">Ts/Tv {{ vcf.tsTvRatio | number:'1.2-2' }}</span>
         </div>
+        <div class="vcf-header-meta" *ngIf="vcf.header">
+          <div class="section-head">
+            <h3>File provenance</h3>
+            <app-help-hint text="Metadata from the VCF header: file format, reference, caller source, contig/INFO/FORMAT tags, and sample column names. Use this to confirm the file matches the expected genome build and pipeline." />
+          </div>
+          <div class="stat-chips">
+            <span class="stat-chip" *ngIf="vcf.header.fileformat">{{ vcf.header.fileformat }}</span>
+            <span class="stat-chip" *ngIf="vcf.header.reference">Ref {{ vcf.header.reference }}</span>
+            <span class="stat-chip" *ngIf="vcf.header.source">{{ vcf.header.source }}</span>
+            <span class="stat-chip" *ngIf="vcf.header.samples?.length">Samples {{ vcf.header.samples.join(', ') }}</span>
+            <span class="stat-chip" *ngIf="vcf.header.contigCount">Contigs {{ vcf.header.contigCount }}</span>
+            <span class="stat-chip" *ngIf="vcf.header.infoCount">INFO {{ vcf.header.infoCount }}</span>
+            <span class="stat-chip" *ngIf="vcf.header.formatCount">FORMAT {{ vcf.header.formatCount }}</span>
+          </div>
+        </div>
         <div echarts [options]="chromChart" class="chart"></div>
         <div echarts [options]="typeChart" class="chart"></div>
         <div echarts [options]="filterChart" class="chart"></div>
+        <div echarts [options]="indelLengthChart" class="chart" *ngIf="indelLengthChart.series"></div>
+        <div echarts [options]="tsTvChromChart" class="chart" *ngIf="tsTvChromChart.series"></div>
+        <div echarts [options]="qualHistChart" class="chart" *ngIf="qualHistChart.series"></div>
+        <div echarts [options]="dpHistChart" class="chart" *ngIf="dpHistChart.series"></div>
       </div>
     </section>
   `
@@ -346,6 +365,10 @@ export class SampleDetailComponent implements OnInit, OnDestroy {
   chromChart: EChartsOption = {};
   typeChart: EChartsOption = {};
   filterChart: EChartsOption = {};
+  indelLengthChart: EChartsOption = {};
+  tsTvChromChart: EChartsOption = {};
+  qualHistChart: EChartsOption = {};
+  dpHistChart: EChartsOption = {};
   private timer?: ReturnType<typeof setInterval>;
 
   get analysisInProgress(): boolean {
@@ -675,6 +698,41 @@ export class SampleDetailComponent implements OnInit, OnDestroy {
       xAxis: { type: 'category', data: Object.keys(filters) },
       yAxis: { type: 'value' },
       series: [{ type: 'bar', data: Object.values(filters).map(v => Number(v)), itemStyle: { borderRadius: [4, 4, 0, 0] } }]
+    };
+    this.indelLengthChart = this.histogramChart('Indel length (ALT − REF)', m.indelLengthDistribution, true);
+    this.qualHistChart = this.histogramChart('QUAL distribution', m.qualHistogram, true);
+    this.dpHistChart = this.histogramChart('DP distribution', m.dpHistogram, true);
+    const tsTv = m.tsTvByChromosome || {};
+    const chroms = Object.keys(tsTv);
+    this.tsTvChromChart = chroms.length ? {
+      color: BRAND_COLORS,
+      textStyle: BRAND_FONT,
+      title: { text: 'Ts/Tv by chromosome' },
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['Transitions', 'Transversions'] },
+      xAxis: { type: 'category', data: chroms },
+      yAxis: { type: 'value' },
+      series: [
+        { name: 'Transitions', type: 'bar', data: chroms.map(c => Number(tsTv[c]?.ts || 0)), itemStyle: { borderRadius: [4, 4, 0, 0] } },
+        { name: 'Transversions', type: 'bar', data: chroms.map(c => Number(tsTv[c]?.tv || 0)), itemStyle: { borderRadius: [4, 4, 0, 0] } }
+      ]
+    } : {};
+  }
+
+  private histogramChart(title: string, hist: { labels?: string[]; counts?: number[] } | undefined, rotate: boolean): EChartsOption {
+    const labels = hist?.labels || [];
+    const counts = hist?.counts || [];
+    if (!labels.length) {
+      return {};
+    }
+    return {
+      color: BRAND_COLORS,
+      textStyle: BRAND_FONT,
+      title: { text: title },
+      tooltip: {},
+      xAxis: { type: 'category', data: labels, axisLabel: rotate ? { rotate: 45, interval: 4 } : {} },
+      yAxis: { type: 'value' },
+      series: [{ type: 'bar', data: counts.map(v => Number(v)), itemStyle: { borderRadius: [4, 4, 0, 0] } }]
     };
   }
 

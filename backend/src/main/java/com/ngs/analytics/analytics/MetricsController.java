@@ -195,6 +195,11 @@ public class MetricsController {
         map.put("alleleFrequency", readJson(m.getAlleleFrequencyJson()));
         map.put("geneDistribution", readJson(m.getGeneDistributionJson()));
         map.put("filterDistribution", readJson(m.getFilterDistributionJson()));
+        map.put("indelLengthDistribution", readJson(m.getIndelLengthDistributionJson()));
+        map.put("tsTvByChromosome", readJson(m.getTsTvByChromosomeJson()));
+        map.put("header", readJson(m.getHeaderJson()));
+        map.put("qualHistogram", readJson(m.getQualHistogramJson()));
+        map.put("dpHistogram", readJson(m.getDpHistogramJson()));
         return map;
     }
 
