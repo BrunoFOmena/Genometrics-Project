@@ -1,0 +1,32 @@
+---
+description: Spring Boot backend conventions for GENOMETRICS
+globs: backend/**
+alwaysApply: false
+---
+
+# Backend (Spring Boot 3 / Java 21)
+
+Single Maven module at `backend/`. Run: `cd backend && mvn test` | `mvn spring-boot:run`.
+
+## Packages
+
+`com.ngs.analytics.{auth,projects,upload,analytics,fastq,vcf,reports,domain,common}`
+
+Business logic: `fastq/FastqParser.java`, `vcf/VcfParser.java`, `analytics/AnalysisService.java`.
+
+## Patterns
+
+- Thin `@RestController` (`/api/...`) → `@Service` (`@Transactional`) → domain repos
+- DTOs as nested records in `*Dtos.java`; errors via `ApiException` + `GlobalExceptionHandler`
+- Ownership: `SecurityUtils.currentUser()` + `ProjectService.*Owned`
+- Async: `AnalysisService.enqueue` → `AnalysisRunner` `@Async("taskExecutor")` → parsers
+- Constructor injection; extend existing classes; `@Component` parsers, not `@Service`
+
+## Profiles
+
+- Default `dev-h2`: H2 file, `ngs.auth.disabled=true`
+- `test` / `prod`: auth enabled (JWT)
+
+## Tests
+
+JUnit 5 under `src/test/java/com/ngs/analytics/` (mirror feature packages). Integration: `@ActiveProfiles("test")`.

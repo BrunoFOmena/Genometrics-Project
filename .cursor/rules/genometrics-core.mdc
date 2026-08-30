@@ -1,0 +1,32 @@
+---
+description: GENOMETRICS identity, GitHub Flow, and agent pointers
+alwaysApply: true
+---
+
+# GENOMETRICS — core agent context
+
+Product: **GENOMETRICS** by Bruno Omena. Monolith: `backend/` (Spring Boot) + `frontend/` (Angular SPA).
+
+## Read first
+
+- Full map, commands, and coprogramming rules: [`AGENTS.md`](../../AGENTS.md)
+- Backend conventions: `.cursor/rules/backend.mdc` (auto when editing `backend/**`)
+- Frontend conventions: `.cursor/rules/frontend.mdc` (auto when editing `frontend/**`)
+
+## GitHub Flow
+
+- **`main`** only long-lived branch; PRs from `feature/*`, `fix/*`, `hotfix/*`
+- CI (`backend`, `frontend`, `e2e`) must pass before merge
+- Do not commit/push unless the user asks; no direct pushes to `main`
+
+## Agent defaults
+
+- Smallest diff; English for UI/API/docs
+- Auth **disabled in dev** (`ngs.auth.disabled`, `environment.authDisabled`)
+- Business logic in `FastqParser`, `VcfParser`, `AnalysisService` — not in Angular pages
+- Cloud/local agents: H2 only (`mvn spring-boot:run`); no Docker/Compose unless user requests prod
+- After implementation, invoke `/verifier`; on failures, `/debugger`
+
+## Avoid
+
+Unrequested refactors, new layers, duplicate FE/BE logic, large docs, force-push to `main`.
