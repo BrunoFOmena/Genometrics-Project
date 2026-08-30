@@ -1,54 +1,48 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute } from '@angular/router';
-import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
-import * as echarts from 'echarts/core';
-import { BarChart, HeatmapChart, LineChart, PieChart } from 'echarts/charts';
-import {
-  GridComponent,
-  LegendComponent,
-  MarkAreaComponent,
-  TitleComponent,
-  TooltipComponent,
-  VisualMapComponent
-} from 'echarts/components';
-import { CanvasRenderer } from 'echarts/renderers';
-import { EChartsOption } from 'echarts';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { ProgressBarModule } from 'primeng/progressbar';
-import { TableModule } from 'primeng/table';
-import { TabsModule } from 'primeng/tabs';
 import {
   LucideCloudUpload,
   LucideUpload,
-  LucideDownload,
   LucideFileText,
-  LucideFileCode,
   LucideMicroscope,
   LucideArchive,
-  LucideInfo,
-  LucideCircleAlert,
-  LucideTriangleAlert,
-  LucideCopy,
-  LucideExternalLink,
-  LucideChevronDown
+  LucideChevronDown,
+  LucideMaximize2,
+  LucideMinimize2
 } from '@lucide/angular';
 import { ApiService } from '../../core/api.service';
-import { HelpHintComponent } from '../../core/help-hint.component';
 import { NotifyService } from '../../core/notify.service';
 import { fadeIn, slideUp } from '../../core/animations';
+import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
+import * as echarts from 'echarts/core';
+import { LineChart } from 'echarts/charts';
+import { GridComponent, TooltipComponent } from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
+import { EChartsOption } from 'echarts';
 
-echarts.use([
-  BarChart, LineChart, PieChart, HeatmapChart,
-  GridComponent, LegendComponent, MarkAreaComponent, TitleComponent, TooltipComponent, VisualMapComponent,
-  CanvasRenderer
-]);
+echarts.use([LineChart, GridComponent, TooltipComponent, CanvasRenderer]);
 
-const BRAND_COLORS = ['#0f6a4d', '#c45c26', '#4d6358', '#74bfa1', '#b7c9be'];
 const BRAND_FONT = { fontFamily: 'IBM Plex Sans, sans-serif' };
+
+type CoverageAssayType = 'WGS' | 'WES' | 'PANEL' | 'UNKNOWN';
+
+type TargetCoveragePoint = {
+  depth: number;
+  label: string;
+  percent: number;
+};
+
+const COVERAGE_PROFILES: Record<CoverageAssayType, { target: number; max: number; assayLabel: string }> = {
+  WGS: { target: 30, max: 60, assayLabel: 'WGS' },
+  WES: { target: 100, max: 200, assayLabel: 'WES' },
+  PANEL: { target: 200, max: 400, assayLabel: 'Targeted panel' },
+  UNKNOWN: { target: 30, max: 60, assayLabel: 'WES/panel default' }
+};
 
 type FileAnalysisRow = {
   file: { id: string; originalFilename: string; fileType: string; sizeBytes: number };
@@ -70,298 +64,229 @@ type FileAnalysisRow = {
   imports: [
     CommonModule,
     NgxEchartsDirective,
-    HelpHintComponent,
     CardModule,
     ButtonModule,
     TagModule,
     ProgressBarModule,
-    TableModule,
-    TabsModule,
     LucideCloudUpload,
     LucideUpload,
-    LucideDownload,
     LucideFileText,
-    LucideFileCode,
     LucideMicroscope,
     LucideArchive,
-    LucideInfo,
-    LucideCircleAlert,
-    LucideTriangleAlert,
-    LucideCopy,
-    LucideExternalLink,
-    LucideChevronDown
+    LucideChevronDown,
+    LucideMaximize2,
+    LucideMinimize2
   ],
   providers: [provideEchartsCore({ echarts })],
   animations: [fadeIn, slideUp],
   template: `
     <section>
-      <header class="page-head">
-        <div>
-          <h1 class="head-row">
-            Sample
-            <app-help-hint text="Upload sequencing files here. FASTQ and VCF are parsed automatically; FASTA is stored as reference metadata." />
-          </h1>
-          <p>Upload FASTQ/VCF/FASTA and inspect metrics.</p>
-        </div>
-      </header>
+      <p-card styleClass="sample-block-card">
+        <h1 class="sample-block-title">Sample</h1>
 
-      <p-card styleClass="sample-upload-card">
-        <div class="label-row">
-          File
-          <app-help-hint text="Supported: .fastq/.fq, .vcf, .fasta (+ .gz). Max 2 GB per file. Upload _R1 and _R2 files to the same sample for paired-end." />
+        <div class="sample-file-section">
+          <div class="label-row">File</div>
+          <div class="sample-upload-actions">
+            <input #fileInput class="sample-file-input" type="file" (change)="onFile($event)" />
+            <button pButton type="button" severity="secondary" [outlined]="true" (click)="fileInput.click()">
+              <svg lucideUpload size="16"></svg>
+              Choose file
+            </button>
+            <span class="muted" *ngIf="selected">{{ selected.name }}</span>
+            <button pButton type="button" (click)="upload()" [disabled]="!selected || uploading">
+              <svg lucideCloudUpload size="16"></svg>
+              Upload
+            </button>
+          </div>
+          <p-progressBar *ngIf="uploading || analysisInProgress" mode="indeterminate" [style]="{ height: '5px', marginTop: '0.75rem' }" />
         </div>
-        <div class="sample-upload-actions">
-          <input #fileInput class="sample-file-input" type="file" (change)="onFile($event)" />
-          <button pButton type="button" severity="secondary" [outlined]="true" (click)="fileInput.click()">
-            <svg lucideUpload size="16"></svg>
-            Choose file
-          </button>
-          <span class="muted" *ngIf="selected">{{ selected.name }}</span>
-          <button pButton type="button" (click)="upload()" [disabled]="!selected || uploading">
-            <svg lucideCloudUpload size="16"></svg>
-            Upload &amp; analyze
-          </button>
+
+        <div *ngIf="fileAnalysisRows.length" class="files-analyses-section">
+          <div class="files-analyses-head collapsible" role="button" tabindex="0"
+               (click)="togglePanel('files')" (keydown.enter)="togglePanel('files')"
+               [attr.aria-expanded]="isOpen('files')">
+            <h2 class="files-analyses-title">Files &amp; analyses</h2>
+            <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isOpen('files')"></svg>
+          </div>
+          <div class="files-analyses-body" *ngIf="isOpen('files')">
+            <ul class="list compact analysis-picker" [class.analysis-picker-focused]="guideOpen">
+              <li *ngFor="let row of visibleFileRows"
+                  class="file-analysis-row"
+                  role="button"
+                  tabindex="0"
+                  (click)="selectRow(row, $event)"
+                  (keydown.enter)="selectRow(row, $event)"
+                  [class.selected]="selectedAnalysisId === row.analysis?.id && guideOpen"
+                  [class.pending]="row.analysis && row.analysis.status !== 'DONE'">
+                <span class="row-file label-row" [ngSwitch]="fileIcon(row.file.fileType)">
+                  <svg *ngSwitchCase="'fastq'" lucideFileText size="17" class="row-icon"></svg>
+                  <svg *ngSwitchCase="'vcf'" lucideMicroscope size="17" class="row-icon"></svg>
+                  <svg *ngSwitchDefault lucideArchive size="17" class="row-icon"></svg>
+                  {{ row.file.originalFilename }} · {{ row.file.fileType }} · {{ row.file.sizeBytes }} B
+                </span>
+                <span class="row-status" *ngIf="row.analysis">
+                  <p-tag [value]="row.analysis.status" [severity]="statusSeverity(row.analysis.status)" />
+                  {{ row.analysis.engine }}
+                  <span *ngIf="row.analysis.errorMessage" class="error"> — {{ row.analysis.errorMessage }}</span>
+                </span>
+                <span class="row-status muted" *ngIf="!row.analysis">No analysis yet</span>
+                <button *ngIf="row.analysis?.status === 'DONE' && selectedFileId === row.file.id && guideOpen"
+                        type="button"
+                        class="row-expand-btn"
+                        pButton
+                        severity="secondary"
+                        [outlined]="true"
+                        size="small"
+                        aria-label="Open full screen"
+                        (click)="openFullscreen($event)">
+                  <svg lucideMaximize2 size="16"></svg>
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
-        <p-progressBar *ngIf="uploading || analysisInProgress" mode="indeterminate" [style]="{ height: '5px', marginTop: '0.75rem' }" />
       </p-card>
 
-      <div *ngIf="fileAnalysisRows.length" class="file-analysis-section">
-        <div class="section-head collapsible" role="button" tabindex="0"
-             (click)="togglePanel('files')" (keydown.enter)="togglePanel('files')"
-             [attr.aria-expanded]="isOpen('files')">
-          <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isOpen('files')"></svg>
-          <h2>Files &amp; analyses</h2>
-          <app-help-hint text="Click a row to view metrics for that file's analysis. Paired-end R2 files link to the joint R1+R2 analysis." />
-        </div>
-        <ng-container *ngIf="isOpen('files')">
-          <ul class="list compact analysis-picker">
-            <li *ngFor="let row of fileAnalysisRows"
-                class="file-analysis-row"
-                role="button"
-                tabindex="0"
-                (click)="selectRow(row)"
-                (keydown.enter)="selectRow(row)"
-                [class.selected]="selectedAnalysisId === row.analysis?.id"
-                [class.pending]="row.analysis && row.analysis.status !== 'DONE'">
-              <span class="row-file label-row" [ngSwitch]="fileIcon(row.file.fileType)">
-                <svg *ngSwitchCase="'fastq'" lucideFileText size="17" class="row-icon"></svg>
-                <svg *ngSwitchCase="'vcf'" lucideMicroscope size="17" class="row-icon"></svg>
-                <svg *ngSwitchDefault lucideArchive size="17" class="row-icon"></svg>
-                {{ row.file.originalFilename }} · {{ row.file.fileType }} · {{ row.file.sizeBytes }} B
-              </span>
-              <span class="row-status" *ngIf="row.analysis">
-                <p-tag [value]="row.analysis.status" [severity]="statusSeverity(row.analysis.status)" />
-                {{ row.analysis.engine }}
-                <span *ngIf="row.analysis.errorMessage" class="error"> — {{ row.analysis.errorMessage }}</span>
-              </span>
-              <span class="row-status muted" *ngIf="!row.analysis">No analysis yet</span>
-            </li>
-          </ul>
-          <p class="muted selection-hint" *ngIf="selectionStatus">{{ selectionStatus }}</p>
-        </ng-container>
-      </div>
-
-      <div class="metrics-actions" *ngIf="sampleId">
-        <button pButton type="button" severity="secondary" [outlined]="true" (click)="download('csv')">
-          <svg lucideDownload size="16"></svg>
-          Download CSV
-        </button>
-        <button pButton type="button" severity="secondary" [outlined]="true" (click)="download('pdf')">
-          <svg lucideFileText size="16"></svg>
-          Download PDF
-        </button>
-      </div>
-
-      <div class="metrics metrics-panel" *ngIf="fastq" @slideUp>
-        <div class="section-head collapsible" role="button" tabindex="0"
-             (click)="togglePanel('fastq')" (keydown.enter)="togglePanel('fastq')"
-             [attr.aria-expanded]="isOpen('fastq')">
-          <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isOpen('fastq')"></svg>
-          <h2>Sequencing (FASTQ)</h2>
-          <p-tag *ngIf="fastq.pairedEnd" value="Paired-end" severity="info" />
-          <p-tag [value]="'Overall QC: ' + (fastq.qc?.overall || 'PASS')" [severity]="qcSeverity()" />
-          <app-help-hint text="Quality metrics from raw reads with FastQC-style pass/warn/fail flags." />
-        </div>
-
-        <ng-container *ngIf="isOpen('fastq')">
-        <div class="stat-chips">
-          <span class="stat-chip" [ngClass]="statClass('readCount')">
-            Reads {{ fastq.readCount }}
-            <span *ngIf="fastq.pairedEnd"> (R1 {{ fastq.readCountR1 }} / R2 {{ fastq.readCountR2 }})</span>
-          </span>
-          <span class="stat-chip" [ngClass]="statClass('gcContent')">GC {{ fastq.gcContent | number:'1.1-1' }}%</span>
-          <span class="stat-chip" [ngClass]="statClass('meanQuality')">Mean Q {{ fastq.meanQuality | number:'1.1-1' }}</span>
-          <span class="stat-chip">Avg len {{ fastq.avgLength | number:'1.0-0' }}</span>
-        </div>
-
-        <div class="qc-recommendations" *ngIf="fastq.recommendations?.length">
-          <div class="section-head collapsible" role="button" tabindex="0"
-               (click)="togglePanel('recs'); $event.stopPropagation()"
-               (keydown.enter)="togglePanel('recs'); $event.stopPropagation()"
-               [attr.aria-expanded]="isOpen('recs')">
-            <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isOpen('recs')"></svg>
-            <h3>Suggested actions</h3>
+      <div class="pbi-dashboard pbi-dashboard-fullscreen" *ngIf="fullscreenOpen" @slideUp>
+        <div class="pbi-fullscreen-bar">
+          <div class="pbi-fullscreen-title">
+            <span class="file-guide-label">Dashboard</span>
+            <strong>{{ selectedFileLabel }}</strong>
           </div>
-          <ul class="rec-items" *ngIf="isOpen('recs')">
-            <li *ngFor="let r of fastq.recommendations" [ngSwitch]="recIcon(r.severity)">
-              <svg *ngSwitchCase="'fail'" lucideCircleAlert size="18" class="rec-icon rec-icon-fail"></svg>
-              <svg *ngSwitchCase="'warn'" lucideTriangleAlert size="18" class="rec-icon rec-icon-warn"></svg>
-              <svg *ngSwitchDefault lucideInfo size="18" class="rec-icon rec-icon-info"></svg>
-              <span class="rec-body">
-                <strong>{{ r.title }}</strong>
-                <span class="muted">{{ r.detail }}</span>
-              </span>
-            </li>
-          </ul>
-        </div>
-
-        <div class="metrics-actions">
-          <button pButton type="button" severity="secondary" [outlined]="true" (click)="downloadFastq('html')">
-            <svg lucideFileCode size="16"></svg>
-            FASTQ HTML report
-          </button>
-          <button pButton type="button" severity="secondary" [outlined]="true" (click)="downloadFastq('pdf')">
-            <svg lucideFileText size="16"></svg>
-            FASTQ PDF report
+          <button type="button" pButton severity="secondary" [outlined]="true" (click)="closeFullscreen()">
+            <svg lucideMinimize2 size="16"></svg>
+            Exit full screen
           </button>
         </div>
 
-        <p-tabs [(value)]="fastqTabIndex">
-          <p-tablist>
-            <p-tab [value]="0">Charts</p-tab>
-            <p-tab [value]="1">Detailed stats</p-tab>
-            <p-tab [value]="2">Overrepresented</p-tab>
-          </p-tablist>
-          <p-tabpanels>
-            <p-tabpanel [value]="0">
-              <div class="fastq-tab-content" @fadeIn>
-                <div echarts [options]="gcChart" class="chart"></div>
-                <div echarts [options]="lengthChart" class="chart"></div>
-                <div echarts [options]="qualityChart" class="chart"></div>
-                <div echarts [options]="heatmapChart" class="chart" *ngIf="hasHeatmap"></div>
-              </div>
-            </p-tabpanel>
-            <p-tabpanel [value]="1">
-              <div class="fastq-tab-content detail-stats" @fadeIn>
-                <dl class="detail-grid">
-                  <dt>Duplication rate</dt>
-                  <dd [ngClass]="statClass('duplicationRate')">{{ fastq.duplicationRate | number:'1.1-1' }}%</dd>
-                  <dt>AT content</dt>
-                  <dd>{{ fastq.atContent | number:'1.1-1' }}%</dd>
-                  <dt>N content</dt>
-                  <dd [ngClass]="statClass('nContent')">{{ fastq.nContent | number:'1.2-2' }}%</dd>
-                  <dt>Min length</dt>
-                  <dd>{{ fastq.minLength }}</dd>
-                  <dt>Max length</dt>
-                  <dd>{{ fastq.maxLength }}</dd>
-                  <dt>Phred encoding</dt>
-                  <dd>{{ fastq.phredSummary?.encoding || 'Phred+33' }}</dd>
-                  <dt>Phred mean</dt>
-                  <dd>{{ fastq.phredSummary?.mean | number:'1.1-1' }}</dd>
-                </dl>
-                <div class="adapter-panel" *ngIf="adapterRows.length">
-                  <h3>Adapters</h3>
-                  <p class="muted">Hits in {{ fastq.adapterHits?.fraction | number:'1.1-1' }}% of sampled reads.</p>
-                  <p-table [value]="adapterRows" styleClass="overrep-table">
-                    <ng-template pTemplate="header">
-                      <tr>
-                        <th>Adapter</th>
-                        <th>Count</th>
-                      </tr>
-                    </ng-template>
-                    <ng-template pTemplate="body" let-row>
-                      <tr>
-                        <td>{{ row.name }}</td>
-                        <td>{{ row.count }}</td>
-                      </tr>
-                    </ng-template>
-                  </p-table>
-                </div>
-                <ul class="qc-check-list" *ngIf="fastq.qc?.checks?.length">
-                  <li *ngFor="let c of fastq.qc.checks" [ngClass]="'qc-' + (c.status | lowercase)">
-                    {{ c.message }}
-                  </li>
-                </ul>
-              </div>
-            </p-tabpanel>
-            <p-tabpanel [value]="2">
-              <div class="fastq-tab-content" @fadeIn>
-                <p *ngIf="!overrepresentedRows.length" class="muted">No overrepresented sequences detected.</p>
-                <p-table [value]="overrepresentedRows" styleClass="overrep-table" *ngIf="overrepresentedRows.length">
-                  <ng-template pTemplate="header">
-                    <tr>
-                      <th>Sequence</th>
-                      <th>Count</th>
-                      <th>Actions</th>
-                    </tr>
-                  </ng-template>
-                  <ng-template pTemplate="body" let-row>
-                    <tr>
-                      <td class="seq-cell" [title]="row.sequence">{{ truncate(row.sequence) }}</td>
-                      <td>{{ row.count }}</td>
-                      <td>
-                        <span class="action-cell">
-                          <button pButton type="button" severity="secondary" [outlined]="true" size="small" (click)="copySequence(row.sequence)">
-                            <svg lucideCopy size="14"></svg>
-                            Copy
-                          </button>
-                          <a class="btn-link" [href]="blastUrl" target="_blank" rel="noopener">
-                            BLAST
-                            <svg lucideExternalLink size="13"></svg>
-                          </a>
-                        </span>
-                      </td>
-                    </tr>
-                  </ng-template>
-                </p-table>
-              </div>
-            </p-tabpanel>
-          </p-tabpanels>
-        </p-tabs>
-        </ng-container>
-      </div>
 
-      <div class="metrics metrics-panel" *ngIf="vcf" @slideUp>
-        <div class="section-head collapsible" role="button" tabindex="0"
-             (click)="togglePanel('vcf')" (keydown.enter)="togglePanel('vcf')"
-             [attr.aria-expanded]="isOpen('vcf')">
-          <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isOpen('vcf')"></svg>
-          <h2>Variants (VCF)</h2>
-            <app-help-hint text="Variant calling summary: type and chromosome counts, filter status, indel length, Ts/Tv by chromosome, QUAL/DP histograms, and VCF header provenance." />
-        </div>
-        <ng-container *ngIf="isOpen('vcf')">
-        <div class="stat-chips">
-          <span class="stat-chip">Variants {{ vcf.variantCount }}</span>
-          <span class="stat-chip">SNPs {{ vcf.snpCount }}</span>
-          <span class="stat-chip">INDELs {{ vcf.indelCount }}</span>
-          <span class="stat-chip">Ts/Tv {{ vcf.tsTvRatio | number:'1.2-2' }}</span>
-        </div>
-        <div class="vcf-header-meta" *ngIf="vcf.header">
-          <div class="section-head collapsible" role="button" tabindex="0"
-               (click)="togglePanel('vcfHeader'); $event.stopPropagation()"
-               (keydown.enter)="togglePanel('vcfHeader'); $event.stopPropagation()"
-               [attr.aria-expanded]="isOpen('vcfHeader')">
-            <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isOpen('vcfHeader')"></svg>
-            <h3>File provenance</h3>
-            <app-help-hint text="Metadata from the VCF header: file format, reference, caller source, contig/INFO/FORMAT tags, and sample column names. Use this to confirm the file matches the expected genome build and pipeline." />
+        <p class="muted file-guide-loading" *ngIf="metricsLoading">{{ selectionStatus || 'Loading metrics…' }}</p>
+        <p class="muted file-guide-loading" *ngIf="!metricsLoading && selectionStatus && !fastq && !vcf">{{ selectionStatus }}</p>
+
+        <ng-container *ngIf="(fastq || vcf) && !metricsLoading">
+          <div class="quality-metrics-panel metric-box metric-box-panel">
+            <div class="metric-box-head collapsible" role="button" tabindex="0"
+                 (click)="toggleMetric('seq-quality-panel')" (keydown.enter)="toggleMetric('seq-quality-panel')"
+                 [attr.aria-expanded]="isMetricOpen('seq-quality-panel')">
+              <span class="metric-box-title metric-box-title-lg">Sequencing quality metrics</span>
+              <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isMetricOpen('seq-quality-panel')"></svg>
+            </div>
+            <div class="metric-box-panel-body" *ngIf="isMetricOpen('seq-quality-panel')">
+              <ul class="metric-box-list metric-box-list-nested">
+                <li class="metric-box" *ngFor="let field of sequencingQualityFields">
+                  <div class="metric-box-head collapsible" role="button" tabindex="0"
+                       (click)="toggleMetric(field.key)" (keydown.enter)="toggleMetric(field.key)"
+                       [attr.aria-expanded]="isMetricOpen(field.key)">
+                    <span class="metric-box-title">{{ field.label }}</span>
+                    <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isMetricOpen(field.key)"></svg>
+                  </div>
+                  <div class="metric-box-body" *ngIf="isMetricOpen(field.key)">
+                    <p class="metric-box-desc">{{ field.description }}</p>
+                    <ng-container [ngSwitch]="field.key">
+                      <ng-container *ngSwitchCase="'seq-q-mean-depth'">
+                        <div class="metric-bullet-wrap" *ngIf="meanCoverageDepth != null; else meanCoveragePending">
+                          <div class="metric-kpi-head">
+                            <div class="metric-box-kpi" [ngClass]="meanCoverageStatusClass()">
+                              {{ meanCoverageDepth | number:'1.1-1' }}<span class="metric-kpi-unit">×</span>
+                            </div>
+                            <span class="metric-kpi-status" [ngClass]="meanCoverageStatusClass()">{{ meanCoverageStatusLabel() }}</span>
+                          </div>
+                          <p class="metric-box-sub">{{ meanCoverageMetaLine() }}</p>
+                          <div class="metric-bullet-chart-wrap">
+                            <div class="metric-bullet-chart" role="img" [attr.aria-label]="meanCoverageAriaLabel()">
+                              <div class="metric-bullet-ranges" aria-hidden="true">
+                                <span class="metric-bullet-range metric-bullet-range-low"
+                                      [style.width.%]="meanCoverageLowBandPercent()"></span>
+                                <span class="metric-bullet-range metric-bullet-range-mid"
+                                      [style.width.%]="meanCoverageMidBandPercent()"></span>
+                                <span class="metric-bullet-range metric-bullet-range-high"
+                                      [style.width.%]="meanCoverageHighBandPercent()"></span>
+                              </div>
+                              <div class="metric-bullet-value" [ngClass]="meanCoverageStatusClass()"
+                                   [style.width.%]="meanCoveragePercent()"></div>
+                              <div class="metric-bullet-target" [style.left.%]="meanCoverageTargetPercent()"
+                                   [attr.title]="'Target ' + meanCoverageTarget + '×'"></div>
+                            </div>
+                            <div class="metric-bullet-target-label" [style.left.%]="meanCoverageTargetPercent()">
+                              {{ meanCoverageTarget }}×
+                            </div>
+                          </div>
+                          <div class="metric-bullet-axis">
+                            <span>0×</span>
+                            <span>{{ meanCoverageMax }}×</span>
+                          </div>
+                        </div>
+                        <ng-template #meanCoveragePending>
+                          <p class="metric-box-empty">Mean coverage depth is not available for this analysis yet.</p>
+                        </ng-template>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'seq-q-target-thresholds'">
+                        <div class="metric-threshold-wrap" *ngIf="targetCoverageThresholds?.length; else targetCoveragePending">
+                          <div class="metric-box-chart metric-box-chart-tall">
+                            <div echarts [options]="targetCoverageChart" class="pbi-chart pbi-chart-tall"></div>
+                          </div>
+                        </div>
+                        <ng-template #targetCoveragePending>
+                          <p class="metric-box-empty">Target coverage thresholds are not available for this analysis yet.</p>
+                        </ng-template>
+                      </ng-container>
+                      <div *ngSwitchDefault class="metric-box-slot" [attr.aria-label]="field.label + ' metrics placeholder'"></div>
+                    </ng-container>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </div>
-          <div class="stat-chips" *ngIf="isOpen('vcfHeader')">
-            <span class="stat-chip" *ngIf="vcf.header.fileformat">{{ vcf.header.fileformat }}</span>
-            <span class="stat-chip" *ngIf="vcf.header.reference">Ref {{ vcf.header.reference }}</span>
-            <span class="stat-chip" *ngIf="vcf.header.source">{{ vcf.header.source }}</span>
-            <span class="stat-chip" *ngIf="vcf.header.samples?.length">Samples {{ vcf.header.samples.join(', ') }}</span>
-            <span class="stat-chip" *ngIf="vcf.header.contigCount">Contigs {{ vcf.header.contigCount }}</span>
-            <span class="stat-chip" *ngIf="vcf.header.infoCount">INFO {{ vcf.header.infoCount }}</span>
-            <span class="stat-chip" *ngIf="vcf.header.formatCount">FORMAT {{ vcf.header.formatCount }}</span>
+
+          <div class="quality-metrics-panel metric-box metric-box-panel" *ngIf="vcf">
+            <div class="metric-box-head collapsible" role="button" tabindex="0"
+                 (click)="toggleMetric('vcf-quality-panel')" (keydown.enter)="toggleMetric('vcf-quality-panel')"
+                 [attr.aria-expanded]="isMetricOpen('vcf-quality-panel')">
+              <span class="metric-box-title metric-box-title-lg">Variant quality metrics</span>
+              <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isMetricOpen('vcf-quality-panel')"></svg>
+            </div>
+            <div class="metric-box-panel-body" *ngIf="isMetricOpen('vcf-quality-panel')">
+              <ul class="metric-box-list metric-box-list-nested">
+                <li class="metric-box" *ngFor="let field of vcfQualityFields">
+                  <div class="metric-box-head collapsible" role="button" tabindex="0"
+                       (click)="toggleMetric(field.key)" (keydown.enter)="toggleMetric(field.key)"
+                       [attr.aria-expanded]="isMetricOpen(field.key)">
+                    <span class="metric-box-title">{{ field.label }}</span>
+                    <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isMetricOpen(field.key)"></svg>
+                  </div>
+                  <div class="metric-box-body" *ngIf="isMetricOpen(field.key)">
+                    <p class="metric-box-desc">{{ field.description }}</p>
+                    <div class="metric-box-slot" [attr.aria-label]="field.label + ' metrics placeholder'"></div>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
-        <div echarts [options]="chromChart" class="chart"></div>
-        <div echarts [options]="typeChart" class="chart"></div>
-        <div echarts [options]="filterChart" class="chart"></div>
-        <div echarts [options]="indelLengthChart" class="chart" *ngIf="indelLengthChart.series"></div>
-        <div echarts [options]="tsTvChromChart" class="chart" *ngIf="tsTvChromChart.series"></div>
-        <div echarts [options]="qualHistChart" class="chart" *ngIf="qualHistChart.series"></div>
-        <div echarts [options]="dpHistChart" class="chart" *ngIf="dpHistChart.series"></div>
+
+          <div class="quality-metrics-panel metric-box metric-box-panel" *ngIf="vcf">
+            <div class="metric-box-head collapsible" role="button" tabindex="0"
+                 (click)="toggleMetric('vcf-composition-panel')" (keydown.enter)="toggleMetric('vcf-composition-panel')"
+                 [attr.aria-expanded]="isMetricOpen('vcf-composition-panel')">
+              <span class="metric-box-title metric-box-title-lg">VCF composition metrics</span>
+              <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isMetricOpen('vcf-composition-panel')"></svg>
+            </div>
+            <div class="metric-box-panel-body" *ngIf="isMetricOpen('vcf-composition-panel')">
+              <ul class="metric-box-list metric-box-list-nested">
+                <li class="metric-box" *ngFor="let field of vcfCompositionFields">
+                  <div class="metric-box-head collapsible" role="button" tabindex="0"
+                       (click)="toggleMetric(field.key)" (keydown.enter)="toggleMetric(field.key)"
+                       [attr.aria-expanded]="isMetricOpen(field.key)">
+                    <span class="metric-box-title">{{ field.label }}</span>
+                    <svg lucideChevronDown size="18" class="collapse-chevron" [class.closed]="!isMetricOpen(field.key)"></svg>
+                  </div>
+                  <div class="metric-box-body" *ngIf="isMetricOpen(field.key)">
+                    <p class="metric-box-desc">{{ field.description }}</p>
+                    <div class="metric-box-slot" [attr.aria-label]="field.label + ' metrics placeholder'"></div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
         </ng-container>
       </div>
     </section>
@@ -376,26 +301,141 @@ export class SampleDetailComponent implements OnInit, OnDestroy {
   fileAnalysisRows: FileAnalysisRow[] = [];
   selectedAnalysisId: string | null = null;
   selectionStatus = '';
+  guideOpen = false;
+  selectedFileId: string | null = null;
+  selectedFileLabel = '';
+  metricsLoading = false;
+  fullscreenOpen = false;
   fastq: any;
   vcf: any;
-  fastqTabIndex = 0;
-  overrepresentedRows: { sequence: string; count: number }[] = [];
-  adapterRows: { name: string; count: number }[] = [];
-  hasHeatmap = false;
-  readonly blastUrl = 'https://blast.ncbi.nlm.nih.gov/Blast.cgi';
-  gcChart: EChartsOption = {};
-  lengthChart: EChartsOption = {};
-  qualityChart: EChartsOption = {};
-  heatmapChart: EChartsOption = {};
-  chromChart: EChartsOption = {};
-  typeChart: EChartsOption = {};
-  filterChart: EChartsOption = {};
-  indelLengthChart: EChartsOption = {};
-  tsTvChromChart: EChartsOption = {};
-  qualHistChart: EChartsOption = {};
-  dpHistChart: EChartsOption = {};
+  meanCoverageDepth: number | null = null;
+  coverageAssayType: CoverageAssayType = 'UNKNOWN';
+  targetCoverageThresholds: TargetCoveragePoint[] | null = null;
+  targetCoverageChart: EChartsOption = {};
+  readonly sequencingQualityFields = [
+    {
+      key: 'seq-q-mean-depth',
+      label: 'Mean coverage depth',
+      description: 'Mean sequencing depth across the target region or genome.'
+    },
+    {
+      key: 'seq-q-target-thresholds',
+      label: 'Target coverage thresholds',
+      description: 'Percentage of the target meeting each sequencing depth threshold.'
+    },
+    {
+      key: 'seq-q-uniformity',
+      label: 'Coverage uniformity',
+      description: 'How evenly reads are distributed across targeted regions.'
+    },
+    {
+      key: 'seq-q-duplication',
+      label: 'Duplication rate',
+      description: 'Fraction of reads that are PCR or optical duplicates.'
+    },
+    {
+      key: 'seq-q-base-quality',
+      label: 'Base quality (Q20, Q30)',
+      description: 'Percentage of bases meeting Phred quality thresholds Q20 and Q30.'
+    },
+    {
+      key: 'seq-q-alignment',
+      label: 'Alignment rate',
+      description: 'Percentage of reads that mapped successfully to the reference.'
+    },
+    {
+      key: 'seq-q-clinical',
+      label: 'Clinically relevant region coverage',
+      description: 'Coverage depth and breadth over regions of clinical interest.'
+    },
+    {
+      key: 'seq-q-on-target',
+      label: 'On-target bases (WES / panel)',
+      description: 'Percentage of reads or bases falling within the capture target in exome or panel sequencing.'
+    }
+  ];
+  readonly vcfQualityFields = [
+    {
+      key: 'vcf-q-qual',
+      label: 'QUAL',
+      description: 'Variant call quality. Higher values usually indicate greater confidence.'
+    },
+    {
+      key: 'vcf-q-filter',
+      label: 'FILTER',
+      description: 'Whether the variant passed filters (PASS) or which filter failed.'
+    },
+    {
+      key: 'vcf-q-gq',
+      label: 'GQ (Genotype Quality)',
+      description: 'Confidence in the sample genotype call.'
+    },
+    {
+      key: 'vcf-q-dp',
+      label: 'DP (Depth)',
+      description: 'Read depth at the variant locus.'
+    },
+    {
+      key: 'vcf-q-ad',
+      label: 'AD (Allelic Depth)',
+      description: 'Number of reads supporting each allele.'
+    },
+    {
+      key: 'vcf-q-vaf',
+      label: 'VAF / AF (Variant Allele Fraction)',
+      description: 'Fraction of reads supporting the variant allele.'
+    }
+  ];
+  readonly vcfCompositionFields = [
+    {
+      key: 'vcf-c-total',
+      label: 'Total variant count',
+      description: 'Overall number of variants reported in the VCF.'
+    },
+    {
+      key: 'vcf-c-snp-indel',
+      label: 'SNPs vs. indels',
+      description: 'Breakdown of single-nucleotide variants compared with insertions and deletions.'
+    },
+    {
+      key: 'vcf-c-titv',
+      label: 'SNV transitions / transversions (Ti/Tv)',
+      description: 'Ratio and counts of transition versus transversion SNVs across the callset.'
+    },
+    {
+      key: 'vcf-c-zygosity',
+      label: 'Heterozygous / homozygous',
+      description: 'Distribution of heterozygous and homozygous genotypes in the sample.'
+    },
+    {
+      key: 'vcf-c-chromosome',
+      label: 'Variants per chromosome',
+      description: 'Variant counts or density grouped by chromosome or contig.'
+    },
+    {
+      key: 'vcf-c-pass-filter',
+      label: 'PASS vs. FILTER variants',
+      description: 'How many variants passed all filters versus failed one or more FILTER flags.'
+    },
+    {
+      key: 'vcf-c-coding',
+      label: 'Variants in coding regions',
+      description: 'Variants overlapping protein-coding sequence according to the annotation model.'
+    },
+    {
+      key: 'vcf-c-exonic',
+      label: 'Exonic / splice-site variants',
+      description: 'Variants in exons or canonical splice sites that may affect transcript sequence.'
+    },
+    {
+      key: 'vcf-c-rare',
+      label: 'Rare variants after population filtering',
+      description: 'Variants remaining after applying population allele-frequency thresholds.'
+    }
+  ];
   private timer?: ReturnType<typeof setInterval>;
   collapsed: Record<string, boolean> = {};
+  metricOpen: Record<string, boolean> = {};
 
   isOpen(key: string): boolean {
     return !this.collapsed[key];
@@ -403,6 +443,101 @@ export class SampleDetailComponent implements OnInit, OnDestroy {
 
   togglePanel(key: string): void {
     this.collapsed[key] = !this.collapsed[key];
+    if (key === 'files' && !this.isOpen('files')) {
+      this.closeGuide();
+    }
+  }
+
+  toggleMetric(key: string, event?: Event): void {
+    event?.stopPropagation();
+    this.metricOpen[key] = !this.metricOpen[key];
+    if (key === 'seq-q-target-thresholds' && this.metricOpen[key]) {
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+    }
+  }
+
+  isMetricOpen(key: string): boolean {
+    return !!this.metricOpen[key];
+  }
+
+  meanCoveragePercent(): number {
+    if (this.meanCoverageDepth == null) {
+      return 0;
+    }
+    return Math.min(100, (this.meanCoverageDepth / this.meanCoverageMax) * 100);
+  }
+
+  meanCoverageTargetPercent(): number {
+    return (this.meanCoverageTarget / this.meanCoverageMax) * 100;
+  }
+
+  get meanCoverageTarget(): number {
+    return COVERAGE_PROFILES[this.coverageAssayType].target;
+  }
+
+  get meanCoverageMax(): number {
+    return COVERAGE_PROFILES[this.coverageAssayType].max;
+  }
+
+  meanCoverageWarnThreshold(): number {
+    return Math.max(10, Math.round(this.meanCoverageTarget * 0.67));
+  }
+
+  meanCoverageLowBandPercent(): number {
+    return (this.meanCoverageWarnThreshold() / this.meanCoverageMax) * 100;
+  }
+
+  meanCoverageMidBandPercent(): number {
+    return ((this.meanCoverageTarget - this.meanCoverageWarnThreshold()) / this.meanCoverageMax) * 100;
+  }
+
+  meanCoverageHighBandPercent(): number {
+    return ((this.meanCoverageMax - this.meanCoverageTarget) / this.meanCoverageMax) * 100;
+  }
+
+  meanCoverageStatusLabel(): string {
+    if (this.meanCoverageDepth == null) {
+      return '';
+    }
+    return this.meanCoverageDepth >= this.meanCoverageTarget ? 'On target' : 'Below target';
+  }
+
+  meanCoverageMetaLine(): string {
+    const profile = COVERAGE_PROFILES[this.coverageAssayType];
+    return `Target: ${profile.target}× (${profile.assayLabel}) · Scale: 0–${profile.max}×`;
+  }
+
+  meanCoverageAriaLabel(): string {
+    const depth = this.meanCoverageDepth == null ? 'unknown' : `${this.meanCoverageDepth.toFixed(1)}x`;
+    return `Mean coverage ${depth}, ${this.meanCoverageStatusLabel().toLowerCase()}, target ${this.meanCoverageTarget}x`;
+  }
+
+  meanCoverageStatusClass(): string {
+    if (this.meanCoverageDepth == null) {
+      return '';
+    }
+    if (this.meanCoverageDepth >= this.meanCoverageTarget) {
+      return 'kpi-good';
+    }
+    if (this.meanCoverageDepth >= this.meanCoverageWarnThreshold()) {
+      return 'kpi-warn';
+    }
+    return 'kpi-bad';
+  }
+
+  private resolveCoverageAssayType(metrics: any): CoverageAssayType {
+    const raw = String(metrics?.coverageAssayType || metrics?.assayType || '').toUpperCase();
+    if (raw === 'WGS' || raw === 'WES' || raw === 'PANEL') {
+      return raw;
+    }
+    return 'UNKNOWN';
+  }
+
+  get visibleFileRows(): FileAnalysisRow[] {
+    if (!this.guideOpen || !this.selectedFileId) {
+      return this.fileAnalysisRows;
+    }
+    return this.fileAnalysisRows.filter(row => row.file.id === this.selectedFileId);
   }
 
   get analysisInProgress(): boolean {
@@ -417,7 +552,6 @@ export class SampleDetailComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private api: ApiService,
-    private http: HttpClient,
     private notify: NotifyService
   ) {}
 
@@ -429,6 +563,32 @@ export class SampleDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.timer) clearInterval(this.timer);
+    this.closeFullscreen();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.fullscreenOpen) {
+      this.closeFullscreen();
+    }
+  }
+
+  openFullscreen(event: Event): void {
+    event.stopPropagation();
+    if (!this.guideOpen || !this.selectedAnalysisId) {
+      return;
+    }
+    this.fullscreenOpen = true;
+    document.body.classList.add('pbi-fullscreen-active');
+    setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+  }
+
+  closeFullscreen(): void {
+    if (!this.fullscreenOpen) {
+      return;
+    }
+    this.fullscreenOpen = false;
+    document.body.classList.remove('pbi-fullscreen-active');
   }
 
   onFile(event: Event): void {
@@ -445,8 +605,15 @@ export class SampleDetailComponent implements OnInit, OnDestroy {
         this.notify.success('File uploaded — analysis queued');
         this.selected = null;
         this.selectedAnalysisId = null;
+        this.selectedFileId = null;
+        this.guideOpen = false;
+        this.selectedFileLabel = '';
         this.fastq = undefined;
         this.vcf = undefined;
+        this.meanCoverageDepth = null;
+        this.coverageAssayType = 'UNKNOWN';
+        this.targetCoverageThresholds = null;
+        this.targetCoverageChart = {};
         this.refresh();
       },
       error: (err) => {
@@ -463,20 +630,6 @@ export class SampleDetailComponent implements OnInit, OnDestroy {
     return 'other';
   }
 
-  recIcon(severity: string): string {
-    const s = (severity || '').toUpperCase();
-    if (s === 'FAIL') return 'fail';
-    if (s === 'WARN') return 'warn';
-    return 'info';
-  }
-
-  qcSeverity(): 'success' | 'warn' | 'danger' {
-    const overall = (this.fastq?.qc?.overall || 'PASS').toUpperCase();
-    if (overall === 'FAIL') return 'danger';
-    if (overall === 'WARN') return 'warn';
-    return 'success';
-  }
-
   statusSeverity(status: string): 'success' | 'danger' | 'info' | 'secondary' {
     switch (status) {
       case 'DONE': return 'success';
@@ -486,39 +639,45 @@ export class SampleDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  statClass(metricId: string): string {
-    const check = (this.fastq?.qc?.checks || []).find((c: any) => c.id === metricId);
-    if (!check) return '';
-    return 'qc-' + String(check.status).toLowerCase();
-  }
-
-  truncate(seq: string, max = 48): string {
-    return seq.length <= max ? seq : seq.slice(0, max) + '…';
-  }
-
-  copySequence(seq: string): void {
-    navigator.clipboard?.writeText(seq).catch(() => {});
-    this.notify.info('Sequence copied to clipboard');
-  }
-
-  selectRow(row: FileAnalysisRow): void {
+  selectRow(row: FileAnalysisRow, event: Event): void {
+    event.stopPropagation();
     if (!row.analysis) {
-      this.selectedAnalysisId = null;
-      this.fastq = undefined;
-      this.vcf = undefined;
-      this.selectionStatus = 'No analysis for this file yet.';
+      this.closeGuide();
+      this.notify.info('No analysis for this file yet.');
+      return;
+    }
+    if (row.analysis.id === this.selectedAnalysisId && this.guideOpen) {
+      this.closeGuide();
+      return;
+    }
+    if (row.analysis.status !== 'DONE') {
+      this.closeGuide();
+      this.notify.info(`Analysis is ${row.analysis.status.toLowerCase()}…`);
       return;
     }
     this.selectedAnalysisId = row.analysis.id;
+    this.selectedFileId = row.file.id;
+    this.selectedFileLabel = row.file.originalFilename;
     this.selectionStatus = '';
-    if (row.analysis.status !== 'DONE') {
-      this.fastq = undefined;
-      this.vcf = undefined;
-      this.selectionStatus = `Analysis is ${row.analysis.status.toLowerCase()}…`;
-      return;
-    }
+    this.guideOpen = true;
     this.loadMetricsForAnalysis(row.analysis, row.file.fileType);
-    document.querySelector('.metrics-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  closeGuide(): void {
+    this.closeFullscreen();
+    this.guideOpen = false;
+    this.selectedAnalysisId = null;
+    this.selectedFileId = null;
+    this.selectedFileLabel = '';
+    this.metricsLoading = false;
+    this.selectionStatus = '';
+    this.fastq = undefined;
+    this.vcf = undefined;
+    this.meanCoverageDepth = null;
+    this.coverageAssayType = 'UNKNOWN';
+    this.targetCoverageThresholds = null;
+    this.targetCoverageChart = {};
+    this.metricOpen = {};
   }
 
   private refresh(): void {
@@ -541,27 +700,16 @@ export class SampleDetailComponent implements OnInit, OnDestroy {
       file,
       analysis: this.findAnalysisForFile(file.id)
     }));
-    if (!this.selectedAnalysisId) {
-      const auto = this.pickDefaultAnalysis();
-      if (auto) {
-        this.selectedAnalysisId = auto.id;
-        const row = this.fileAnalysisRows.find(r => r.analysis?.id === auto.id);
-        if (row && auto.status === 'DONE') {
-          this.loadMetricsForAnalysis(auto, row.file.fileType);
-        }
-      }
+    if (!this.guideOpen || !this.selectedAnalysisId) {
       return;
     }
     const selected = this.analyses.find(a => a.id === this.selectedAnalysisId);
-    const row = this.fileAnalysisRows.find(r => r.analysis?.id === this.selectedAnalysisId);
-    if (selected && row) {
-      if (selected.status === 'DONE') {
-        this.loadMetricsForAnalysis(selected, row.file.fileType);
-      } else {
-        this.fastq = undefined;
-        this.vcf = undefined;
-        this.selectionStatus = `Analysis is ${selected.status.toLowerCase()}…`;
-      }
+    if (!selected) {
+      return;
+    }
+    if (selected.status !== 'DONE') {
+      this.closeGuide();
+      this.notify.info(`Analysis is ${selected.status.toLowerCase()}…`);
     }
   }
 
@@ -580,225 +728,173 @@ export class SampleDetailComponent implements OnInit, OnDestroy {
     return ts ? new Date(ts).getTime() : 0;
   }
 
-  private pickDefaultAnalysis(): FileAnalysisRow['analysis'] {
-    const done = this.analyses
-      .filter(a => a.status === 'DONE')
-      .sort((a, b) => this.analysisSortKey(b) - this.analysisSortKey(a));
-    return done[0] ?? null;
-  }
-
   private loadMetricsForAnalysis(analysis: NonNullable<FileAnalysisRow['analysis']>, fileType: string): void {
+    this.metricsLoading = true;
+    this.metricOpen = {};
     this.selectionStatus = '';
+    this.fastq = undefined;
+    this.vcf = undefined;
+    this.meanCoverageDepth = null;
+    this.coverageAssayType = 'UNKNOWN';
+    this.targetCoverageThresholds = null;
+    this.targetCoverageChart = {};
     const type = fileType.toUpperCase();
     if (type.startsWith('FASTQ')) {
-      this.vcf = undefined;
       this.api.fastqMetricsByAnalysis(analysis.id).subscribe({
-        next: (m) => this.applyFastq(m),
+        next: (m) => {
+          this.metricsLoading = false;
+          this.applyFastq(m);
+        },
         error: () => {
-          this.fastq = undefined;
+          this.metricsLoading = false;
           this.selectionStatus = 'FASTQ metrics not available for this analysis.';
         }
       });
       return;
     }
     if (type.startsWith('VCF')) {
-      this.fastq = undefined;
       this.api.vcfMetricsByAnalysis(analysis.id).subscribe({
-        next: (m) => this.applyVcf(m),
+        next: (m) => {
+          this.metricsLoading = false;
+          this.applyVcf(m);
+        },
         error: () => {
-          this.vcf = undefined;
+          this.metricsLoading = false;
           this.selectionStatus = 'VCF metrics not available for this analysis.';
         }
       });
       return;
     }
-    this.fastq = undefined;
-    this.vcf = undefined;
+    this.metricsLoading = false;
     this.selectionStatus = 'Reference metadata only — no sequencing metrics for FASTA.';
   }
 
   private applyFastq(m: any): void {
     this.fastq = m;
-    this.overrepresentedRows = Array.isArray(m.overrepresented) ? m.overrepresented : [];
-    this.adapterRows = Array.isArray(m.adapterHits?.adapters) ? m.adapterHits.adapters : [];
-    this.gcChart = {
-      color: BRAND_COLORS,
-      textStyle: BRAND_FONT,
-      title: { text: 'Base composition' },
-      tooltip: {},
-      series: [{
-        type: 'pie',
-        radius: '60%',
-        data: Object.entries(m.baseComposition || {}).map(([name, value]) => ({
-          name,
-          value: Number(value)
-        }))
-      }]
-    };
-    const lengths = m.lengthDistribution || {};
-    this.lengthChart = {
-      color: BRAND_COLORS,
-      textStyle: BRAND_FONT,
-      title: { text: 'Read length distribution' },
-      xAxis: { type: 'category', data: Object.keys(lengths) },
-      yAxis: { type: 'value' },
-      series: [{ type: 'bar', data: Object.values(lengths).map(v => Number(v)), itemStyle: { borderRadius: [4, 4, 0, 0] } }]
-    };
-    const pq = m.perPositionQuality || {};
-    this.qualityChart = {
-      color: BRAND_COLORS,
-      textStyle: BRAND_FONT,
-      title: { text: 'Quality by position' },
-      tooltip: {},
-      xAxis: { type: 'category', data: Object.keys(pq) },
-      yAxis: { type: 'value', min: 0, max: 41 },
-      series: [{
-        type: 'line',
-        data: Object.values(pq).map(v => Number(v)),
-        areaStyle: {},
-        markArea: {
-          silent: true,
-          data: [
-            [{ yAxis: 0, itemStyle: { color: 'rgba(155, 44, 44, 0.12)' } }, { yAxis: 20 }],
-            [{ yAxis: 20, itemStyle: { color: 'rgba(196, 92, 38, 0.12)' } }, { yAxis: 28 }],
-            [{ yAxis: 28, itemStyle: { color: 'rgba(15, 106, 77, 0.12)' } }, { yAxis: 41 }]
-          ]
-        }
-      }]
-    };
-    const hm = m.qualityHeatmap;
-    const hmData = Array.isArray(hm?.data) ? hm.data : [];
-    this.hasHeatmap = hmData.length > 0;
-    if (this.hasHeatmap) {
-      const maxCount = hmData.reduce((max: number, row: number[]) => Math.max(max, Number(row[2])), 1);
-      this.heatmapChart = {
-        textStyle: BRAND_FONT,
-        title: { text: 'Quality heatmap' },
-        tooltip: { position: 'top' },
-        grid: { height: '60%', top: '12%' },
-        xAxis: { type: 'category', name: 'Position', data: Array.from({ length: hm.maxPosition || 1 }, (_, i) => i + 1) },
-        yAxis: { type: 'category', name: 'Q bin', data: Array.from({ length: hm.bins || 41 }, (_, i) => String(i)) },
-        visualMap: {
-          min: 0,
-          max: maxCount,
-          calculable: true,
-          orient: 'horizontal',
-          left: 'center',
-          bottom: '2%',
-          inRange: { color: ['#eef3f0', '#74bfa1', '#0f6a4d'] }
-        },
-        series: [{
-          type: 'heatmap',
-          data: hmData.map((row: number[]) => [row[0] - 1, row[1], row[2]]),
-          emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' } }
-        }]
-      };
-    } else {
-      this.heatmapChart = {};
-    }
+    this.meanCoverageDepth = null;
+    this.coverageAssayType = this.resolveCoverageAssayType(m);
+    this.applyTargetCoverageMetrics(m);
+    this.metricOpen['seq-quality-panel'] = true;
   }
 
   private applyVcf(m: any): void {
     this.vcf = m;
-    const chrom = m.chromosomeDistribution || {};
-    this.chromChart = {
-      color: BRAND_COLORS,
+    const meanDp = Number(m.meanDp);
+    this.meanCoverageDepth = Number.isFinite(meanDp) ? meanDp : null;
+    this.coverageAssayType = this.resolveCoverageAssayType(m);
+    this.applyTargetCoverageMetrics(m);
+    this.metricOpen['seq-quality-panel'] = true;
+    this.metricOpen['vcf-quality-panel'] = true;
+    this.metricOpen['vcf-composition-panel'] = true;
+  }
+
+  private applyTargetCoverageMetrics(m: any): void {
+    this.targetCoverageThresholds = this.parseTargetCoverageThresholds(m, this.meanCoverageDepth);
+    this.targetCoverageChart = this.targetCoverageThresholds?.length
+      ? this.buildTargetCoverageChart(this.targetCoverageThresholds)
+      : {};
+  }
+
+  private parseTargetCoverageThresholds(m: any, meanDepth: number | null): TargetCoveragePoint[] | null {
+    const parsed = this.parseTargetCoverageRaw(m?.targetCoverageThresholds);
+    if (parsed?.length) {
+      return parsed;
+    }
+    if (meanDepth != null) {
+      return this.demoTargetCoverageThresholds();
+    }
+    return null;
+  }
+
+  private parseTargetCoverageRaw(raw: unknown): TargetCoveragePoint[] | null {
+    if (!raw) {
+      return null;
+    }
+    if (Array.isArray(raw)) {
+      const points = raw
+        .map((item: any) => {
+          const depth = Number(item?.depth ?? item?.threshold);
+          const percent = Number(item?.percent ?? item?.pct ?? item?.value);
+          if (!Number.isFinite(depth) || !Number.isFinite(percent)) {
+            return null;
+          }
+          return {
+            depth,
+            label: item?.label || `≥${depth}×`,
+            percent
+          } as TargetCoveragePoint;
+        })
+        .filter((point): point is TargetCoveragePoint => point != null);
+      return points.length ? points.sort((a, b) => a.depth - b.depth) : null;
+    }
+    if (typeof raw === 'object') {
+      const points = Object.entries(raw as Record<string, unknown>)
+        .map(([key, value]) => {
+          const depth = Number(String(key).replace(/[^\d.]/g, ''));
+          const percent = Number(value);
+          if (!Number.isFinite(depth) || !Number.isFinite(percent)) {
+            return null;
+          }
+          return { depth, label: `≥${depth}×`, percent } as TargetCoveragePoint;
+        })
+        .filter((point): point is TargetCoveragePoint => point != null);
+      return points.length ? points.sort((a, b) => a.depth - b.depth) : null;
+    }
+    return null;
+  }
+
+  private demoTargetCoverageThresholds(): TargetCoveragePoint[] {
+    return [
+      { depth: 10, label: '≥10×', percent: 96.8 },
+      { depth: 20, label: '≥20×', percent: 91.4 },
+      { depth: 30, label: '≥30×', percent: 82.7 },
+      { depth: 50, label: '≥50×', percent: 61.3 }
+    ];
+  }
+
+  private buildTargetCoverageChart(points: TargetCoveragePoint[]): EChartsOption {
+    const labels = points.map(point => point.label);
+    const values = points.map(point => point.percent);
+    return {
+      color: ['#0f6a4d'],
       textStyle: BRAND_FONT,
-      title: { text: 'Variants by chromosome' },
-      xAxis: { type: 'category', data: Object.keys(chrom) },
-      yAxis: { type: 'value' },
-      series: [{ type: 'bar', data: Object.values(chrom).map(v => Number(v)), itemStyle: { borderRadius: [4, 4, 0, 0] } }]
-    };
-    this.typeChart = {
-      color: BRAND_COLORS,
-      textStyle: BRAND_FONT,
-      title: { text: 'Variant types' },
-      tooltip: {},
+      grid: { left: 52, right: 20, top: 42, bottom: 40 },
+      tooltip: {
+        trigger: 'axis',
+        valueFormatter: (value) => `${value}%`
+      },
+      xAxis: {
+        type: 'category',
+        data: labels,
+        axisLabel: { fontSize: 11, color: '#4d6358' },
+        axisLine: { lineStyle: { color: '#b7c9be' } }
+      },
+      yAxis: {
+        type: 'value',
+        name: '% target covered',
+        nameGap: 38,
+        min: 0,
+        max: 100,
+        axisLabel: { formatter: '{value}%', color: '#4d6358' },
+        splitLine: { lineStyle: { color: 'rgba(183, 201, 190, 0.45)' } }
+      },
       series: [{
-        type: 'pie',
-        radius: ['35%', '65%'],
-        data: [
-          { name: 'SNP', value: Number(m.snpCount) },
-          { name: 'INDEL', value: Number(m.indelCount) },
-          { name: 'MNP', value: Number(m.mnpCount) }
-        ]
+        type: 'line',
+        data: values,
+        symbol: 'circle',
+        symbolSize: 10,
+        lineStyle: { width: 2.5, color: '#0f6a4d' },
+        itemStyle: { color: '#0f6a4d', borderColor: '#fff', borderWidth: 2 },
+        label: {
+          show: true,
+          position: 'top',
+          distance: 8,
+          formatter: '{c}%',
+          fontSize: 11,
+          fontWeight: 600,
+          color: '#1a2e24'
+        }
       }]
     };
-    const filters = m.filterDistribution || {};
-    this.filterChart = {
-      color: BRAND_COLORS,
-      textStyle: BRAND_FONT,
-      title: { text: 'Filter distribution' },
-      xAxis: { type: 'category', data: Object.keys(filters) },
-      yAxis: { type: 'value' },
-      series: [{ type: 'bar', data: Object.values(filters).map(v => Number(v)), itemStyle: { borderRadius: [4, 4, 0, 0] } }]
-    };
-    this.indelLengthChart = this.histogramChart('Indel length (ALT − REF)', m.indelLengthDistribution, true);
-    this.qualHistChart = this.histogramChart('QUAL distribution', m.qualHistogram, true);
-    this.dpHistChart = this.histogramChart('DP distribution', m.dpHistogram, true);
-    const tsTv = m.tsTvByChromosome || {};
-    const chroms = Object.keys(tsTv);
-    this.tsTvChromChart = chroms.length ? {
-      color: BRAND_COLORS,
-      textStyle: BRAND_FONT,
-      title: { text: 'Ts/Tv by chromosome' },
-      tooltip: { trigger: 'axis' },
-      legend: { data: ['Transitions', 'Transversions'] },
-      xAxis: { type: 'category', data: chroms },
-      yAxis: { type: 'value' },
-      series: [
-        { name: 'Transitions', type: 'bar', data: chroms.map(c => Number(tsTv[c]?.ts || 0)), itemStyle: { borderRadius: [4, 4, 0, 0] } },
-        { name: 'Transversions', type: 'bar', data: chroms.map(c => Number(tsTv[c]?.tv || 0)), itemStyle: { borderRadius: [4, 4, 0, 0] } }
-      ]
-    } : {};
-  }
-
-  private histogramChart(title: string, hist: { labels?: string[]; counts?: number[] } | undefined, rotate: boolean): EChartsOption {
-    const labels = hist?.labels || [];
-    const counts = hist?.counts || [];
-    if (!labels.length) {
-      return {};
-    }
-    return {
-      color: BRAND_COLORS,
-      textStyle: BRAND_FONT,
-      title: { text: title },
-      tooltip: {},
-      xAxis: { type: 'category', data: labels, axisLabel: rotate ? { rotate: 45, interval: 4 } : {} },
-      yAxis: { type: 'value' },
-      series: [{ type: 'bar', data: counts.map(v => Number(v)), itemStyle: { borderRadius: [4, 4, 0, 0] } }]
-    };
-  }
-
-  download(kind: 'csv' | 'pdf'): void {
-    const url = kind === 'csv'
-      ? this.api.reportCsvUrl(this.sampleId)
-      : this.api.reportPdfUrl(this.sampleId);
-    this.http.get(url, { responseType: 'blob' }).subscribe({
-      next: (blob) => {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `report-${this.sampleId}.${kind}`;
-        a.click();
-        URL.revokeObjectURL(a.href);
-      },
-      error: () => this.notify.error('Report not available yet')
-    });
-  }
-
-  downloadFastq(kind: 'html' | 'pdf'): void {
-    const url = kind === 'html'
-      ? this.api.fastqReportHtmlUrl(this.sampleId)
-      : this.api.fastqReportPdfUrl(this.sampleId);
-    this.http.get(url, { responseType: 'blob' }).subscribe({
-      next: (blob) => {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `fastq-${this.sampleId}.${kind}`;
-        a.click();
-        URL.revokeObjectURL(a.href);
-      },
-      error: () => this.notify.error('FASTQ report not available yet')
-    });
   }
 }
