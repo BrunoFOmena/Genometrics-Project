@@ -1,6 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+import {
+  AiAnswer,
+  AnalyticsQuery,
+  AnalyticsResult,
+  MetricDefinition
+} from './analytics.models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -94,5 +100,22 @@ export class ApiService {
 
   fastqReportPdfUrl(sampleId: string): string {
     return `${this.base}/reports/${sampleId}/fastq/pdf`;
+  }
+
+  metricCatalog() {
+    return this.http.get<MetricDefinition[]>(`${this.base}/analytics/metrics`);
+  }
+
+  analyticsQuery(query: AnalyticsQuery) {
+    return this.http.post<AnalyticsResult>(`${this.base}/analytics/query`, query);
+  }
+
+  askAnalyst(request: {
+    question: string;
+    projectId?: string;
+    sampleIds?: string[];
+    metrics?: string[];
+  }) {
+    return this.http.post<AiAnswer>(`${this.base}/ai/ask`, request);
   }
 }

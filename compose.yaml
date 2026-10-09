@@ -1,0 +1,8 @@
+# GENOMETRICS — stack completa (Postgres + API + UI).
+# Na raiz do repositório:
+#   docker compose up --build -d
+#
+# UI: http://localhost:4200  |  API direta (Swagger): http://localhost:8080
+
+include:
+  - path: docker/docker-compose.yml

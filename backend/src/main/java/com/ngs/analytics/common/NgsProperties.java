@@ -8,6 +8,7 @@ public class NgsProperties {
     private final Jwt jwt = new Jwt();
     private final Storage storage = new Storage();
     private final Auth auth = new Auth();
+    private final Ai ai = new Ai();
 
     public Jwt getJwt() {
         return jwt;
@@ -19,6 +20,10 @@ public class NgsProperties {
 
     public Auth getAuth() {
         return auth;
+    }
+
+    public Ai getAi() {
+        return ai;
     }
 
     public static class Jwt {
@@ -82,5 +87,18 @@ public class NgsProperties {
         public void setDevEmail(String devEmail) {
             this.devEmail = devEmail;
         }
+    }
+
+    public static class Ai {
+        private boolean enabled;
+        private String baseUrl = "http://localhost:11434";
+        private String model = "llama3.2";
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public String getBaseUrl() { return baseUrl; }
+        public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
+        public String getModel() { return model; }
+        public void setModel(String model) { this.model = model; }
     }
 }

@@ -5,4 +5,29 @@ describe('GENOMETRICS smoke', () => {
     cy.contains('by Bruno Omena');
     cy.contains('Projects');
   });
+
+  it('opens Explore and runs a grounded analytics query', () => {
+    cy.intercept('GET', '**/api/analytics/metrics', [{
+      key: 'mean_quality',
+      label: 'Mean quality',
+      domain: 'FASTQ',
+      unit: 'Phred',
+      description: 'Mean Phred quality score',
+      aggregations: ['AVG'],
+      version: 1
+    }]);
+    cy.intercept('GET', '**/api/projects', []);
+    cy.intercept('POST', '**/api/analytics/query', {
+      columns: ['sample', 'metric', 'value'],
+      rows: [{ sample: 'S1', metric: 'mean_quality', value: 31.5 }],
+      total: 1,
+      truncated: false
+    }).as('analyticsQuery');
+
+    cy.visit('/explore');
+    cy.contains('Explore');
+    cy.contains('Run query').click();
+    cy.wait('@analyticsQuery');
+    cy.contains('31.5');
+  });
 });

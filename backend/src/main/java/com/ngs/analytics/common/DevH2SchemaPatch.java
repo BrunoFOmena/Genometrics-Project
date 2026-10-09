@@ -30,10 +30,24 @@ public class DevH2SchemaPatch {
         patch("UPDATE file_assets SET read_end = 'SINGLE' WHERE read_end IS NULL");
         patch("ALTER TABLE analyses ADD COLUMN IF NOT EXISTS mate_file_asset_id UUID");
         patch("ALTER TABLE fastq_metrics ADD COLUMN IF NOT EXISTS paired_end BOOLEAN DEFAULT FALSE");
-        patch("ALTER TABLE fastq_metrics ADD COLUMN IF NOT EXISTS read_countr1 BIGINT DEFAULT 0");
-        patch("ALTER TABLE fastq_metrics ADD COLUMN IF NOT EXISTS read_countr2 BIGINT DEFAULT 0");
+        patch("ALTER TABLE fastq_metrics ADD COLUMN IF NOT EXISTS read_count_r1 BIGINT DEFAULT 0");
+        patch("ALTER TABLE fastq_metrics ADD COLUMN IF NOT EXISTS read_count_r2 BIGINT DEFAULT 0");
+        migrateLegacyPairedReadColumns();
         patch("ALTER TABLE fastq_metrics ADD COLUMN IF NOT EXISTS adapter_hits_json TEXT");
         patch("ALTER TABLE fastq_metrics ADD COLUMN IF NOT EXISTS quality_heatmap_json TEXT");
+    }
+
+    private void migrateLegacyPairedReadColumns() {
+        try {
+            jdbcTemplate.execute(
+                    "UPDATE fastq_metrics SET read_count_r1 = read_countr1 "
+                            + "WHERE read_count_r1 = 0 AND read_countr1 <> 0");
+            jdbcTemplate.execute(
+                    "UPDATE fastq_metrics SET read_count_r2 = read_countr2 "
+                            + "WHERE read_count_r2 = 0 AND read_countr2 <> 0");
+        } catch (Exception ex) {
+            log.debug("Legacy read_countr1/r2 columns not present: {}", ex.getMessage());
+        }
     }
 
     private void patch(String sql) {

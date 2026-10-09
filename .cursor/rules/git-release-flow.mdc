@@ -1,0 +1,42 @@
+---
+description: Commit e push com confirmação do Bruno; nunca PR nem merge no GitHub
+alwaysApply: true
+---
+
+# Git — commit, push e PR (Genometrics)
+
+O agente **pode** fazer `git add` (caminhos explícitos), `git commit` e `git push` **somente** após confirmação explícita do Bruno, nesta ordem. **Nunca** abrir PR, **nunca** mergear no GitHub (nem `gh pr create`, `gh pr merge`, merge na UI).
+
+## Ordem obrigatória (parar se Bruno disser não)
+
+1. Perguntar: **Posso fazer o commit?**  
+   - Só após **sim**: stage com paths explícitos (nunca `git add .` / `-A` / `--all`), `git commit` com mensagem Conventional Commits em **uma linha**.
+2. Perguntar: **Posso fazer o push?**  
+   - Só após **sim**: `git push` (incluir `-u origin HEAD` se a branch ainda não tiver upstream).
+3. Perguntar: **Posso fazer a mensagem de PR?**  
+   - Só após **sim**: gravar o texto em  
+     **`.cursor/work/<slug-da-funcionalidade>/PR.md`**  
+     (corpo completo: Summary, Test plan, etc.). Bruno abre o PR manualmente no GitHub.  
+   - PR de integração: destino **`test`** (nunca `main`). Após aprovação em test e cherry-pick, segunda seção **PR → prod** no mesmo `PR.md` quando Bruno autorizar de novo.
+
+Branches e deploy: **`.cursor/rules/branch-deploy-flow.mdc`**.
+
+Não pular etapas. Não agrupar passos sem confirmação separada. Não criar PR no remoto.
+
+## Proibido sempre
+
+- `git add .`, `git add -A`, `git add --all`
+- `gh pr create`, `gh pr merge`, comentários que disparem merge, force-push em `main`, `test` ou `prod`
+- Push direto para `main`, `test` ou `prod` (sempre via PR mergeado pelo Bruno)
+- `git merge` para concluir PR no lugar do Bruno
+- Commit ou push **sem** ter perguntado e recebido **sim** na etapa correspondente
+
+## Permitido sem confirmação de push
+
+- `git status`, `git diff`, `git log`, `git show`, listar branches
+- `git checkout -b feature/…` (ou `fix/` / `hotfix/`) **a partir de `test`** quando a tarefa exigir
+- `gh` **somente leitura** ou metadata que **não** publique commit (checks, issues, comentários **se** Bruno pedir)
+
+## Mensagem de commit
+
+Uma linha, Conventional Commits, sem aspas na sugestão quando entregar comando ao Bruno; se o agente commitar, usar a mesma regra.

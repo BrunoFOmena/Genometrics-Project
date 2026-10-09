@@ -1,0 +1,24 @@
+---
+description: GitHub — PR e merge são do Bruno; ver git-release-flow para commit/push
+alwaysApply: true
+---
+
+# GitHub control
+
+Bruno decide **PR e merge** no GitHub (`test` e `prod`; nunca `main`). O agente **não** cria PR nem mergeia. Fluxo de branches: `branch-deploy-flow.mdc`.
+
+## Commit e push
+
+Seguir **`.cursor/rules/git-release-flow.mdc`**: perguntar commit → push → mensagem de PR; só executar após **sim** em cada etapa.
+
+## Never (remoto / integração)
+
+- `gh pr create`, `gh pr merge`, merge automático ou equivalente
+- Push ou commit fora do fluxo com confirmação
+- `git add .`, `git add -A`, `git add --all`
+
+## Allowed
+
+- Editar código e arquivos do projeto
+- Git local conforme `git-release-flow.mdc`
+- `gh` read-only / checks / issues quando não publicar commits, se Bruno pedir

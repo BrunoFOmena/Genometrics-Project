@@ -8,16 +8,18 @@ import { SampleDetailComponent } from './pages/sample-detail/sample-detail.compo
 import { OverviewComponent } from './pages/overview/overview.component';
 import { CompareComponent } from './pages/compare/compare.component';
 import { HistoryComponent } from './pages/history/history.component';
+import { ExploreComponent } from './pages/explore/explore.component';
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'projects' },
+  { path: '', pathMatch: 'full', redirectTo: 'overview' },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'overview', component: OverviewComponent, canActivate: [authGuard] },
+  { path: 'explore', component: ExploreComponent, canActivate: [authGuard] },
   { path: 'projects', component: ProjectsComponent, canActivate: [authGuard] },
   { path: 'projects/:id', component: ProjectDetailComponent, canActivate: [authGuard] },
   { path: 'samples/:id', component: SampleDetailComponent, canActivate: [authGuard] },
   { path: 'compare', component: CompareComponent, canActivate: [authGuard] },
   { path: 'history', component: HistoryComponent, canActivate: [authGuard] },
-  { path: '**', redirectTo: 'projects' }
+  { path: '**', redirectTo: 'overview' }
 ];

@@ -3,11 +3,10 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 
-# IDE / Cursor
+# IDE
 .idea/
 *.iml
 .vscode/
-.cursor/plans/
 *.swp
 *.swo
 
@@ -25,10 +24,15 @@ frontend/.angular/
 frontend/coverage/
 npm-debug.log*
 
-# Local-only markdown (all .md except README.md)
-AGENT.md
+# Bruno / agente — não publicar no GitHub
+Docs_Bruno/*
+!Docs_Bruno/README.md
 plan.md
 docs/
+AGENT.md
+.cursor/plans/
+.cursor/work/*
+!.cursor/work/README.md
 
 # Data & uploads
 data/
