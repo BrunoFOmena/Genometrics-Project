@@ -26,7 +26,11 @@ public class FastqMetrics {
     private double duplicationRate;
 
     private boolean pairedEnd;
+
+    @Column(name = "read_count_r1")
     private long readCountR1;
+
+    @Column(name = "read_count_r2")
     private long readCountR2;
 
     @Column(columnDefinition = "TEXT")

@@ -12,6 +12,8 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
+  flyway:
+    enabled: false
   servlet:
     multipart:
       max-file-size: 2GB
@@ -38,6 +40,10 @@ ngs:
   storage:
     local-dir: ../data/uploads
     max-upload-bytes: 2147483648
+  ai:
+    enabled: ${NGS_AI_ENABLED:false}
+    base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+    model: ${OLLAMA_MODEL:llama3.2}
 
 springdoc:
   api-docs:
@@ -82,3 +88,10 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:ngs}
     password: ${SPRING_DATASOURCE_PASSWORD:ngs}
     driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0

@@ -9,6 +9,7 @@ import {
   LucideFolderKanban,
   LucideGitCompareArrows,
   LucideHistory,
+  LucideSearch,
   LucideMenu,
   LucideX
 } from '@lucide/angular';
@@ -20,7 +21,7 @@ import { HelpHintComponent } from './core/help-hint.component';
   standalone: true,
   imports: [
     CommonModule, RouterOutlet, RouterLink, RouterLinkActive, HelpHintComponent, ToastModule,
-    LucideDna, LucideLayoutDashboard, LucideFolderKanban, LucideGitCompareArrows, LucideHistory, LucideMenu, LucideX
+    LucideDna, LucideLayoutDashboard, LucideFolderKanban, LucideGitCompareArrows, LucideHistory, LucideSearch, LucideMenu, LucideX
   ],
   template: `
     <p-toast position="bottom-right" />
@@ -48,6 +49,13 @@ import { HelpHintComponent } from './core/help-hint.component';
               Overview
             </a>
             <app-help-hint text="Dashboard with project, sample, and analysis counts plus recent jobs." />
+          </div>
+          <div class="nav-item">
+            <a routerLink="/explore" routerLinkActive="active" (click)="menuOpen = false">
+              <svg lucideSearch size="17"></svg>
+              Explore
+            </a>
+            <app-help-hint text="Query catalogued metrics and ask the grounded local analyst." />
           </div>
           <div class="nav-item">
             <a routerLink="/projects" routerLinkActive="active" (click)="menuOpen = false">
