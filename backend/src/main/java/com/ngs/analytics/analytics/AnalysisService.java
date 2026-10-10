@@ -33,6 +33,7 @@ public class AnalysisService {
     private final VcfParser vcfParser;
     private final FileTypeDetector fileTypeDetector;
     private final AnalysisRunner analysisRunner;
+    private final MetricFactWriter metricFactWriter;
 
     public AnalysisService(
             AnalysisRepository analysisRepository,
@@ -42,7 +43,8 @@ public class AnalysisService {
             FastqParser fastqParser,
             VcfParser vcfParser,
             FileTypeDetector fileTypeDetector,
-            @Lazy AnalysisRunner analysisRunner
+            @Lazy AnalysisRunner analysisRunner,
+            MetricFactWriter metricFactWriter
     ) {
         this.analysisRepository = analysisRepository;
         this.fastqMetricsRepository = fastqMetricsRepository;
@@ -52,6 +54,7 @@ public class AnalysisService {
         this.vcfParser = vcfParser;
         this.fileTypeDetector = fileTypeDetector;
         this.analysisRunner = analysisRunner;
+        this.metricFactWriter = metricFactWriter;
     }
 
     @Transactional
@@ -124,23 +127,26 @@ public class AnalysisService {
                     boolean r2Gz = fileTypeDetector.isGzipped(mate.getFileType());
                     try (InputStream r1In = storageService.open(file.getStoragePath());
                          InputStream r2In = storageService.open(mate.getStoragePath())) {
-                        FastqMetrics metrics = fastqParser.parsePaired(r1In, r2In, gzipped, r2Gz);
+                        FastqMetrics metrics = fastqParser.parsePairedResult(r1In, r2In, gzipped, r2Gz).toEntity();
                         metrics.setAnalysis(analysis);
                         fastqMetricsRepository.save(metrics);
+                        metricFactWriter.write(analysis, metrics);
                     }
                 } else {
                     try (InputStream in = storageService.open(file.getStoragePath())) {
-                        FastqMetrics metrics = fastqParser.parse(in, gzipped);
+                        FastqMetrics metrics = fastqParser.parseResult(in, gzipped).toEntity();
                         metrics.setAnalysis(analysis);
                         fastqMetricsRepository.save(metrics);
+                        metricFactWriter.write(analysis, metrics);
                     }
                 }
                 analysis.setEngine("JAVA");
             } else if (fileTypeDetector.isVcf(type)) {
                 try (InputStream in = storageService.open(file.getStoragePath())) {
-                    VcfMetrics metrics = vcfParser.parse(in, gzipped);
+                    VcfMetrics metrics = vcfParser.parseResult(in, gzipped).toEntity();
                     metrics.setAnalysis(analysis);
                     vcfMetricsRepository.save(metrics);
+                    metricFactWriter.write(analysis, metrics);
                 }
                 analysis.setEngine("JAVA");
             } else if (fileTypeDetector.isFasta(type)) {

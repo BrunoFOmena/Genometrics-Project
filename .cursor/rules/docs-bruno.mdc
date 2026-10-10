@@ -1,0 +1,29 @@
+---
+description: Planos e anotações pessoais do Bruno vão em Docs_Bruno, nunca em .cursor/plans
+alwaysApply: true
+---
+
+# Docs_Bruno (anotações locais)
+
+Bruno mantém planos, boas práticas e rascunhos em **`Docs_Bruno/`**, separados do código da aplicação (`backend/`, `frontend/`).
+
+## Use
+
+- **`Docs_Bruno/`** na raiz do repositório para:
+  - planos de produto ou refatoração
+  - boas práticas e notas de processo
+  - rascunhos de sessão, checklists, decisões pendentes
+
+Crie subpastas/arquivos `.md` dentro de `Docs_Bruno/` quando o usuário pedir para anotar, planejar ou documentar algo **pessoal/local**.
+
+## Never
+
+- **Não** criar, editar ou mover planos/anotações para **`~/.cursor/plans/`**, **`.cursor/plans/`** ou qualquer pasta de “plans” dentro de **`.cursor/`**.
+- Planos que o Cursor criar em `~/.cursor/plans/` devem ser **copiados/movidos** para `Docs_Bruno/planos/` quando forem deste repositório.
+- **Não** usar `.cursor/` para documentação longa de produto — só **`.cursor/rules/`** (regras curtas para o agente).
+- **Não** substituir `README.md` / `AGENTS.md` com conteúdo que deveria ir em `Docs_Bruno/`.
+
+## Git
+
+- Conteúdo de **`Docs_Bruno/`** (exceto `Docs_Bruno/README.md`), **`plan.md`**, **`docs/`**, **`AGENT.md`** e **`.cursor/plans/`** estão no **`.gitignore`** — não commitar.
+- Ao commitar o resto do repo, usar **caminhos explícitos** (nunca `git add .`).

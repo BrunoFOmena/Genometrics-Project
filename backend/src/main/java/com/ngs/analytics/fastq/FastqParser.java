@@ -38,6 +38,10 @@ public class FastqParser {
         }
     }
 
+    public FastqParseResult parseResult(InputStream raw, boolean gzipped) {
+        return FastqParseResult.fromEntity(parse(raw, gzipped));
+    }
+
     public FastqMetrics parsePaired(InputStream r1Raw, InputStream r2Raw, boolean r1Gz, boolean r2Gz) {
         try (InputStream in1 = r1Gz ? new GZIPInputStream(r1Raw) : r1Raw;
              InputStream in2 = r2Gz ? new GZIPInputStream(r2Raw) : r2Raw;
@@ -74,6 +78,12 @@ public class FastqParser {
         } catch (IOException ex) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Failed to parse paired FASTQ: " + ex.getMessage());
         }
+    }
+
+    public FastqParseResult parsePairedResult(
+            InputStream r1Raw, InputStream r2Raw, boolean r1Gz, boolean r2Gz
+    ) {
+        return FastqParseResult.fromEntity(parsePaired(r1Raw, r2Raw, r1Gz, r2Gz));
     }
 
     private void readAll(BufferedReader reader, FastqParseAccumulator acc) throws IOException {

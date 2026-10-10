@@ -62,7 +62,8 @@ describe('project flow', () => {
     cy.intercept('GET', '**/api/samples/s1/metrics/fastq', { statusCode: 404, body: {} });
     cy.intercept('GET', '**/api/samples/s1/metrics/vcf', { statusCode: 404, body: {} });
     cy.contains('a', 'S1').click();
-    cy.contains('Upload & analyze');
+    cy.contains('Choose file');
+    cy.contains('button', 'Upload').should('be.disabled');
 
     cy.intercept('GET', '**/api/samples/s1/files', [uploadedFile]).as('filesAfterUpload');
     cy.intercept('GET', '**/api/samples/s1/analyses', [queuedAnalysis]).as('analysesAfterUpload');
@@ -74,7 +75,7 @@ describe('project flow', () => {
       { contents: Cypress.Buffer.from('@r1\nACGT\n+\nIIII\n'), fileName: 'a.fastq', mimeType: 'text/plain' },
       { force: true }
     );
-    cy.contains('button', 'Upload & analyze').click();
+    cy.contains('button', 'Upload').should('be.enabled').click();
     cy.wait('@upload');
     cy.contains('File uploaded — analysis queued');
     cy.contains('QUEUED');

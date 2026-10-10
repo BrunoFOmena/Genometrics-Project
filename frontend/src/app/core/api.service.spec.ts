@@ -34,4 +34,28 @@ describe('ApiService', () => {
     expect((req.request.body as FormData).get('file')).toBeTruthy();
     req.flush({ analysis: { status: 'QUEUED' } });
   });
+
+  it('posts typed analytics queries to the shared query endpoint', () => {
+    const query = {
+      metrics: ['mean_quality'],
+      dimensions: ['sample', 'metric'],
+      aggregation: 'AVG' as const
+    };
+
+    api.analyticsQuery(query).subscribe();
+
+    const req = http.expectOne('http://localhost:8080/api/analytics/query');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(query);
+    req.flush({ columns: [], rows: [], total: 0, truncated: false });
+  });
+
+  it('sends analyst questions with explicit metric context', () => {
+    api.askAnalyst({ question: 'Why did QC fail?', metrics: ['mean_quality'] }).subscribe();
+
+    const req = http.expectOne('http://localhost:8080/api/ai/ask');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.metrics).toEqual(['mean_quality']);
+    req.flush({ interactionId: 'i1', answer: 'No data.', model: 'deterministic', tools: [], citations: [] });
+  });
 });

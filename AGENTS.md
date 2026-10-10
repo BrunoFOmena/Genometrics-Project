@@ -15,6 +15,8 @@ Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 | Business logic | `backend/.../fastq/FastqParser.java`, `vcf/VcfParser.java`, `analytics/AnalysisService.java` | Streaming parsers + async analysis |
 | Domain | `backend/.../domain/` | JPA entities and repositories |
 | Fixtures | `datasets/` | Tiny FASTQ/VCF/FASTA samples for manual tests |
+| Local notes (Bruno) | `Docs_Bruno/` | Plans, practices — **not** `.cursor/plans/` (see `docs-bruno.mdc`) |
+| Feature work logs | `.cursor/work/` | Per-feature `LOG.md` / `PR.md`; archive under `arquivados/` (see `work-logs.mdc`, `git-release-flow.mdc`) |
 | CI | `.github/workflows/ci.yml` | Tests on PR/push; GHCR image on merge to `main` |
 
 ### Run locally
@@ -31,31 +33,35 @@ Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 
 ---
 
-## GitHub Flow (classic)
+## Branches and deploy (`test` → `prod`)
 
-Single integration branch: **`main`** (always deployable).
+**Do not use `main`** for day-to-day work. Integration and deploys:
 
 ```
-main ─────────────────────────────► deploy (GHCR on push)
-  ▲
-  │ PR (CI must pass)
-  │
 feature/*  fix/*  hotfix/*
+        │
+        ▼ PR (Bruno merges)
+      test ──► deploy test ──► Bruno approves?
+        │
+        ▼ cherry-pick (after approval)
+      prod ──► deploy prod ──► Bruno approves? ──► archive `.cursor/work/<slug>/`
 ```
+
+Rules: `.cursor/rules/branch-deploy-flow.mdc`, commit/PR drafts: `git-release-flow.mdc`.
 
 ### Workflow
 
-1. Branch from latest `main`: `git checkout main && git pull && git checkout -b feature/<short-name>`
+1. Branch from **`test`**: `git fetch origin && git checkout test && git pull && git checkout -b feature/<short-name>`
 2. Small commits; run tests locally before pushing.
-3. Open PR **into `main`**. Wait for `backend`, `frontend`, `e2e`.
-4. Merge (squash or merge commit — team default). Delete the branch after merge.
-5. `main` push triggers GHCR API image (`:latest` + `:sha`).
+3. PR **`feature/…` → `test`**. CI green; Bruno merges and deploys **test**.
+4. After **test** approval: cherry-pick to **`prod`**, PR **`…` → `prod`**, Bruno merges; deploy **prod**.
+5. Archive work log under `.cursor/work/arquivados/` when **prod** is approved.
 
 ### Do not
 
-- Push directly to `main` (branch protection should enforce PRs).
-- Use a long-lived `develop` branch — deprecated in this repo.
-- Force-push `main` or skip CI.
+- Commit, push, or open PRs targeting **`main`**.
+- Push directly to **`test`** or **`prod`** (PR + Bruno merge only).
+- Force-push `test`/`prod` or skip CI.
 
 ### Branch names
 

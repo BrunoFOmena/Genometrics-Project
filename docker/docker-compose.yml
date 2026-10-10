@@ -1,7 +1,10 @@
 # Full GENOMETRICS stack: Postgres + API + nginx (Angular SPA).
 #
-# Local build:
-#   cd docker && docker compose up --build -d
+# Local build (recomendado — na raiz do repo):
+#   docker compose up --build -d
+#
+# Alternativa:
+#   cd docker && docker compose -f ../compose.yaml up --build -d
 #
 # Pull from GHCR (after merge to main):
 #   export GENOMETRICS_API_IMAGE=ghcr.io/<owner>/genometrics-project/api:latest
@@ -48,10 +51,17 @@ services:
       SPRING_DATASOURCE_PASSWORD: ngs
       NGS_STORAGE_LOCAL_DIR: /data/uploads
       NGS_JWT_SECRET: ${NGS_JWT_SECRET:-change-me-ngs-analytics-platform-jwt-secret-key-32bytes-min}
+      NGS_AUTH_DISABLED: ${NGS_AUTH_DISABLED:-true}
     volumes:
       - uploads_data:/data/uploads
-    expose:
-      - "8080"
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
 
   frontend:
     build:
