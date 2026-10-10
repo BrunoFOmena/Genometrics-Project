@@ -23,6 +23,7 @@ frontend/dist/
 frontend/.angular/
 frontend/coverage/
 npm-debug.log*
+frontend/ng-serve-ci.log
 
 # Bruno / agente — não publicar no GitHub
 Docs_Bruno/*

@@ -7,6 +7,12 @@ alwaysApply: true
 
 O agente **pode** fazer `git add` (caminhos explícitos), `git commit` e `git push` **somente** após confirmação explícita do Bruno, nesta ordem. **Nunca** abrir PR, **nunca** mergear no GitHub (nem `gh pr create`, `gh pr merge`, merge na UI).
 
+## Antes de commit ou push
+
+Se a mudança toca `backend/`, `frontend/`, `docker/`, Cypress ou `.github/workflows/ci.yml`, a cartilha em **`ci-verification.mdc`** precisa estar verde **nesta sessão** (`./scripts/ci-check.sh`). Sem isso, não perguntar commit nem push.
+
+Em qualquer mudança, concluir os handoffs internos definidos em **`pre-push-review.mdc`** e **`security-review-handoff.mdc`**: o Bugbot e o revisor de cybersecurity devolvem feedback ao agente principal, que consolida a avaliação. Sem essa avaliação, não perguntar commit nem push.
+
 ## Ordem obrigatória (parar se Bruno disser não)
 
 1. Perguntar: **Posso fazer o commit?**  
