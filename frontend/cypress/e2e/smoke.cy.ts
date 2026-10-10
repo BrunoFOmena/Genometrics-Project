@@ -26,7 +26,8 @@ describe('GENOMETRICS smoke', () => {
 
     cy.visit('/explore');
     cy.contains('Explore');
-    cy.contains('Run query').click();
+    cy.get('#metrics option').should('contain', 'Mean quality');
+    cy.contains('button', 'Run query').should('be.enabled').click();
     cy.wait('@analyticsQuery');
     cy.contains('31.5');
   });

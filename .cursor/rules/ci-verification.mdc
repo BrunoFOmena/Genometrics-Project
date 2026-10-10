@@ -1,0 +1,40 @@
+---
+description: Antes de dizer que o CI passa, rodar a mesma cartilha do workflow
+alwaysApply: true
+---
+
+# Cartilha de testes (espelho do CI)
+
+O check que quebrou no PR #25 foi **`CI / e2e (push)`**. Backend e frontend unitários passaram. O job `e2e` sobe só o Angular e roda **todos** os specs em `frontend/cypress/e2e/` (não só o smoke).
+
+O workflow local (`.github/workflows/ci.yml`) dispara em **PR** para `test` e `prod`, e em **push** de `test`, `prod`, `feature/**`, `fix/**` e `hotfix/**`. Imagem Docker só no push de `prod`. Não tratar “unitário verde” como CI verde.
+
+Não afirmar que o remoto vai passar sem ter executado o equivalente local quando a mudança toca backend, frontend, Cypress ou o workflow.
+
+## Comando único
+
+```bash
+./scripts/ci-check.sh
+```
+
+Equivale a:
+
+1. `cd backend && mvn -B test`
+2. `cd frontend && npm ci && npm run build && npm test -- --watch=false --browsers=ChromeHeadless`
+3. `ng serve` + `npx cypress run --browser chrome` (todos os specs em `frontend/cypress/e2e/`)
+
+O script usa a porta **4300** para não colidir com Docker na **4200**.
+
+## Regras dos specs Cypress
+
+- A UI de dev usa `authDisabled: true`. Specs de login devem visitar `/login` direto; não dependem do guard.
+- Não clicar botão desabilitado. Esperar o dado que habilita o controle (ex.: opção no `#metrics`, arquivo selecionado) e usar `.should('be.enabled')`.
+- Textos de botão e toasts devem bater com o template atual (`Choose file` / `Upload`, não rótulos antigos).
+- Interceptar `**/api/...` **antes** do `cy.visit` / clique que dispara a request.
+- Não deixar request real para `localhost:8080` como pré-condição do assert: o job `e2e` sobe só o Angular.
+
+## Se o CI falhar no GitHub
+
+1. Abrir o job **e2e** (backend e frontend verdes não cobrem Cypress).
+2. Reproduzir com `./scripts/ci-check.sh` ou só a parte Cypress.
+3. Corrigir spec ou UI, rodar a cartilha de novo, só então pedir commit/push.

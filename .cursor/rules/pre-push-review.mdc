@@ -1,0 +1,23 @@
+---
+description: Revisão local obrigatória por subagente antes de commit e push
+alwaysApply: true
+---
+
+# Gate local de revisão
+
+Antes de pedir autorização para commit ou push:
+
+1. Rodar os testes aplicáveis conforme `ci-verification.mdc`.
+2. O agente principal deve acionar exatamente um subagente **Bugbot** e enviar a ele o contexto da tarefa e o diff para revisar:
+   - `uncommitted changes`, quando ainda houver mudanças não commitadas;
+   - `branch changes`, quando os commits já estiverem prontos para push.
+3. O Bugbot deve devolver o feedback ao agente principal, com severidade, arquivo/linha, justificativa e correção sugerida. Esse retorno é comunicação interna entre agentes, não uma resposta independente ao Bruno.
+4. O agente principal deve avaliar cada apontamento:
+   - corrigir achados válidos dentro do escopo;
+   - justificar falsos positivos ou itens fora do escopo;
+   - não delegar ao subagente a decisão final.
+5. Após correções, rodar novamente os testes afetados e acionar uma nova revisão se o diff tiver mudado materialmente.
+6. Acionar em seguida o handoff de cybersecurity definido em **`security-review-handoff.mdc`**. O revisor também devolve o feedback ao agente principal.
+7. Apresentar ao Bruno somente a avaliação consolidada do agente principal e não pedir commit ou push enquanto houver achado válido bloqueante sem resolução.
+
+A revisão é local: o Bugbot e o revisor de cybersecurity não devem interagir diretamente com Bruno nem comentar, revisar, publicar ou alterar nada no GitHub. Se Bruno alterar o diff depois da revisão, o gate deve ser executado novamente.
