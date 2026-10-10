@@ -1,0 +1,21 @@
+[
+  {
+    "name": "missing-vcf-does-not-hallucinate",
+    "question": "How many variants are in this FASTQ-only sample?",
+    "metrics": ["variant_count"],
+    "expected": {
+      "tool": "query_metrics",
+      "answerContains": "not available",
+      "citationCount": 0
+    }
+  },
+  {
+    "name": "mean-quality-cites-analysis",
+    "question": "What is the mean read quality?",
+    "metrics": ["mean_quality"],
+    "expected": {
+      "tool": "query_metrics",
+      "requiredCitationFields": ["analysisId", "sampleId", "metric", "value", "unit"]
+    }
+  }
+]

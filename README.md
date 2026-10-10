@@ -145,23 +145,26 @@ Runs **Postgres + API + nginx (Angular UI)**. The UI is served on port **4200** 
 
 ### Local build
 
+Na **raiz** do repositório (Postgres + API + UI com um comando):
+
 ```bash
-cd docker
 docker compose up --build -d
 ```
 
 | Service | URL |
 |---------|-----|
 | Dashboard | http://localhost:4200 |
-| API (internal) | proxied at http://localhost:4200/api |
-| Swagger | not exposed by default (optional: `docker compose exec api` + port mapping) |
+| API | http://localhost:8080 (também via http://localhost:4200/api no nginx) |
+| Swagger | http://localhost:8080/swagger-ui.html |
 | PostgreSQL | localhost:5432 (`ngs` / `ngs`) |
+
+Por padrão `NGS_AUTH_DISABLED=true` (sem login, igual ao dev local). Copie `.env.example` → `.env` para ajustar JWT e auth.
 
 Set a strong JWT secret before any shared/staging deploy:
 
 ```bash
 export NGS_JWT_SECRET="your-32-byte-minimum-secret"
-cd docker && docker compose up --build -d
+docker compose up --build -d
 ```
 
 ### Pull from GHCR (after merge to `main`)

@@ -41,6 +41,10 @@ public class VcfParser {
         }
     }
 
+    public VcfParseResult parseResult(InputStream raw, boolean gzipped) {
+        return VcfParseResult.fromEntity(parse(raw, gzipped));
+    }
+
     private VcfMetrics parseReader(BufferedReader reader) throws IOException {
         long variantCount = 0, snp = 0, indel = 0, mnp = 0;
         double qualSum = 0;
