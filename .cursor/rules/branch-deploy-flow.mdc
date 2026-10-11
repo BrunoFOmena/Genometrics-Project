@@ -1,59 +1,59 @@
 ---
-description: Branches test e prod — nunca main; integração em test, promoção cherry-pick para prod
+description: Branch oficial prod — PRs de feature/fix; merge e deploy só Bruno
 alwaysApply: true
 ---
 
 # Fluxo de branches e deploy (Genometrics)
 
-**Nunca usar `main`** como branch de trabalho, integração ou deploy. Branches de ambiente:
+**Branch oficial:** **`prod`** (default no GitHub). Integração e releases passam por ela.
+
+**Não usar** `main` nem `test` para trabalho novo. A branch `test` é legado — apagar no remoto após alinhar com `prod`.
 
 | Branch | Papel |
 |--------|--------|
-| **`test`** | Integração contínua — recebe PRs de `feature/*`, `fix/*`, `hotfix/*` |
-| **`prod`** | Produção — recebe apenas o que foi validado em `test` |
-
-`main` pode existir no remoto por legado (CI/GHCR); **não** commitar, **não** abrir PR para `main`, **não** fazer deploy a partir de `main`.
+| **`prod`** | Única linha oficial — recebe PRs mergeados pelo Bruno; push dispara GHCR |
+| **`feature/*`**, **`fix/*`**, **`hotfix/*`** | Trabalho curto; base sempre em `prod` atualizada |
 
 ## Ciclo por funcionalidade
 
 ```mermaid
 flowchart TD
-  F[feature/fix/hotfix branch] -->|PR merge Bruno| T[test]
-  T -->|deploy ambiente test| VT{Bruno aprova test?}
-  VT -->|não| F
-  VT -->|sim| CP[cherry-pick commits para prod]
-  CP -->|PR merge Bruno| P[prod]
-  P -->|deploy prod| VP{Bruno aprova prod?}
+  F[feature/fix/hotfix branch] -->|PR merge Bruno| P[prod]
+  P -->|deploy| VP{Bruno aprova?}
   VP -->|sim| ARQ[LOG + arquivar .cursor/work]
-  VP -->|não| P
+  VP -->|não| F
 ```
 
-1. **Desenvolvimento** — criar branch a partir de **`test`** atualizada:  
-   `git fetch origin && git checkout test && git pull && git checkout -b feature/<slug>`
-2. **Integração** — PR **`feature/…` → `test`** (Bruno mergeia; agente **não** cria PR).
-3. **Test** — deploy no ambiente de **test**; CI verde; Bruno **aprova** em test.
-4. **Promoção** — com aprovação explícita, preparar **`cherry-pick`** dos commits da feature (ou do merge) para branch baseada em **`prod`**:  
-   - Documentar hashes e comandos em `.cursor/work/<slug>/LOG.md`.  
-   - Executar cherry-pick **somente** se Bruno pedir; conflitos → parar e reportar.
-5. **Produção** — PR **`…` → `prod`** (Bruno mergeia); segundo rascunho de PR em `PR.md` ou seção **PR prod** no mesmo arquivo.
-6. **Deploy prod** — após deploy e **aprovação** do Bruno em prod: registrar no `LOG.md`, **mover** pasta para `.cursor/work/arquivados/<slug>/`.
+1. **Desenvolvimento** — branch a partir de **`prod`**:  
+   `git fetch origin && git checkout prod && git pull && git checkout -b feature/<slug>`
+2. **Integração** — PR **`feature/…` → `prod`** (Bruno abre/mergeia; agente **não** cria PR nem mergeia).
+3. **CI** — checks `backend`, `frontend`, `e2e` verdes no PR.
+4. **Deploy** — após merge em `prod`; Bruno valida ambiente e aprova.
+5. **Arquivar** — mover `.cursor/work/<slug>/` para `arquivados/` quando **prod** estiver ok.
+
+## Colaboração externa
+
+- Contribuidores: fork ou branch + **PR para `prod`**.
+- **Somente Bruno** aprova e faz merge (branch protection no GitHub).
+- Ver [`CONTRIBUTING.md`](../../CONTRIBUTING.md).
 
 ## Regras para o agente
 
-- Base de feature: sempre **`test`**, nunca `main`.
-- PRs sugeridos: primeiro para **`test`**, depois (pós-aprovação test) para **`prod`**.
-- **Cherry-pick** para `prod` só depois de Bruno confirmar que **test** está aprovado e deploy em test ok.
-- **Arquivar** work log só quando **prod** estiver aprovado (fim do ciclo).
-- Não mergear PRs; não fazer deploy (só documentar passos/comandos se Bruno pedir).
+- Base de feature: sempre **`prod`**, nunca `main`/`test`.
+- PR sugerido: destino **`prod`** (um único PR por funcionalidade).
+- Não mergear PRs; não fazer deploy; não cherry-pick entre branches de ambiente.
+- Arquivar work log só quando Bruno confirmar **prod** aprovado.
 
-## Prefixos de branch (inalterados)
+## Prefixos de branch
 
 | Prefixo | Uso |
 |---------|-----|
 | `feature/` | Nova capacidade |
 | `fix/` | Correção |
-| `hotfix/` | Urgência (ainda passa por test → prod salvo exceção explícita do Bruno) |
+| `hotfix/` | Urgência (ainda via PR → `prod`) |
 
 ## CI / GHCR
 
-Até o workflow apontar para `test`/`prod`, tratar **`test`** como branch de integração lógica; alinhar `.github/workflows` quando Bruno pedir — não mudar CI silenciosamente.
+- PR e push em `feature/**`, `fix/**`, `hotfix/**`: testes.
+- Push em **`prod`**: testes + imagens `ghcr.io/.../api` e `.../frontend` (`:latest` + `:${GITHUB_SHA}`).
+- Versionamento por tag Git `v*` (SemVer): ver `CONTRIBUTING.md` / releases no GitHub.

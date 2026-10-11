@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Handoff de cybersecurity
 
-Depois do gate em `pre-push-review.mdc` e antes de pedir commit ou push, o agente principal aciona exatamente um subagente **security-review**.
+Depois do gate em `pre-push-review.mdc` e antes de pedir commit ou de entregar o comando de push ao Bruno, o agente principal aciona exatamente um subagente **security-review**.
 
 Prompt:
 
@@ -16,8 +16,8 @@ Custom Instructions: Atue como especialista em cybersecurity. Revise somente o d
 ```
 
 - Use `uncommitted changes` quando ainda houver mudanças não commitadas.
-- Use `branch changes` quando os commits já estiverem prontos para push. A base é `test`, salvo promoção explícita para `prod`.
+- Use `branch changes` quando os commits já estiverem prontos para push. A base é `prod`.
 
 O retorno fica entre os agentes. O agente principal avalia cada achado, corrige os riscos válidos no escopo e justifica falso positivo. Se a correção mudar o diff de forma material, repete os testes afetados e uma nova revisão de segurança.
 
-Bruno recebe apenas a avaliação consolidada. Não pedir commit ou push com achado de segurança válido ainda sem resolução.
+Bruno recebe apenas a avaliação consolidada. Não pedir commit nem entregar o comando de push com achado de segurança válido ainda sem resolução.

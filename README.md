@@ -83,7 +83,7 @@ The goal is to provide **immediate visibility into sequencing quality (FASTQ)** 
 | Technology | Role |
 |------------|------|
 | **GitHub Actions** | CI (`backend`, `frontend`, `e2e`) |
-| **GHCR** | API + frontend Docker images on merge to `main` |
+| **GHCR** | API + frontend Docker images on push to `prod` |
 | **Docker Compose** | Local Postgres (optional) |
 
 ---
@@ -167,9 +167,9 @@ export NGS_JWT_SECRET="your-32-byte-minimum-secret"
 docker compose up --build -d
 ```
 
-### Pull from GHCR (after merge to `main`)
+### Pull from GHCR (after merge to `prod`)
 
-Images: `ghcr.io/<owner>/genometrics-project/api` and `.../frontend` (`:latest` + `:sha` on each push to `main`).
+Images: `ghcr.io/<owner>/genometrics-project/api` and `.../frontend` (`:latest` + `:sha` on each push to `prod`).
 
 ```bash
 export GENOMETRICS_API_IMAGE=ghcr.io/<owner>/genometrics-project/api:latest
@@ -221,25 +221,24 @@ Optional Postgres smoke test with Docker: `RUN_TESTCONTAINERS=true mvn -Dtest=Po
 
 ---
 
-## 🔀 Git & CI (GitHub Flow)
+## 🔀 Git & CI
 
-**`main`** is the only integration branch — always deployable. All work merges via **Pull Request**.
+**`prod`** is the official branch. PRs target **`prod`**; only the maintainer merges. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ```bash
-git checkout main && git pull
+git fetch origin && git checkout prod && git pull
 git checkout -b feature/<name>
-# ... commits ...
 git push -u origin HEAD
-# Open PR → main · wait for CI · merge · delete branch
+# Open PR → prod · CI · maintainer merges
 ```
 
 | Event | Tests | GHCR image |
 |-------|-------|------------|
-| PR → `main` | ✅ | ❌ |
+| PR → `prod` | ✅ | ❌ |
 | Push to `feature/*`, `fix/*`, `hotfix/*` | ✅ | ❌ |
-| Push to `main` (after merge) | ✅ | ✅ |
+| Push to `prod` | ✅ | ✅ |
 
-Protect **`main`**: require PR, checks `backend` / `frontend` / `e2e`, block force-push.
+Protect **`prod`**: require PR, checks `backend` / `frontend` / `e2e`, restrict merge to maintainer.
 
 AI agents: see [`AGENTS.md`](AGENTS.md) and [`.cursor/rules/`](.cursor/rules/) for project context.
 

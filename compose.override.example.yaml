@@ -1,0 +1,17 @@
+# Copy to compose.override.yaml (gitignored). Demo SQL stays on your machine.
+# Path: ~/projetos/dumps/genometrics/demo-data.sql
+
+services:
+  demo-data:
+    image: postgres:16-alpine
+    container_name: ngs-demo-data
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ngs
+    volumes:
+      - ${GENOMETRICS_DUMP_HOST:-${HOME}/projetos/dumps/genometrics/demo-data.sql}:/seed/demo-data.sql:ro
+    entrypoint:
+      ["psql", "-h", "postgres", "-U", "ngs", "-d", "ngs", "-v", "ON_ERROR_STOP=1", "-f", "/seed/demo-data.sql"]
+    restart: "no"

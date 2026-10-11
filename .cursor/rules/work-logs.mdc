@@ -27,8 +27,8 @@ Enquanto o time trabalha por **funcionalidade** (ainda sem issue formal no GitHu
 
 1. Ao **iniciar** uma funcionalidade nova, criar `.cursor/work/<slug>/LOG.md` (e pasta) se ainda não existir.
 2. **Durante** o trabalho, atualizar `LOG.md` (marcos, não dump enorme).
-3. Quando o ciclo **test → prod** terminar (deploy em **prod** aprovado pelo Bruno — ver `branch-deploy-flow.mdc`), **mover** a pasta inteira para  
-   `.cursor/work/arquivados/<slug>/` (registrar data e commits/cherry-picks no `LOG.md` antes de mover).
+3. Quando merge em **`prod`** e deploy estiverem aprovados (ver `branch-deploy-flow.mdc`), **mover** a pasta para 
+   `.cursor/work/arquivados/<slug>/` (registrar data e commits no `LOG.md` antes de mover).
 4. Não usar **`~/.cursor/plans/`** nem **`.cursor/plans/`** para isso — ver `docs-bruno.mdc`.
 
 ## Git

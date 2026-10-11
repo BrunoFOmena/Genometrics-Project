@@ -46,6 +46,9 @@ scripts/NGS_ANALYTICS.ps1
 # Env / secrets
 .env
 .env.local
+
+compose.override.yaml
+compose.override.yml
 *.pem
 
 # Docker volumes

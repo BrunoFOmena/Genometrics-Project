@@ -1,0 +1,13 @@
+---
+description: Subir a plataforma com Docker (stack completa; dump opcional e local)
+globs:
+alwaysApply: true
+---
+
+# Subida da plataforma (Docker completo)
+
+Na raiz: `docker compose up --build -d` — Postgres + API + UI (http://localhost:4200). Auth padrão desligada.
+
+Dump de demo **não** está no git: `~/projetos/dumps/genometrics/demo-data.sql` + `compose.override.yaml` (modelo: `compose.override.example.yaml`). Recarregar: `./scripts/load-demo-data.sh`.
+
+Cartilha CI local: `./scripts/ci-check.sh` (porta 4300).

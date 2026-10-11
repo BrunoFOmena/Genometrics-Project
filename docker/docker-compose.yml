@@ -1,12 +1,14 @@
 # Full GENOMETRICS stack: Postgres + API + nginx (Angular SPA).
 #
-# Local build (recomendado — na raiz do repo):
+# Local build (na raiz do repo):
 #   docker compose up --build -d
+#
+# Demo SQL is not in git — optional compose.override.yaml (see compose.override.example.yaml)
 #
 # Alternativa:
 #   cd docker && docker compose -f ../compose.yaml up --build -d
 #
-# Pull from GHCR (after merge to main):
+# Pull from GHCR (after merge to prod):
 #   export GENOMETRICS_API_IMAGE=ghcr.io/<owner>/genometrics-project/api:latest
 #   export GENOMETRICS_FRONTEND_IMAGE=ghcr.io/<owner>/genometrics-project/frontend:latest
 #   cd docker && docker compose pull && docker compose up -d

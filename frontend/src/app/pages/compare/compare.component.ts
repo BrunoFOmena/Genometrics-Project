@@ -148,8 +148,8 @@ export class CompareComponent implements OnInit {
           xAxis: { type: 'category', data: categories, axisLabel: { rotate: 30 } },
           yAxis: { type: 'value' },
           series: [
-            { name: res.sampleA.name, type: 'bar', data: valuesA, itemStyle: { borderRadius: [5, 5, 0, 0] } },
-            { name: res.sampleB.name, type: 'bar', data: valuesB, itemStyle: { borderRadius: [5, 5, 0, 0] } }
+            { name: res.sampleA.name, type: 'bar', data: valuesA, itemStyle: { borderRadius: 0 } },
+            { name: res.sampleB.name, type: 'bar', data: valuesB, itemStyle: { borderRadius: 0 } }
           ]
         };
       },
