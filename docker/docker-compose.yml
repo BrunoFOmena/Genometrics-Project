@@ -1,7 +1,11 @@
 # Full GENOMETRICS stack: Postgres + API + nginx (Angular SPA).
 #
 # Local build (recomendado — na raiz do repo):
-#   docker compose up --build -d
+#   docker compose --profile demo up --build -d
+#
+# O serviço demo-data (profile demo) carrega docker/seed/demo-data.sql
+# depois que a API termina o Flyway. Pode repetir a qualquer momento:
+#   ./scripts/load-demo-data.sh
 #
 # Alternativa:
 #   cd docker && docker compose -f ../compose.yaml up --build -d
@@ -80,6 +84,20 @@ services:
       timeout: 5s
       retries: 6
       start_period: 10s
+
+  demo-data:
+    profiles: ["demo"]
+    image: postgres:16-alpine
+    container_name: ngs-demo-data
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ngs
+    volumes:
+      - ./seed/demo-data.sql:/seed/demo-data.sql:ro
+    entrypoint: ["psql", "-h", "postgres", "-U", "ngs", "-d", "ngs", "-v", "ON_ERROR_STOP=1", "-f", "/seed/demo-data.sql"]
+    restart: "no"
 
 volumes:
   postgres_data:

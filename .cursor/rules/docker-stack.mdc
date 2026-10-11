@@ -1,0 +1,58 @@
+---
+description: Subir a plataforma sempre com Docker completo e o dump de demonstração
+alwaysApply: true
+---
+
+# Subida da plataforma (Docker completo + dump)
+
+Quando Bruno pedir para **subir**, **rodar** ou **avaliar** a aplicação, usar a stack Docker inteira. Não substituir isso por `ng serve` nem por `mvn spring-boot:run`.
+
+A cartilha de CI (`./scripts/ci-check.sh`) continua separada: ela sobe só o Angular na porta 4300. Não usar essa cartilha como forma de abrir a plataforma.
+
+## Comando
+
+Na raiz do repositório:
+
+```bash
+docker compose --profile demo up --build -d
+```
+
+Isso sobe, via `compose.yaml` → `docker/docker-compose.yml`:
+
+| Serviço | Container | Porta |
+|---------|-----------|-------|
+| Postgres 16 | `ngs-postgres` | 5432 |
+| API | `ngs-api` | 8080 |
+| Frontend | `ngs-frontend` | 4200 |
+| Dump | `ngs-demo-data` | — (roda o SQL e encerra) |
+
+- UI: http://localhost:4200
+- API: http://localhost:8080 (Swagger `/swagger-ui.html`)
+- Auth no Docker: `NGS_AUTH_DISABLED` padrão `true`
+- Se a porta 4200 ou 8080 já estiver ocupada por um processo local, parar esse processo antes do compose. Não deixar dois frontends ao mesmo tempo.
+
+## Dump padrão de teste
+
+Arquivo canônico: **`docker/seed/demo-data.sql`**.
+
+O serviço `demo-data` fica no profile `demo`. O comando acima sobe esse profile na avaliação local e aplica o arquivo depois que a API fica healthy (Flyway já rodou). Sem `--profile demo`, o compose não cria os usuários de demonstração. É idempotente: repetir troca só as linhas de demonstração.
+
+Conferir:
+
+```bash
+docker ps -a --filter name=ngs-demo-data --format '{{.Status}}'
+```
+
+Exit 0. Se falhou ou o arquivo não entrou:
+
+```bash
+./scripts/load-demo-data.sh
+```
+
+O conjunto esperado para avaliação:
+
+- 4 projetos: WES breast panel, RNA-seq pilot, Panel design draft, GIAB germline calls
+- Análises DONE, FAILED, QUEUED e RUNNING
+- Dono: `dev@genometrics.local` (com auth desligada a API entra como esse usuário)
+
+Se `docker/seed/demo-data.sql` não existir, recriar esse arquivo antes do `docker compose up` e manter o serviço `demo-data` apontando para ele. Não subir a plataforma vazia para teste ou avaliação.

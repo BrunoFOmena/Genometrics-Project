@@ -1,10 +1,17 @@
 import { definePreset } from '@primeng/themes';
 import Aura from '@primeng/themes/aura';
 
-// GENOMETRICS brand preset: deep green primary, warm orange accents,
-// soft radii matching the existing --radius token family.
+// GENOMETRICS brand preset: deep green primary, square corners.
 export const GenometricsPreset = definePreset(Aura, {
   semantic: {
+    borderRadius: {
+      none: '0',
+      xs: '0',
+      sm: '0',
+      md: '0',
+      lg: '0',
+      xl: '0'
+    },
     primary: {
       50: '#e8f5ef',
       100: '#cde9dd',
@@ -46,7 +53,7 @@ export const GenometricsPreset = definePreset(Aura, {
   components: {
     card: {
       root: {
-        borderRadius: '16px',
+        borderRadius: '0',
         shadow: '0 8px 24px rgba(19, 37, 28, 0.07)'
       }
     }
