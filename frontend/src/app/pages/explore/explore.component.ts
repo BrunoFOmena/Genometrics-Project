@@ -94,14 +94,14 @@ import {
   styles: [`
     .explore-grid { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(320px, 2fr); gap: 1rem; margin-bottom: 1rem; }
     .field-label { display: block; margin: .85rem 0 .35rem; font-weight: 600; }
-    .native-select, textarea { width: 100%; padding: .65rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: inherit; }
+    .native-select, textarea { width: 100%; padding: .65rem; border: 1px solid var(--border); border-radius: 0; background: var(--surface); color: inherit; }
     .native-select.multi { min-height: 12rem; }
-    .primary-btn { margin-top: 1rem; padding: .65rem 1rem; border: 0; border-radius: 6px; cursor: pointer; }
+    .primary-btn { margin-top: 1rem; padding: .65rem 1rem; border: 0; border-radius: 0; cursor: pointer; }
     .primary-btn:disabled { opacity: .55; cursor: default; }
     .analyst-answer { margin-top: 1rem; padding: .8rem; border-left: 3px solid var(--primary); white-space: pre-wrap; }
     .result-bars { display: grid; gap: .45rem; margin: 1rem 0 1.5rem; }
     .result-bar-row { display: grid; grid-template-columns: minmax(120px, 1fr) 3fr 80px; gap: .75rem; align-items: center; }
-    .result-bar-track { height: .65rem; border-radius: 1rem; overflow: hidden; background: rgba(128, 128, 128, .18); }
+    .result-bar-track { height: .65rem; border-radius: 0; overflow: hidden; background: rgba(128, 128, 128, .18); }
     .result-bar { height: 100%; min-width: 2px; background: var(--primary-color); }
     .error-text { color: #b42318; }
     @media (max-width: 850px) { .explore-grid { grid-template-columns: 1fr; } }

@@ -93,7 +93,7 @@ Rules: `.cursor/rules/branch-deploy-flow.mdc`, commit/PR drafts: `git-release-fl
 ### Before finishing
 
 1. **Delete dead code** you replaced.
-2. **Do not commit or push** unless the user explicitly asks.
+2. **Do not commit** unless Bruno explicitly says yes. **Do not push** — Bruno runs `git push` himself.
 3. **Do not edit README/AGENTS** unless the task requires it.
 4. Summarize what changed, how to test, and any flags (auth, profiles).
 

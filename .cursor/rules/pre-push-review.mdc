@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Gate local de revisão
 
-Antes de pedir autorização para commit ou push:
+Antes de pedir autorização para commit, e antes de entregar ao Bruno o comando de push (o agente não faz push):
 
 1. Rodar os testes aplicáveis conforme `ci-verification.mdc`.
 2. O agente principal deve acionar exatamente um subagente **Bugbot** e enviar a ele o contexto da tarefa e o diff para revisar:
@@ -18,6 +18,6 @@ Antes de pedir autorização para commit ou push:
    - não delegar ao subagente a decisão final.
 5. Após correções, rodar novamente os testes afetados e acionar uma nova revisão se o diff tiver mudado materialmente.
 6. Acionar em seguida o handoff de cybersecurity definido em **`security-review-handoff.mdc`**. O revisor também devolve o feedback ao agente principal.
-7. Apresentar ao Bruno somente a avaliação consolidada do agente principal e não pedir commit ou push enquanto houver achado válido bloqueante sem resolução.
+7. Apresentar ao Bruno somente a avaliação consolidada do agente principal e não pedir commit nem entregar o comando de push enquanto houver achado válido bloqueante sem resolução.
 
 A revisão é local: o Bugbot e o revisor de cybersecurity não devem interagir diretamente com Bruno nem comentar, revisar, publicar ou alterar nada no GitHub. Se Bruno alterar o diff depois da revisão, o gate deve ser executado novamente.

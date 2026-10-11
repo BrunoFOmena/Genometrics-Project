@@ -7,9 +7,6 @@ import {
   LucideDna,
   LucideLayoutDashboard,
   LucideFolderKanban,
-  LucideGitCompareArrows,
-  LucideHistory,
-  LucideSearch,
   LucideMenu,
   LucideX
 } from '@lucide/angular';
@@ -21,14 +18,14 @@ import { HelpHintComponent } from './core/help-hint.component';
   standalone: true,
   imports: [
     CommonModule, RouterOutlet, RouterLink, RouterLinkActive, HelpHintComponent, ToastModule,
-    LucideDna, LucideLayoutDashboard, LucideFolderKanban, LucideGitCompareArrows, LucideHistory, LucideSearch, LucideMenu, LucideX
+    LucideDna, LucideLayoutDashboard, LucideFolderKanban, LucideMenu, LucideX
   ],
   template: `
     <p-toast position="bottom-right" />
     <a class="skip-link" href="#main-content">Skip to main content</a>
 
-    <div class="shell" [class.auth-shell]="authRoute">
-      <header class="topbar" *ngIf="!authRoute">
+    <div class="shell" [class.auth-shell]="authRoute" [class.public-shell]="publicRoute">
+      <header class="topbar" *ngIf="!authRoute && !publicRoute">
         <button
           type="button"
           class="menu-btn"
@@ -61,7 +58,7 @@ import { HelpHintComponent } from './core/help-hint.component';
         id="primary-navigation"
         class="nav"
         [class.open]="menuOpen"
-        *ngIf="!authRoute"
+        *ngIf="!authRoute && !publicRoute"
         aria-label="Primary navigation"
       >
         <div class="sidebar-head">
@@ -84,37 +81,16 @@ import { HelpHintComponent } from './core/help-hint.component';
           <div class="nav-item">
             <a routerLink="/overview" routerLinkActive="active" (click)="closeNavigation()">
               <svg lucideLayoutDashboard size="18"></svg>
-              Overview
+              Panel
             </a>
-            <app-help-hint text="Dashboard with project, sample, and analysis counts plus recent jobs." />
-          </div>
-          <div class="nav-item">
-            <a routerLink="/explore" routerLinkActive="active" (click)="closeNavigation()">
-              <svg lucideSearch size="18"></svg>
-              Explore
-            </a>
-            <app-help-hint text="Query catalogued metrics and ask the grounded local analyst." />
+            <app-help-hint text="Named charts for the FASTQ and VCF metrics already calculated, plus job status." />
           </div>
           <div class="nav-item">
             <a routerLink="/projects" routerLinkActive="active" (click)="closeNavigation()">
               <svg lucideFolderKanban size="18"></svg>
               Projects
             </a>
-            <app-help-hint text="Create and open projects, then add samples and upload sequencing files." />
-          </div>
-          <div class="nav-item">
-            <a routerLink="/compare" routerLinkActive="active" (click)="closeNavigation()">
-              <svg lucideGitCompareArrows size="18"></svg>
-              Compare
-            </a>
-            <app-help-hint text="Compare FASTQ/VCF metrics between two samples side by side." />
-          </div>
-          <div class="nav-item">
-            <a routerLink="/history" routerLinkActive="active" (click)="closeNavigation()">
-              <svg lucideHistory size="18"></svg>
-              History
-            </a>
-            <app-help-hint text="Full log of all analysis jobs and their status." />
+            <app-help-hint text="Create projects, add samples, and upload FASTQ or VCF files." />
           </div>
         </nav>
 
@@ -139,17 +115,25 @@ export class AppComponent {
   readonly authDisabled = environment.authDisabled;
 
   authRoute = false;
+  publicRoute = false;
   menuOpen = false;
 
   private readonly router = inject(Router);
 
   constructor() {
+    this.syncShell(this.router.url);
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe(e => {
-        this.authRoute = /^\/(login|register)/.test(e.urlAfterRedirects);
+        this.syncShell(e.urlAfterRedirects);
         this.closeNavigation();
       });
+  }
+
+  private syncShell(url: string): void {
+    const path = url.split('?')[0];
+    this.authRoute = /^\/(login|register)/.test(path);
+    this.publicRoute = path === '/' || path === '';
   }
 
   toggleNavigation(): void {

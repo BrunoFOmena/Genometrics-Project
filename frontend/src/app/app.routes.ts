@@ -9,9 +9,10 @@ import { OverviewComponent } from './pages/overview/overview.component';
 import { CompareComponent } from './pages/compare/compare.component';
 import { HistoryComponent } from './pages/history/history.component';
 import { ExploreComponent } from './pages/explore/explore.component';
+import { LandingComponent } from './pages/landing/landing.component';
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'overview' },
+  { path: '', pathMatch: 'full', component: LandingComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'overview', component: OverviewComponent, canActivate: [authGuard] },
