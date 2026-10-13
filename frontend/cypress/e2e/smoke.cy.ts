@@ -4,6 +4,7 @@ describe('GENOMETRICS smoke', () => {
     cy.contains('GENOMETRICS');
     cy.contains('by Bruno Omena');
     cy.contains('Projects');
+    cy.contains('a', 'Explore');
   });
 
   it('opens Explore and runs a grounded analytics query', () => {

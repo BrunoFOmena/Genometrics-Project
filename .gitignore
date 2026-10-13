@@ -29,7 +29,8 @@ frontend/ng-serve-ci.log
 Docs_Bruno/*
 !Docs_Bruno/README.md
 plan.md
-docs/
+docs/*
+!docs/mcp.md
 AGENT.md
 .cursor/plans/
 .cursor/work/*

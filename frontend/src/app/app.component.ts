@@ -7,6 +7,7 @@ import {
   LucideDna,
   LucideLayoutDashboard,
   LucideFolderKanban,
+  LucideSearch,
   LucideMenu,
   LucideX
 } from '@lucide/angular';
@@ -18,7 +19,7 @@ import { HelpHintComponent } from './core/help-hint.component';
   standalone: true,
   imports: [
     CommonModule, RouterOutlet, RouterLink, RouterLinkActive, HelpHintComponent, ToastModule,
-    LucideDna, LucideLayoutDashboard, LucideFolderKanban, LucideMenu, LucideX
+    LucideDna, LucideLayoutDashboard, LucideFolderKanban, LucideSearch, LucideMenu, LucideX
   ],
   template: `
     <p-toast position="bottom-right" />
@@ -84,6 +85,13 @@ import { HelpHintComponent } from './core/help-hint.component';
               Panel
             </a>
             <app-help-hint text="Named charts for the FASTQ and VCF metrics already calculated, plus job status." />
+          </div>
+          <div class="nav-item">
+            <a routerLink="/explore" routerLinkActive="active" (click)="closeNavigation()">
+              <svg lucideSearch size="18"></svg>
+              Explore
+            </a>
+            <app-help-hint text="Query catalogued metrics and ask questions that cite those facts." />
           </div>
           <div class="nav-item">
             <a routerLink="/projects" routerLinkActive="active" (click)="closeNavigation()">

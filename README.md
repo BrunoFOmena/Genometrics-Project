@@ -1,259 +1,142 @@
-# 🧬 GENOMETRICS — NGS QC & Metrics Platform
+# GENOMETRICS
 
-**Local-first platform for quality control and variant metrics on FASTQ/VCF files.**
+**Local-first QC for FASTQ and VCF, with an analyst that only answers from metrics already calculated.**
 
-Built by **Bruno Omena** · modular monolith designed to run on a **16 GB RAM Windows laptop**.
+[MIT License](LICENSE) · Built by **Bruno Omena**
+
+Sequencing files stay on your machine. The analyst does not invent a Phred score, a variant count, or a depth: it queries catalogued facts, cites them, and — if you run [Ollama](https://ollama.com) — phrases the answer from that evidence. This is file QC and metric review, not an alignment or variant-calling pipeline. It is a research and quality-control tool, not a clinical diagnostic device.
 
 ![Status](https://img.shields.io/badge/Status-Active-success)
+![License](https://img.shields.io/badge/License-MIT-blue)
 ![Angular](https://img.shields.io/badge/Angular-19-DD0031?logo=angular&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3-6DB33F?logo=springboot&logoColor=white)
-![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
-![Database](https://img.shields.io/badge/Database-H2%20%7C%20PostgreSQL-336791?logo=postgresql&logoColor=white)
 
----
+## Why it matters
 
-## 📖 About the Project
+| Promise | How |
+|---------|-----|
+| No invented metrics | Questions run through the same query API as the charts |
+| Explainable QC | Every numeric claim can point at an analysis, sample, metric, value, and unit |
+| Sensitive data stays local | Parsers, Postgres, and the optional model run on your computer |
 
-**GENOMETRICS** is a **full-stack** application focused on **Next-Generation Sequencing (NGS)**. Unlike heavy pipelines that require clusters or cloud infrastructure, this project delivers a **complete analytics dashboard** running locally — with streaming Java parsers, in-process async jobs, and on-disk file storage.
+## Quick start
 
-The goal is to provide **immediate visibility into sequencing quality (FASTQ)** and **variant metrics (VCF)**, with upload, automatic analysis, interactive charts, and report export — all accessible through a modern SPA.
-
----
-
-## ✨ Features
-
-### 📁 Projects & Samples
-- Create **projects** and **samples** organized by workspace.
-- Upload **FASTQ** (single and paired-end) and **VCF** files (up to 2 GB).
-- Unified file and analysis list with real-time status (`QUEUED` → `RUNNING` → `DONE`).
-
-### 🔬 FASTQ QC
-- Quality metrics: **Phred**, **GC content**, **duplication**, **N-content**.
-- **Adapter** detection and **over-represented** sequences (with BLAST link).
-- **Paired-end** support with automatic mate detection (`R1`/`R2`).
-- **PASS / WARN / FAIL** evaluation with actionable recommendations.
-- 2D heatmaps, position charts, and **Charts · Detailed · Overrepresented** tabs.
-
-### 🧪 VCF Metrics
-- Variant counts by type, quality, and chromosomal distribution.
-- ECharts visualizations integrated into the sample panel.
-
-### 📊 Dashboard & Compare
-- **Overview** with animated KPIs (GSAP): projects, samples, queued and completed analyses.
-- **Compare** side-by-side across samples/analyses.
-- **History** with recent jobs and quick navigation.
-
-### 📄 Reports & Export
-- Download metrics as **JSON**, **CSV**, and **PDF** (FASTQ QC report).
-- Swagger UI for REST API exploration.
-
-### 🔐 Authentication *(optional in dev)*
-- Login/register with JWT (Spring Security).
-- **Auth disabled by default in dev** — open the UI and start immediately.
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-| Technology | Role |
-|------------|------|
-| **Angular 19** | Standalone SPA, routing, animations |
-| **PrimeNG** | Cards, tabs, tables, chips, progress |
-| **Apache ECharts** | QC and variant charts |
-| **GSAP** | Animated counters on Overview |
-| **Lucide Angular** | Icons |
-| **Tailwind CSS** | Layout utilities |
-| **TypeScript** | Static typing |
-| **Cypress** | E2E tests |
-
-### Backend
-| Technology | Role |
-|------------|------|
-| **Java 21** | Runtime |
-| **Spring Boot 3.3** | REST API, security, JPA |
-| **FastqParser / VcfParser** | In-process streaming parsers |
-| **SpringDoc OpenAPI** | Swagger documentation |
-| **JWT (JJWT)** | Authentication |
-| **H2** | Dev/test database |
-| **PostgreSQL** | Prod/staging database |
-| **Testcontainers** | Optional Postgres smoke tests |
-
-### DevOps
-| Technology | Role |
-|------------|------|
-| **GitHub Actions** | CI (`backend`, `frontend`, `e2e`) |
-| **GHCR** | API + frontend Docker images on push to `prod` |
-| **Docker Compose** | Local Postgres (optional) |
-
----
-
-## 🚀 How to Run
-
-### Prerequisites
-
-- **JDK 21**
-- **Maven 3.9+**
-- **Node.js 22+** and npm
-- *(Optional)* Docker — only for local Postgres in prod/staging
-
-### 1. Clone the repository
+**Prerequisite:** [Docker](https://docs.docker.com/get-docker/) with Compose v2.
 
 ```bash
 git clone https://github.com/BrunoFOmena/Genometrics-Project.git
 cd Genometrics-Project
+docker compose up --build -d
 ```
 
-### 2. Start the API (H2 — default)
+Open http://localhost:4200 (no login). Then:
 
-```bash
-cd backend
-mvn spring-boot:run
-```
-
-No Docker or Postgres required. Profile `dev-h2` is the default.
+1. Create a project and a sample.
+2. Upload [`datasets/sample.fastq`](datasets/sample.fastq) or [`datasets/sample.vcf`](datasets/sample.vcf).
+3. Open **Panel** when the job is `DONE`.
+4. Open **Explore**, run a query, and ask a question. The answer cites the stored facts.
 
 | Service | URL |
 |---------|-----|
+| App | http://localhost:4200 |
+| API / Swagger | http://localhost:8080/swagger-ui.html |
+| MCP (direct; nginx does not proxy it) | http://localhost:8080/mcp |
+
+The first image build can take several minutes. Auth is off by default (`NGS_AUTH_DISABLED=true`). Published ports bind to `127.0.0.1` only.
+
+### Optional local model
+
+Docker turns the analyst on and points it at Ollama on the host. Without Ollama, Explore still returns the catalogued facts.
+
+```bash
+ollama serve
+ollama pull llama3.2
+```
+
+Override with `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, or `NGS_AI_ENABLED=false` (see [`.env.example`](.env.example)).
+
+## What you can do
+
+### Explore and Analyst
+
+**Explore** queries the metric catalog (quality, GC, depth, variant counts, and the rest already computed for a file). **Analyst** answers in that same context. With Ollama it writes a short explanation. Without it, or if the model is down, the reply is the grounded fact list — it does not fill in missing numbers.
+
+### Panel, projects, and files
+
+- Projects and samples, FASTQ (including paired-end) and VCF uploads.
+- Streaming parsers, async jobs (`QUEUED` → `RUNNING` → `DONE`), PASS / WARN / FAIL on FASTQ QC.
+- Named charts on **Panel**. JSON, CSV, and PDF export for FASTQ QC.
+
+Compare and History remain available as routes. They are not the main workspace.
+
+### Agents (MCP)
+
+The API exposes the same read tools over HTTP JSON-RPC at `POST /mcp`. It is not a stdio MCP server. Setup for Cursor and Claude Desktop: [`docs/mcp.md`](docs/mcp.md).
+
+Tools: `list_metrics`, `query_metrics`, `compare_analyses`, `explain_qc`, `get_analysis_context`.
+
+### Evals
+
+[`datasets/evals/grounded-questions.json`](datasets/evals/grounded-questions.json) and `GroundedAnalystEvalTest` check that missing facts are not invented and that answers cite the analysis behind a number.
+
+## Stack
+
+| Area | Technology |
+|------|------------|
+| UI | Angular 19, PrimeNG, ECharts |
+| API | Java 21, Spring Boot 3 |
+| Data | H2 in local dev, PostgreSQL in Docker |
+| Optional model | Ollama (`llama3.2` by default) |
+| CI | GitHub Actions; images on push to `prod` |
+
+## Develop on the host
+
+JDK 21, Maven 3.9+, Node 22. Host runs keep `NGS_AI_ENABLED` off unless you set it.
+
+```bash
+cd backend && mvn spring-boot:run
+cd frontend && npm install && npm start
+```
+
+| Service | URL |
+|---------|-----|
+| UI | http://localhost:4200 |
 | API | http://localhost:8080 |
-| Swagger | http://localhost:8080/swagger-ui.html |
 
-### 3. Start the UI
-
-```bash
-cd frontend
-npm install
-npm start
-```
-
-| Service | URL |
-|---------|-----|
-| Dashboard | http://localhost:4200 |
-
-### 4. Try the fixtures
-
-1. Open the UI (no login required in dev).
-2. Create a **project** + **sample**.
-3. Upload [`datasets/sample.fastq`](datasets/sample.fastq) and [`datasets/sample.vcf`](datasets/sample.vcf) — or paired-end: [`sample_R1.fastq`](datasets/sample_R1.fastq) + [`sample_R2.fastq`](datasets/sample_R2.fastq).
-4. Wait for status `DONE` and explore charts and reports.
-
----
-
-## 🐘 Full stack with Docker Compose
-
-Runs **Postgres + API + nginx (Angular UI)**. The UI is served on port **4200** and proxies `/api` to the API container.
-
-### Local build
-
-Na **raiz** do repositório (Postgres + API + UI com um comando):
+Postgres only, while the API runs on the host:
 
 ```bash
-docker compose up --build -d
-```
-
-| Service | URL |
-|---------|-----|
-| Dashboard | http://localhost:4200 |
-| API | http://localhost:8080 (também via http://localhost:4200/api no nginx) |
-| Swagger | http://localhost:8080/swagger-ui.html |
-| PostgreSQL | localhost:5432 (`ngs` / `ngs`) |
-
-Por padrão `NGS_AUTH_DISABLED=true` (sem login, igual ao dev local). Copie `.env.example` → `.env` para ajustar JWT e auth.
-
-Set a strong JWT secret before any shared/staging deploy:
-
-```bash
-export NGS_JWT_SECRET="your-32-byte-minimum-secret"
-docker compose up --build -d
-```
-
-### Pull from GHCR (after merge to `prod`)
-
-Images: `ghcr.io/<owner>/genometrics-project/api` and `.../frontend` (`:latest` + `:sha` on each push to `prod`).
-
-```bash
-export GENOMETRICS_API_IMAGE=ghcr.io/<owner>/genometrics-project/api:latest
-export GENOMETRICS_FRONTEND_IMAGE=ghcr.io/<owner>/genometrics-project/frontend:latest
-export NGS_JWT_SECRET="your-32-byte-minimum-secret"
-cd docker
-docker compose pull
-docker compose up -d
-```
-
-Environment variables for cloud/staging (`prod` profile inside the API container):
-
-- `SPRING_DATASOURCE_URL` (default in compose: `jdbc:postgresql://postgres:5432/ngs`)
-- `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD`
-- `NGS_JWT_SECRET` (required for production auth)
-- `NGS_STORAGE_LOCAL_DIR` (default in compose: `/data/uploads`, persisted in volume `uploads_data`)
-
-| Service | User | Password |
-|---------|------|----------|
-| PostgreSQL (Compose) | `ngs` | `ngs` |
-
-### Postgres only (optional)
-
-To run only Postgres while developing the API/UI on the host:
-
-```bash
-cd docker
 docker compose up -d postgres
-cd ../backend
-mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
+cd backend && mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
 ```
 
----
+For a shared deploy, set a real `NGS_JWT_SECRET` (32+ bytes) and `NGS_AUTH_DISABLED=false`.
 
-## 🧪 Tests
+Images after a merge to `prod`: `ghcr.io/<owner>/genometrics-project/api` and `.../frontend` (`:latest` and `:${GITHUB_SHA}`).
+
+## Tests
 
 ```bash
-# Backend (in-memory H2)
-cd backend && mvn test
-
-# Frontend (headless)
-cd frontend && npm test -- --watch=false --browsers=ChromeHeadless
-
-# E2E (API + UI running)
-cd frontend && npm run e2e
+./scripts/ci-check.sh
 ```
 
-Optional Postgres smoke test with Docker: `RUN_TESTCONTAINERS=true mvn -Dtest=PostgresContainerIT test`
+Or separately: `cd backend && mvn test`, `cd frontend && npm test -- --watch=false --browsers=ChromeHeadless`, `cd frontend && npm run e2e`.
 
----
+## Git
 
-## 🔀 Git & CI
-
-**`prod`** is the official branch. PRs target **`prod`**; only the maintainer merges. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+**`prod`** is the official branch. Pull requests target `prod`; only the maintainer merges. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ```bash
 git fetch origin && git checkout prod && git pull
 git checkout -b feature/<name>
-git push -u origin HEAD
-# Open PR → prod · CI · maintainer merges
 ```
 
 | Event | Tests | GHCR image |
 |-------|-------|------------|
-| PR → `prod` | ✅ | ❌ |
-| Push to `feature/*`, `fix/*`, `hotfix/*` | ✅ | ❌ |
-| Push to `prod` | ✅ | ✅ |
+| PR → `prod` | yes | no |
+| Push to `feature/*`, `fix/*`, `hotfix/*` | yes | no |
+| Push to `prod` | yes | yes |
 
-Protect **`prod`**: require PR, checks `backend` / `frontend` / `e2e`, restrict merge to maintainer.
+## Hardware
 
-AI agents: see [`AGENTS.md`](AGENTS.md) and [`.cursor/rules/`](.cursor/rules/) for project context.
-
----
-
-## 💻 Hardware Notes
-
-| Resource | Guidance |
-|----------|----------|
-| **RAM** | API heap ~1 GB; Postgres Compose ≤ 512 MB |
-| **Disk** | Use fixtures in `datasets/`; prune `data/uploads` periodically |
-| **GPU** | Not used |
-
----
-
-<p align="center">
-  <sub>GENOMETRICS · Bruno Omena · Local-first NGS analytics</sub>
-</p>
+API heap about 1 GB. Postgres in Compose is limited to 512 MB. GPU is not required; Ollama can use a CPU model.
