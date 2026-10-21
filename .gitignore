@@ -32,9 +32,8 @@ plan.md
 docs/*
 !docs/mcp.md
 AGENT.md
-.cursor/plans/
-.cursor/work/*
-!.cursor/work/README.md
+# Cursor IDE / agent rules and work logs (local only — not published)
+.cursor/
 
 # Data & uploads
 data/

@@ -15,8 +15,7 @@ Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 | Business logic | `backend/.../fastq/FastqParser.java`, `vcf/VcfParser.java`, `analytics/AnalysisService.java` | Streaming parsers + async analysis |
 | Domain | `backend/.../domain/` | JPA entities and repositories |
 | Fixtures | `datasets/` | Tiny FASTQ/VCF/FASTA samples for manual tests |
-| Local notes (Bruno) | `Docs_Bruno/` | Plans, practices — **not** `.cursor/plans/` (see `docs-bruno.mdc`) |
-| Feature work logs | `.cursor/work/` | Per-feature `LOG.md` / `PR.md`; archive under `arquivados/` (see `work-logs.mdc`, `git-release-flow.mdc`) |
+| Local notes (maintainer) | `Docs_Bruno/` | Not in git (personal plans and checklists) |
 | CI | `.github/workflows/ci.yml` | Tests on PR/push; GHCR image on push to `prod` |
 
 ### Run locally
@@ -41,13 +40,13 @@ Official branch: **`prod`**. Do not use legacy **`main`** or **`test`**.
 feature/*  fix/*  hotfix/*  ──► PR (Bruno merges) ──► prod
 ```
 
-Rules: `.cursor/rules/branch-deploy-flow.mdc`, `CONTRIBUTING.md`, commit/PR drafts: `git-release-flow.mdc`.
+Rules: `CONTRIBUTING.md` and branch **`prod`** for integration.
 
 ### Workflow
 
 1. Branch from **`prod`**: `git fetch origin && git checkout prod && git pull && git checkout -b feature/<short-name>`
 2. PR **`feature/…` → `prod`**. CI green; Bruno merges.
-3. Archive work log under `.cursor/work/arquivados/` when **prod** is approved.
+3. Merge to **`prod`** when CI is green and the maintainer approves.
 
 ### Do not
 
@@ -129,16 +128,6 @@ Rules: `.cursor/rules/branch-deploy-flow.mdc`, `CONTRIBUTING.md`, commit/PR draf
 
 ---
 
-## Cursor harness
+## AI assistants
 
-Rules and subagents live in `.cursor/` (versioned in git).
-
-| Layer | Path | When it applies |
-|-------|------|-----------------|
-| Always-on | `.cursor/rules/genometrics-core.mdc` | Every agent session |
-| Backend | `.cursor/rules/backend.mdc` | Editing `backend/**` |
-| Frontend | `.cursor/rules/frontend.mdc` | Editing `frontend/**` |
-| Verifier | `.cursor/agents/verifier.md` | Invoke `/verifier` after implementation |
-| Debugger | `.cursor/agents/debugger.md` | Invoke `/debugger` on errors or test failures |
-
-Specialize by **function** (verify, debug), not by architecture layer. Backend and frontend conventions are rules with globs — do not create separate back/front/QA agents.
+Follow `CONTRIBUTING.md` for branches and tests. Match existing code style in the nearest file; English for UI strings and API messages.
