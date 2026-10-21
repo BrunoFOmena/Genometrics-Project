@@ -54,10 +54,15 @@ services:
       NGS_STORAGE_LOCAL_DIR: /data/uploads
       NGS_JWT_SECRET: ${NGS_JWT_SECRET:-change-me-ngs-analytics-platform-jwt-secret-key-32bytes-min}
       NGS_AUTH_DISABLED: ${NGS_AUTH_DISABLED:-true}
+      NGS_AI_ENABLED: ${NGS_AI_ENABLED:-true}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - uploads_data:/data/uploads
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
       interval: 10s
@@ -75,7 +80,7 @@ services:
       api:
         condition: service_healthy
     ports:
-      - "4200:80"
+      - "127.0.0.1:4200:80"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:80/ >/dev/null || exit 1"]
       interval: 10s

@@ -29,11 +29,11 @@ frontend/ng-serve-ci.log
 Docs_Bruno/*
 !Docs_Bruno/README.md
 plan.md
-docs/
+docs/*
+!docs/mcp.md
 AGENT.md
-.cursor/plans/
-.cursor/work/*
-!.cursor/work/README.md
+# Cursor IDE / agent rules and work logs (local only — not published)
+.cursor/
 
 # Data & uploads
 data/
