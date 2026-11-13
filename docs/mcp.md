@@ -8,7 +8,7 @@ POST http://localhost:8080/mcp
 
 This is not a stdio MCP server: clients need an HTTP MCP transport (or a small stdio bridge) pointed at that URL. With the default setup, authentication is off and the API uses the built-in dev user. If you set `NGS_AUTH_DISABLED=false`, send `Authorization: Bearer <jwt>` (see the README for how to get a token).
 
-Tools are read-only: they query stored facts and do not upload files or start analyses. Load data through the REST API first (README, "Load data").
+Tools query stored facts; they do not upload files or start analyses (`explain_qc` only records the question and answer in its history). Load data through the REST API first (README, "Load data").
 
 ## Handshake
 
@@ -36,7 +36,9 @@ curl -s http://localhost:8080/mcp \
 | `explain_qc` | `question` | Grounded answer plus citations. Optional: `projectId`, `sampleIds`, `metrics` |
 | `get_analysis_context` | `analysisId` | One analysis and its metric facts |
 
-`explain_qc` uses [Ollama](https://ollama.com) only when `NGS_AI_ENABLED=true` and the model responds. Otherwise the text is the catalogued facts. Missing facts are reported as unavailable; the tool does not invent a value.
+`explain_qc` uses [Ollama](https://ollama.com) only when `NGS_AI_ENABLED=true` (off by default) and the model responds within the timeout. Otherwise the text is the catalogued facts. Missing facts are reported as unavailable; the tool does not invent a value. Treat model-phrased answers as untrusted text: check the cited facts.
+
+With Docker, the API reaches Ollama on the host through `host.docker.internal`. Ollama listens on `127.0.0.1` by default, which the container cannot reach. Bind it to the Docker bridge address (for example `OLLAMA_HOST=172.17.0.1`) or firewall port 11434 to the Docker subnet; do **not** expose Ollama on `0.0.0.0` on untrusted networks, since its API has no authentication.
 
 ## Call a tool
 
@@ -101,16 +103,18 @@ Add an HTTP MCP server (Cursor Settings → MCP):
 }
 ```
 
+With auth enabled, add `"headers": {"Authorization": "Bearer <jwt>"}` next to `url`.
+
 ## Clients that only support stdio
 
-Use an HTTP-to-stdio bridge, for example [`mcp-remote`](https://www.npmjs.com/package/mcp-remote), only if you trust that package:
+Claude Code and Cursor speak HTTP directly; a bridge is only needed for stdio-only clients. Use one, for example [`mcp-remote`](https://www.npmjs.com/package/mcp-remote), only if you trust that package, and pin a reviewed version:
 
 ```json
 {
   "mcpServers": {
     "genometrics": {
       "command": "npx",
-      "args": ["-y", "mcp-remote", "http://localhost:8080/mcp"]
+      "args": ["-y", "mcp-remote@0.15.2", "http://localhost:8080/mcp"]
     }
   }
 }

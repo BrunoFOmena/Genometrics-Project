@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ngs.analytics.analytics.AnalyticsDtos;
 import com.ngs.analytics.analytics.AnalyticsQueryService;
 import com.ngs.analytics.analytics.MetricCatalog;
+import com.ngs.analytics.common.ApiException;
 import com.ngs.analytics.domain.AiInteractionRepository;
 import com.ngs.analytics.domain.UserAccount;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 import java.util.Map;
@@ -64,6 +66,35 @@ class GroundedAnalystEvalTest {
         );
 
         assertThat(response.answer()).contains("31.5").doesNotContain("variant_count");
+        assertThat(response.citations()).singleElement()
+                .satisfies(citation -> assertThat(citation.analysisId()).isEqualTo(analysisId));
+    }
+
+    @Test
+    void fallsBackToGroundedFactsWhenLocalModelIsUnavailable() {
+        UserAccount owner = owner();
+        UUID analysisId = UUID.randomUUID();
+        Map<String, Object> row = Map.of(
+                "analysisId", analysisId,
+                "sampleId", UUID.randomUUID(),
+                "metric", "mean_quality",
+                "value", 31.5,
+                "unit", "Phred"
+        );
+        when(queryService.query(any(), eq(owner.getId())))
+                .thenReturn(new AnalyticsDtos.QueryResponse(List.of(), List.of(row), 1, false));
+        when(llmClient.enabled()).thenReturn(true);
+        when(llmClient.model()).thenReturn("llama3.2");
+        when(llmClient.complete(any(), any()))
+                .thenThrow(new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "Local AI is unavailable."));
+
+        AiDtos.AskResponse response = service.ask(
+                new AiDtos.AskRequest("What is the mean quality?", null, List.of(), List.of("mean_quality")),
+                owner
+        );
+
+        assertThat(response.model()).isEqualTo("deterministic");
+        assertThat(response.answer()).startsWith("Local AI is unavailable.").contains("31.5");
         assertThat(response.citations()).singleElement()
                 .satisfies(citation -> assertThat(citation.analysisId()).isEqualTo(analysisId));
     }

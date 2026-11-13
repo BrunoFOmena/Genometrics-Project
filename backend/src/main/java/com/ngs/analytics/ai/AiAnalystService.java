@@ -8,7 +8,10 @@ import com.ngs.analytics.analytics.AnalyticsQueryService;
 import com.ngs.analytics.analytics.MetricCatalog;
 import com.ngs.analytics.domain.AiInteraction;
 import com.ngs.analytics.domain.AiInteractionRepository;
+import com.ngs.analytics.common.ApiException;
 import com.ngs.analytics.domain.UserAccount;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +20,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class AiAnalystService {
+
+    private static final Logger log = LoggerFactory.getLogger(AiAnalystService.class);
 
     private static final List<String> DEFAULT_METRICS =
             List.of("mean_quality", "gc_content", "duplication_rate", "variant_count", "mean_depth");
@@ -103,7 +108,8 @@ public class AiAnalystService {
                 + "\n\nFACTS:\n" + context;
         try {
             return new Generated(llmClient.complete(system, prompt), llmClient.model());
-        } catch (RuntimeException ex) {
+        } catch (ApiException ex) {
+            log.warn("Local AI unavailable, answering with grounded facts: {}", ex.getMessage());
             return new Generated("Local AI is unavailable. Grounded facts: " + context, "deterministic");
         }
     }

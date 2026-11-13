@@ -31,7 +31,7 @@ Everything runs on your machine: the API, MCP endpoint and Postgres listen on `1
 | `list_metrics` | Metric catalog (keys, units, descriptions) |
 | `query_metrics` | Query grounded metric facts with filters and aggregation |
 | `compare_analyses` | Compare metrics across samples |
-| `explain_qc` | Explain QC results with citations to metric facts (phrased by a local [Ollama](https://ollama.com) model if available, otherwise the grounded facts) |
+| `explain_qc` | Explain QC results with citations to metric facts (phrased by a local [Ollama](https://ollama.com) model when `NGS_AI_ENABLED=true`, otherwise the grounded facts) |
 | `get_analysis_context` | One analysis with all its metric facts |
 
 ### 📁 Projects & Samples (REST)
@@ -107,6 +107,7 @@ From the repository root:
 API=http://localhost:8080
 PROJECT=$(curl -s -X POST $API/api/projects -H 'Content-Type: application/json' -d '{"name":"Demo"}' | jq -r .id)
 SAMPLE=$(curl -s -X POST $API/api/projects/$PROJECT/samples -H 'Content-Type: application/json' -d '{"name":"S1"}' | jq -r .id)
+curl -s -F file=@datasets/sample.fastq $API/api/samples/$SAMPLE/files
 curl -s -F file=@datasets/sample.vcf $API/api/samples/$SAMPLE/files
 ```
 
@@ -172,7 +173,7 @@ docker compose up -d
 cd docker
 docker compose up -d postgres
 cd ../backend
-mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
+SERVER_ADDRESS=127.0.0.1 mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
 ```
 
 ---
