@@ -243,7 +243,7 @@ Protect **`main`**: require PR, checks `backend` / `frontend` / `e2e` / `issue-l
 
 Every PR closes a prioritized issue (`P0` / `P1` / `P2`) with `Closes #<n>`. See [`CONTRIBUTING.md`](CONTRIBUTING.md#issues-priorities-and-prs).
 
-AI agents: see [`AGENTS.md`](AGENTS.md) and [`.cursor/rules/`](.cursor/rules/) for project context.
+AI agents: see [`AGENTS.md`](AGENTS.md) for project context.
 
 ---
 

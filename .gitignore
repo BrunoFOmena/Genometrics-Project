@@ -31,9 +31,8 @@ Docs_Bruno/*
 plan.md
 docs/
 AGENT.md
-.cursor/plans/
-.cursor/work/*
-!.cursor/work/README.md
+# Cursor IDE / agent harness and work logs (local only, not published)
+.cursor/
 
 # Data & uploads
 data/

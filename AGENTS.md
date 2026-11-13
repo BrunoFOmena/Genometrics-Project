@@ -15,8 +15,7 @@ Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 | Business logic | `backend/.../fastq/FastqParser.java`, `vcf/VcfParser.java`, `analytics/AnalysisService.java` | Streaming parsers + async analysis |
 | Domain | `backend/.../domain/` | JPA entities and repositories |
 | Fixtures | `datasets/` | Tiny FASTQ/VCF/FASTA samples for manual tests |
-| Local notes (Bruno) | `Docs_Bruno/` | Plans, practices — **not** `.cursor/plans/` (see `docs-bruno.mdc`) |
-| Feature work logs | `.cursor/work/` | Per-feature `LOG.md` / `PR.md`; archive under `arquivados/` (see `work-logs.mdc`, `git-release-flow.mdc`) |
+| Local notes (maintainer) | `Docs_Bruno/`, `.cursor/` | Not in git (personal plans, agent harness, work logs) |
 | CI | `.github/workflows/ci.yml` | Tests on PR/push; GHCR image on push to `main` |
 
 ### Run locally
@@ -41,13 +40,13 @@ Official branch: **`main`** (renamed from `prod`; `prod` is now only a Spring pr
 feature/*  fix/*  hotfix/*  ──► PR (Bruno merges) ──► main
 ```
 
-Rules: `.cursor/rules/branch-deploy-flow.mdc`, `CONTRIBUTING.md`, commit/PR drafts: `git-release-flow.mdc`.
+Rules: [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, priorities, PR issue link).
 
 ### Workflow
 
 1. Branch from **`main`**: `git fetch origin && git checkout main && git pull && git checkout -b feature/<short-name>`
 2. PR **`feature/…` → `main`**. CI green; Bruno merges.
-3. Archive work log under `.cursor/work/arquivados/` when the deploy from **`main`** is approved.
+3. One PR per issue; the PR body starts with `Closes #<issue>`.
 
 ### Do not
 
@@ -84,7 +83,7 @@ Rules: `.cursor/rules/branch-deploy-flow.mdc`, `CONTRIBUTING.md`, commit/PR draf
 ### Before finishing
 
 1. **Delete dead code** you replaced.
-2. **Do not commit** unless Bruno explicitly says yes. **Do not push** — Bruno runs `git push` himself.
+2. **Commit, push and open PRs only after Bruno says yes in the current chat** (separate confirmations; every push needs its own yes). Push only `feature/*`, `fix/*`, `hotfix/*` branches. **Never merge**, never push to `main`, never force-push or push tags, never delete/rename remote branches or change repo settings unless Bruno asks for that specific action.
 3. **Do not edit README/AGENTS** unless the task requires it.
 4. Summarize what changed, how to test, and any flags (auth, profiles).
 5. **Issue link** — every task maps to a GitHub issue labeled `P0`/`P1`/`P2` (see `CONTRIBUTING.md`). PR drafts start with `Closes #<issue>`; CI rejects PRs without it.
@@ -130,16 +129,6 @@ Rules: `.cursor/rules/branch-deploy-flow.mdc`, `CONTRIBUTING.md`, commit/PR draf
 
 ---
 
-## Cursor harness
+## AI assistants
 
-Rules and subagents live in `.cursor/` (versioned in git).
-
-| Layer | Path | When it applies |
-|-------|------|-----------------|
-| Always-on | `.cursor/rules/genometrics-core.mdc` | Every agent session |
-| Backend | `.cursor/rules/backend.mdc` | Editing `backend/**` |
-| Frontend | `.cursor/rules/frontend.mdc` | Editing `frontend/**` |
-| Verifier | `.cursor/agents/verifier.md` | Invoke `/verifier` after implementation |
-| Debugger | `.cursor/agents/debugger.md` | Invoke `/debugger` on errors or test failures |
-
-Specialize by **function** (verify, debug), not by architecture layer. Backend and frontend conventions are rules with globs — do not create separate back/front/QA agents.
+Follow [`CONTRIBUTING.md`](CONTRIBUTING.md) for branches, priorities and tests. Match the style of the nearest file. The maintainer's agent harness (`.cursor/`) is local-only and not part of the repository.
