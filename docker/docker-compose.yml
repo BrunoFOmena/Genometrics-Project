@@ -1,4 +1,4 @@
-# Full GENOMETRICS stack: Postgres + API + nginx (Angular SPA).
+# Full GENOMETRICS stack: Postgres + API (REST + MCP endpoint).
 #
 # Local build (na raiz do repo):
 #   docker compose up --build -d
@@ -10,10 +10,9 @@
 #
 # Pull from GHCR (after merge to main):
 #   export GENOMETRICS_API_IMAGE=ghcr.io/<owner>/genometrics-project/api:latest
-#   export GENOMETRICS_FRONTEND_IMAGE=ghcr.io/<owner>/genometrics-project/frontend:latest
 #   cd docker && docker compose pull && docker compose up -d
 #
-# UI: http://localhost:4200  (nginx proxies /api to the API container)
+# API: http://localhost:8080  |  MCP: http://localhost:8080/mcp
 
 services:
   postgres:
@@ -24,7 +23,7 @@ services:
       POSTGRES_USER: ngs
       POSTGRES_PASSWORD: ngs
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     deploy:
@@ -57,31 +56,13 @@ services:
     volumes:
       - uploads_data:/data/uploads
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12
       start_period: 90s
-
-  frontend:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.frontend
-    image: ${GENOMETRICS_FRONTEND_IMAGE:-genometrics-frontend:local}
-    container_name: ngs-frontend
-    depends_on:
-      api:
-        condition: service_healthy
-    ports:
-      - "4200:80"
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:80/ >/dev/null || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 6
-      start_period: 10s
 
 volumes:
   postgres_data:

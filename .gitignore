@@ -17,14 +17,6 @@ backend/target/
 *.war
 .mvn/wrapper/maven-wrapper.jar
 
-# Node / Angular
-frontend/node_modules/
-frontend/dist/
-frontend/.angular/
-frontend/coverage/
-npm-debug.log*
-frontend/ng-serve-ci.log
-
 # Maintainer-local files (not published)
 plan.md
 docs/
@@ -55,8 +47,6 @@ docker/postgres-data/
 # Test / coverage
 **/jacoco.exec
 **/coverage/
-cypress/videos/
-cypress/screenshots/
 
 # Python (if any tooling)
 __pycache__/

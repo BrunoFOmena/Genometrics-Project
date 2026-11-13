@@ -50,7 +50,7 @@ Every pull request **must close an issue** with a closing keyword in the PR body
    ./scripts/ci-check.sh
    ```
 5. Open a **pull request targeting `main`** using the template (`Closes #<issue>`, summary, test plan).
-6. Wait for CI (`backend`, `frontend`, `e2e`, `issue-link`) and maintainer review.
+6. Wait for CI (`backend`, `issue-link`) and maintainer review.
 
 **Only the maintainer merges PRs.**
 

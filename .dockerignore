@@ -3,9 +3,6 @@
 .agents
 .cursor
 data
-**/node_modules
-**/dist
-**/.angular
 **/target
 **/coverage
 **/*.log

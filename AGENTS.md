@@ -1,6 +1,6 @@
 # AGENTS.md — GENOMETRICS
 
-**GENOMETRICS** by Bruno Omena — local-first FASTQ/VCF analytics (Spring Boot + Angular SPA).
+**GENOMETRICS** by Bruno Omena — local-first FASTQ/VCF analytics exposed to AI agents via MCP (Spring Boot API, no UI).
 
 Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 
@@ -11,7 +11,7 @@ Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 | Area | Path | Notes |
 |------|------|-------|
 | API | `backend/` | Java 21, Spring Boot 3, modular packages under `com.ngs.analytics.*` |
-| UI | `frontend/` | Angular 19 SPA, sidebar shell in `app.component.ts`, pages in `src/app/pages/` |
+| MCP | `backend/.../mcp/McpController.java` | JSON-RPC 2.0 over HTTP at `/mcp` (`tools/list`, `tools/call`) |
 | Business logic | `backend/.../fastq/FastqParser.java`, `vcf/VcfParser.java`, `analytics/AnalysisService.java` | Streaming parsers + async analysis |
 | Domain | `backend/.../domain/` | JPA entities and repositories |
 | Fixtures | `datasets/` | Tiny FASTQ/VCF/FASTA samples for manual tests |
@@ -23,10 +23,10 @@ Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 | Service | Command | URL |
 |---------|---------|-----|
 | API | `cd backend && mvn spring-boot:run` | http://localhost:8080 (Swagger `/swagger-ui.html`) |
-| UI | `cd frontend && npm start` | http://localhost:4200 |
+| Stack | `docker compose up --build -d` | Postgres + API on http://localhost:8080 (MCP `/mcp`) |
 
 - Default DB: H2 (`dev-h2` profile). Postgres only with `prod` + Compose.
-- **Auth is temporarily disabled** for dev: `ngs.auth.disabled=true` (backend), `authDisabled: true` (frontend `environment.ts`). Re-enable before production.
+- **Auth is temporarily disabled** for dev: `ngs.auth.disabled=true`. Re-enable before exposing the API on a network.
 - H2/uploads persist in `data/` (gitignored). Delete to reset.
 - No `mvnw`; use system `mvn`. Cloud Agents: no Docker — do not run Compose or `prod` profile there.
 
@@ -75,9 +75,9 @@ Rules: [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, priorities, PR issue link
 
 1. **Smallest correct diff** — no drive-by refactors or new abstractions for one caller.
 2. **Match conventions** — package layout, naming, patterns already in the file you edit.
-3. **English only** — UI strings, API messages, docs, commits, PR text.
+3. **English only** — API and MCP messages, docs, commits, PR text.
 4. **Reuse** — one upload flow, one metrics API shape; no duplicate parsers/DTOs FE↔BE.
-5. **Tests** — add/update only for behavior you changed; run `mvn test` / `npm test` when touching those areas.
+5. **Tests** — add/update only for behavior you changed; run `mvn test` (or `./scripts/ci-check.sh`) when touching the backend.
 6. **No secrets** — never commit `.env`, keys, or real credentials.
 
 ### Before finishing
@@ -110,7 +110,7 @@ Rules: [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, priorities, PR issue link
 
 - Extend nearest class/component before adding files.
 - Colocate related logic.
-- Use `backend/...` modular packages and `frontend/src/app/{core,pages}`.
+- Use `backend/...` modular packages under `com.ngs.analytics.*`.
 
 ### Do not
 
@@ -123,9 +123,8 @@ Rules: [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, priorities, PR issue link
 ## Stack reference
 
 - **Backend:** Java 21, Spring Boot 3, JWT (optional), JPA, in-process `@Async` jobs
-- **Frontend:** Angular 19, Apache ECharts, sidebar SPA shell
 - **DB:** H2 (dev/test) · PostgreSQL (prod)
-- **Deploy:** `docker/Dockerfile.api` + `docker/Dockerfile.frontend` → GHCR on push to `main`; full stack via `compose.yaml`
+- **Deploy:** `docker/Dockerfile.api` → GHCR on push to `main`; Postgres + API via `compose.yaml`
 
 ---
 
