@@ -25,12 +25,12 @@ frontend/coverage/
 npm-debug.log*
 frontend/ng-serve-ci.log
 
-# Bruno / agente — não publicar no GitHub
-Docs_Bruno/
+# Maintainer-local files (not published)
 plan.md
 docs/
 AGENT.md
-# Cursor IDE / agent harness and work logs (local only, not published)
+# Local agent harness (rules + work logs for any AI agent) and IDE-specific folders
+.agents/
 .cursor/
 
 # Data & uploads

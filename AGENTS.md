@@ -15,7 +15,7 @@ Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 | Business logic | `backend/.../fastq/FastqParser.java`, `vcf/VcfParser.java`, `analytics/AnalysisService.java` | Streaming parsers + async analysis |
 | Domain | `backend/.../domain/` | JPA entities and repositories |
 | Fixtures | `datasets/` | Tiny FASTQ/VCF/FASTA samples for manual tests |
-| Local notes (maintainer) | `Docs_Bruno/`, `.cursor/` | Not in git (personal plans, agent harness, work logs) |
+| Local agent harness | `.agents/` | Not in git: maintainer rules (`rules/*.md`) and work logs / PR drafts (`work/`) for any AI agent |
 | CI | `.github/workflows/ci.yml` | Tests on PR/push; GHCR image on push to `main` |
 
 ### Run locally
@@ -131,4 +131,4 @@ Rules: [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, priorities, PR issue link
 
 ## AI assistants
 
-Follow [`CONTRIBUTING.md`](CONTRIBUTING.md) for branches, priorities and tests. Match the style of the nearest file. The maintainer's agent harness (`.cursor/`) is local-only and not part of the repository.
+Follow [`CONTRIBUTING.md`](CONTRIBUTING.md) for branches, priorities and tests. Match the style of the nearest file. If `.agents/rules/` exists in your checkout, read and follow those rules too (any agent: Cursor, Claude Code, Codex…). That folder is the maintainer's local harness and is not part of the repository.

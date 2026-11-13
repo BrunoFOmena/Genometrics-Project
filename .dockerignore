@@ -1,5 +1,6 @@
 .git
 .github
+.agents
 .cursor
 data
 **/node_modules
