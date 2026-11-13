@@ -1,11 +1,11 @@
 ---
-description: Push, PR e merge no GitHub são exclusivos do Bruno; branch oficial prod
+description: Push, PR e merge no GitHub são exclusivos do Bruno; branch oficial main
 alwaysApply: true
 ---
 
 # GitHub control
 
-Bruno é responsável pelo **push**, pelo **PR** e pelo **merge** no GitHub (branch oficial **`prod`**). O agente **não** faz `git push`, **não** cria PR e **não** mergeia. Fluxo: `branch-deploy-flow.mdc`.
+Bruno é responsável pelo **push**, pelo **PR** e pelo **merge** no GitHub (branch oficial **`main`**). O agente **não** faz `git push`, **não** cria PR e **não** mergeia. Fluxo: `branch-deploy-flow.mdc`.
 
 ## Commit e push
 
@@ -25,4 +25,4 @@ Seguir **`.cursor/rules/git-release-flow.mdc`**: perguntar o commit e só commit
 
 ## Colaboradores
 
-PRs podem vir de forks ou branches; **apenas Bruno** aprova e mergeia em `prod` (configurar branch protection no repositório).
+PRs podem vir de forks ou branches; **apenas Bruno** aprova e mergeia em `main` (configurar branch protection no repositório).

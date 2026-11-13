@@ -16,7 +16,7 @@ Custom Instructions: Atue como especialista em cybersecurity. Revise somente o d
 ```
 
 - Use `uncommitted changes` quando ainda houver mudanças não commitadas.
-- Use `branch changes` quando os commits já estiverem prontos para push. A base é `prod`.
+- Use `branch changes` quando os commits já estiverem prontos para push. A base é `main`.
 
 O retorno fica entre os agentes. O agente principal avalia cada achado, corrige os riscos válidos no escopo e justifica falso positivo. Se a correção mudar o diff de forma material, repete os testes afetados e uma nova revisão de segurança.
 

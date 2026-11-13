@@ -1,6 +1,6 @@
 # Cartilha de testes (espelho do CI)
 
-CI dispara em PR para **`prod`** e push em **`prod`** + `feature/**` / `fix/**` / `hotfix/**`. Imagem Docker só no push de **`prod`**.
+CI dispara em PR para **`main`** e push em **`main`** + `feature/**` / `fix/**` / `hotfix/**`. Imagem Docker só no push de **`main`**.
 
 ```bash
 ./scripts/ci-check.sh

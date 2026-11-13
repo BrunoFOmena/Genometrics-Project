@@ -17,7 +17,7 @@ Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 | Fixtures | `datasets/` | Tiny FASTQ/VCF/FASTA samples for manual tests |
 | Local notes (Bruno) | `Docs_Bruno/` | Plans, practices — **not** `.cursor/plans/` (see `docs-bruno.mdc`) |
 | Feature work logs | `.cursor/work/` | Per-feature `LOG.md` / `PR.md`; archive under `arquivados/` (see `work-logs.mdc`, `git-release-flow.mdc`) |
-| CI | `.github/workflows/ci.yml` | Tests on PR/push; GHCR image on push to `prod` |
+| CI | `.github/workflows/ci.yml` | Tests on PR/push; GHCR image on push to `main` |
 
 ### Run locally
 
@@ -33,26 +33,26 @@ Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 
 ---
 
-## Branches and deploy (`prod` only)
+## Branches and deploy (`main` only)
 
-Official branch: **`prod`**. Do not use legacy **`main`** or **`test`**.
+Official branch: **`main`** (renamed from `prod`; `prod` is now only a Spring profile). Do not use legacy **`test`**.
 
 ```
-feature/*  fix/*  hotfix/*  ──► PR (Bruno merges) ──► prod
+feature/*  fix/*  hotfix/*  ──► PR (Bruno merges) ──► main
 ```
 
 Rules: `.cursor/rules/branch-deploy-flow.mdc`, `CONTRIBUTING.md`, commit/PR drafts: `git-release-flow.mdc`.
 
 ### Workflow
 
-1. Branch from **`prod`**: `git fetch origin && git checkout prod && git pull && git checkout -b feature/<short-name>`
-2. PR **`feature/…` → `prod`**. CI green; Bruno merges.
-3. Archive work log under `.cursor/work/arquivados/` when **prod** is approved.
+1. Branch from **`main`**: `git fetch origin && git checkout main && git pull && git checkout -b feature/<short-name>`
+2. PR **`feature/…` → `main`**. CI green; Bruno merges.
+3. Archive work log under `.cursor/work/arquivados/` when the deploy from **`main`** is approved.
 
 ### Do not
 
-- Push directly to **`prod`** (PR + Bruno merge only).
-- Force-push **`prod`** or skip CI.
+- Push directly to **`main`** (PR + Bruno merge only).
+- Force-push **`main`** or skip CI.
 
 ### Branch names
 
@@ -87,6 +87,7 @@ Rules: `.cursor/rules/branch-deploy-flow.mdc`, `CONTRIBUTING.md`, commit/PR draf
 2. **Do not commit** unless Bruno explicitly says yes. **Do not push** — Bruno runs `git push` himself.
 3. **Do not edit README/AGENTS** unless the task requires it.
 4. Summarize what changed, how to test, and any flags (auth, profiles).
+5. **Issue link** — every task maps to a GitHub issue labeled `P0`/`P1`/`P2` (see `CONTRIBUTING.md`). PR drafts start with `Closes #<issue>`; CI rejects PRs without it.
 
 ### Token economy
 
@@ -125,7 +126,7 @@ Rules: `.cursor/rules/branch-deploy-flow.mdc`, `CONTRIBUTING.md`, commit/PR draf
 - **Backend:** Java 21, Spring Boot 3, JWT (optional), JPA, in-process `@Async` jobs
 - **Frontend:** Angular 19, Apache ECharts, sidebar SPA shell
 - **DB:** H2 (dev/test) · PostgreSQL (prod)
-- **Deploy:** `docker/Dockerfile.api` + `docker/Dockerfile.frontend` → GHCR on push to `prod`; full stack via `compose.yaml`
+- **Deploy:** `docker/Dockerfile.api` + `docker/Dockerfile.frontend` → GHCR on push to `main`; full stack via `compose.yaml`
 
 ---
 

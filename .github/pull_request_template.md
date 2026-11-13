@@ -1,4 +1,7 @@
-**Base branch:** `prod`
+**Base branch:** `main`
+
+<!-- Required: the issue this PR closes (add the number after #). CI fails without it. -->
+Closes #
 
 ## Summary
 
@@ -9,6 +12,7 @@
 - [ ] `cd backend && mvn test`
 - [ ] `cd frontend && npm test -- --watch=false --browsers=ChromeHeadless`
 - [ ] Manual smoke (if UI/API behavior changed)
+- [ ] No real patient/participant data in code, fixtures, logs or screenshots
 
 ## Agent notes
 

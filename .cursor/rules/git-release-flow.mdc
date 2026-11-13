@@ -20,12 +20,13 @@ Em qualquer mudança, concluir os handoffs internos definidos em **`pre-push-rev
 2. Entregar o comando de push para o Bruno rodar no terminal dele. Não perguntar se o agente pode fazer o push e não executar `git push`.  
    - Branch nova: `git push -u origin HEAD`  
    - Branch que já tem upstream: `git push origin HEAD`  
-   - Nunca sugerir push direto para **`prod`** (sempre PR mergeado pelo Bruno).
+   - Nunca sugerir push direto para **`main`** (sempre PR mergeado pelo Bruno).
 3. Perguntar: **Posso fazer a mensagem de PR?**  
    - Só após **sim**: gravar o texto em  
      **`.cursor/work/<slug-da-funcionalidade>/PR.md`**  
-     (corpo completo: Summary, Test plan, etc.). Bruno abre o PR manualmente no GitHub.  
-   - Destino do PR: **`prod`** (branch oficial).
+     (corpo completo: Summary, Test plan, etc.). Bruno abre o PR manualmente no GitHub.
+   - A primeira linha do corpo é **`Closes #<issue>`** (issue com label `P0`/`P1`/`P2`); sem isso o CI `PR issue link` falha. Sem issue, pedir ao Bruno para criar ou indicar uma antes.
+   - Destino do PR: **`main`** (branch oficial).
 
 Branches e deploy: **`.cursor/rules/branch-deploy-flow.mdc`**.
 
@@ -35,15 +36,15 @@ Não pular etapas. Não agrupar passos sem confirmação separada. Não criar PR
 
 - `git add .`, `git add -A`, `git add --all`
 - `git push` (qualquer forma, inclusive `-u`, tags e `--force`) — o Bruno executa
-- `gh pr create`, `gh pr merge`, comentários que disparem merge, force-push em **`prod`**
-- Push direto para **`prod`** (sempre via PR mergeado pelo Bruno)
+- `gh pr create`, `gh pr merge`, comentários que disparem merge, force-push em **`main`**
+- Push direto para **`main`** (sempre via PR mergeado pelo Bruno)
 - `git merge` para concluir PR no lugar do Bruno
 - Commit **sem** ter perguntado e recebido **sim**
 
 ## Permitido sem confirmação de push
 
 - `git status`, `git diff`, `git log`, `git show`, listar branches
-- `git checkout -b feature/…` (ou `fix/` / `hotfix/`) **a partir de `prod`** quando a tarefa exigir
+- `git checkout -b feature/…` (ou `fix/` / `hotfix/`) **a partir de `main`** quando a tarefa exigir
 - `gh` **somente leitura** ou metadata que **não** publique commit (checks, issues, comentários **se** Bruno pedir)
 
 ## Mensagem de commit

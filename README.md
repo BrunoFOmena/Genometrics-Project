@@ -9,6 +9,7 @@ Built by **Bruno Omena** · modular monolith designed to run on a **16 GB RAM Wi
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3-6DB33F?logo=springboot&logoColor=white)
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
 ![Database](https://img.shields.io/badge/Database-H2%20%7C%20PostgreSQL-336791?logo=postgresql&logoColor=white)
+![License](https://img.shields.io/badge/License-Apache%202.0-blue)
 
 ---
 
@@ -82,8 +83,8 @@ The goal is to provide **immediate visibility into sequencing quality (FASTQ)** 
 ### DevOps
 | Technology | Role |
 |------------|------|
-| **GitHub Actions** | CI (`backend`, `frontend`, `e2e`) |
-| **GHCR** | API + frontend Docker images on push to `prod` |
+| **GitHub Actions** | CI (`backend`, `frontend`, `e2e`, `issue-link`) |
+| **GHCR** | API + frontend Docker images on push to `main` |
 | **Docker Compose** | Local Postgres (optional) |
 
 ---
@@ -167,9 +168,9 @@ export NGS_JWT_SECRET="your-32-byte-minimum-secret"
 docker compose up --build -d
 ```
 
-### Pull from GHCR (after merge to `prod`)
+### Pull from GHCR (after merge to `main`)
 
-Images: `ghcr.io/<owner>/genometrics-project/api` and `.../frontend` (`:latest` + `:sha` on each push to `prod`).
+Images: `ghcr.io/<owner>/genometrics-project/api` and `.../frontend` (`:latest` + `:sha` on each push to `main`).
 
 ```bash
 export GENOMETRICS_API_IMAGE=ghcr.io/<owner>/genometrics-project/api:latest
@@ -223,24 +224,38 @@ Optional Postgres smoke test with Docker: `RUN_TESTCONTAINERS=true mvn -Dtest=Po
 
 ## 🔀 Git & CI
 
-**`prod`** is the official branch. PRs target **`prod`**; only the maintainer merges. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+**`main`** is the official branch. PRs target **`main`**; only the maintainer merges. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ```bash
-git fetch origin && git checkout prod && git pull
+git fetch origin && git checkout main && git pull
 git checkout -b feature/<name>
 git push -u origin HEAD
-# Open PR → prod · CI · maintainer merges
+# Open PR → main · CI · maintainer merges
 ```
 
 | Event | Tests | GHCR image |
 |-------|-------|------------|
-| PR → `prod` | ✅ | ❌ |
+| PR → `main` | ✅ | ❌ |
 | Push to `feature/*`, `fix/*`, `hotfix/*` | ✅ | ❌ |
-| Push to `prod` | ✅ | ✅ |
+| Push to `main` | ✅ | ✅ |
 
-Protect **`prod`**: require PR, checks `backend` / `frontend` / `e2e`, restrict merge to maintainer.
+Protect **`main`**: require PR, checks `backend` / `frontend` / `e2e` / `issue-link`, restrict merge to maintainer.
+
+Every PR closes a prioritized issue (`P0` / `P1` / `P2`) with `Closes #<n>`. See [`CONTRIBUTING.md`](CONTRIBUTING.md#issues-priorities-and-prs).
 
 AI agents: see [`AGENTS.md`](AGENTS.md) and [`.cursor/rules/`](.cursor/rules/) for project context.
+
+---
+
+## 🤝 Contributing & community
+
+- [Contributing guide](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Security policy](SECURITY.md)
+- **Research use only.** GENOMETRICS is not a medical device and must not be used for diagnosis.
+- Never commit or upload real patient data to this repository, issues or PRs.
+
+## 📜 License
+
+[Apache License 2.0](LICENSE) © Bruno Omena
 
 ---
 

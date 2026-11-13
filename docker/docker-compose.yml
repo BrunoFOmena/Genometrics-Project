@@ -8,7 +8,7 @@
 # Alternativa:
 #   cd docker && docker compose -f ../compose.yaml up --build -d
 #
-# Pull from GHCR (after merge to prod):
+# Pull from GHCR (after merge to main):
 #   export GENOMETRICS_API_IMAGE=ghcr.io/<owner>/genometrics-project/api:latest
 #   export GENOMETRICS_FRONTEND_IMAGE=ghcr.io/<owner>/genometrics-project/frontend:latest
 #   cd docker && docker compose pull && docker compose up -d
