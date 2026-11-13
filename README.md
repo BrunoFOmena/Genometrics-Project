@@ -31,7 +31,7 @@ Everything runs on your machine: the API, MCP endpoint and Postgres listen on `1
 | `list_metrics` | Metric catalog (keys, units, descriptions) |
 | `query_metrics` | Query grounded metric facts with filters and aggregation |
 | `compare_analyses` | Compare metrics across samples |
-| `explain_qc` | Explain QC results with citations to metric facts |
+| `explain_qc` | Explain QC results with citations to metric facts (phrased by a local [Ollama](https://ollama.com) model if available, otherwise the grounded facts) |
 | `get_analysis_context` | One analysis with all its metric facts |
 
 ### 📁 Projects & Samples (REST)
@@ -119,6 +119,8 @@ GENOMETRICS speaks MCP (JSON-RPC 2.0) over HTTP at `http://localhost:8080/mcp`. 
 ```bash
 claude mcp add --transport http genometrics http://localhost:8080/mcp
 ```
+
+Other clients (Cursor, stdio bridges), tool arguments and examples: [`docs/mcp.md`](docs/mcp.md).
 
 Check it from the shell:
 

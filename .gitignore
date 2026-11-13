@@ -19,7 +19,8 @@ backend/target/
 
 # Maintainer-local files (not published)
 plan.md
-docs/
+docs/*
+!docs/mcp.md
 AGENT.md
 # Local agent harness (rules + work logs for any AI agent) and IDE-specific folders
 .agents/

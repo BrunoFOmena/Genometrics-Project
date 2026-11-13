@@ -53,6 +53,11 @@ services:
       NGS_STORAGE_LOCAL_DIR: /data/uploads
       NGS_JWT_SECRET: ${NGS_JWT_SECRET:-change-me-ngs-analytics-platform-jwt-secret-key-32bytes-min}
       NGS_AUTH_DISABLED: ${NGS_AUTH_DISABLED:-true}
+      NGS_AI_ENABLED: ${NGS_AI_ENABLED:-true}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - uploads_data:/data/uploads
     ports:
