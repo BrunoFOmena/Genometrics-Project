@@ -1,0 +1,119 @@
+{
+  "inputs" : [ "sample.vcf" ],
+  "kind" : "vcf",
+  "metricFacts" : [ {
+    "key" : "variant_count",
+    "unit" : "variants",
+    "value" : 10.0
+  }, {
+    "key" : "snp_count",
+    "unit" : "variants",
+    "value" : 7.0
+  }, {
+    "key" : "indel_count",
+    "unit" : "variants",
+    "value" : 3.0
+  }, {
+    "key" : "mean_variant_quality",
+    "unit" : "Phred",
+    "value" : 72.45
+  }, {
+    "key" : "mean_depth",
+    "unit" : "x",
+    "value" : 27.8
+  }, {
+    "key" : "ts_tv_ratio",
+    "unit" : "ratio",
+    "value" : 0.75
+  }, {
+    "key" : "pass_count",
+    "unit" : "variants",
+    "value" : 8.0
+  } ],
+  "metrics" : {
+    "variantCount" : 10,
+    "snpCount" : 7,
+    "indelCount" : 3,
+    "mnpCount" : 0,
+    "meanQuality" : 72.45,
+    "meanDepth" : 27.8,
+    "transitions" : 3,
+    "transversions" : 4,
+    "tsTvRatio" : 0.75,
+    "passCount" : 8,
+    "failCount" : 2,
+    "chromosomeDistribution" : {
+      "chr1" : 3,
+      "chr2" : 3,
+      "chr3" : 2,
+      "chrX" : 2
+    },
+    "alleleFrequency" : {
+      "count" : 10,
+      "max" : 0.5,
+      "mean" : 0.32999999999999996,
+      "min" : 0.05,
+      "values" : [ 0.5, 0.25, 0.1, 0.4, 0.35, 0.5, 0.2, 0.05, 0.45, 0.5 ]
+    },
+    "geneDistribution" : {
+      "BRCA1" : 2,
+      "DMD" : 2,
+      "EGFR" : 2,
+      "KRAS" : 1,
+      "PTEN" : 2,
+      "TP53" : 1
+    },
+    "filterDistribution" : {
+      "LowQual" : 2,
+      "PASS" : 8
+    },
+    "indelLengthDistribution" : {
+      "counts" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+      "labels" : [ "≤-21", "-20", "-19", "-18", "-17", "-16", "-15", "-14", "-13", "-12", "-11", "-10", "-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "≥21" ]
+    },
+    "tsTvByChromosome" : {
+      "chr1" : {
+        "ts" : 3,
+        "tsTvRatio" : 3.0,
+        "tv" : 0
+      },
+      "chr2" : {
+        "ts" : 0,
+        "tsTvRatio" : 0.0,
+        "tv" : 1
+      },
+      "chr3" : {
+        "ts" : 0,
+        "tsTvRatio" : 0.0,
+        "tv" : 1
+      },
+      "chrX" : {
+        "ts" : 0,
+        "tsTvRatio" : 0.0,
+        "tv" : 2
+      }
+    },
+    "header" : {
+      "contigCount" : 0,
+      "contigs" : [ ],
+      "fileformat" : "VCFv4.2",
+      "formatCount" : 1,
+      "formatIds" : [ "GT" ],
+      "infoCount" : 3,
+      "infoIds" : [ "DP", "AF", "GENE" ],
+      "reference" : null,
+      "samples" : [ "SAMPLE" ],
+      "source" : null
+    },
+    "qualityHistogram" : {
+      "binWidth" : 5,
+      "counts" : [ 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 2, 1, 0 ],
+      "labels" : [ "0–5", "5–10", "10–15", "15–20", "20–25", "25–30", "30–35", "35–40", "40–45", "45–50", "50–55", "55–60", "60–65", "65–70", "70–75", "75–80", "80–85", "85–90", "90–95", "95–100", ">100" ]
+    },
+    "depthHistogram" : {
+      "binWidth" : 5,
+      "counts" : [ 0, 1, 1, 0, 1, 2, 2, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+      "labels" : [ "0–5", "5–10", "10–15", "15–20", "20–25", "25–30", "30–35", "35–40", "40–45", "45–50", "50–55", "55–60", "60–65", "65–70", "70–75", "75–80", "80–85", "85–90", "90–95", "95–100", "100–105", "105–110", "110–115", "115–120", "120–125", "125–130", "130–135", "135–140", "140–145", "145–150", "150–155", "155–160", "160–165", "165–170", "170–175", "175–180", "180–185", "185–190", "190–195", "195–200", ">200" ]
+    }
+  }
+}
