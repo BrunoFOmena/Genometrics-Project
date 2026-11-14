@@ -20,6 +20,8 @@ curl -s http://localhost:8080/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}'
 ```
 
+The server also answers `ping` with an empty result, for clients that check the connection.
+
 Then list tools:
 
 ```bash

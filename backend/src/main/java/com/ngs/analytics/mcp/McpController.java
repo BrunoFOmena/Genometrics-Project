@@ -68,6 +68,7 @@ public class McpController {
                         "capabilities", Map.of("tools", Map.of()),
                         "serverInfo", Map.of("name", "genometrics", "version", "1.0.0")
                 );
+                case "ping" -> Map.of(); // liveness check: the spec requires an empty result
                 case "tools/list" -> Map.of("tools", tools());
                 case "tools/call" -> callTool(request.path("params"));
                 default -> throw new MethodNotFoundException(method);
