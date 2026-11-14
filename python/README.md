@@ -3,10 +3,11 @@
 Pure-Python port of the GENOMETRICS analysis core ([ADR 0001](../docs/adr/0001-core-language.md)). No runtime dependencies, so `pip` works on Linux, macOS and Windows.
 
 ```python
-from genometrics import fastq, qc
+from genometrics import fastq, qc, vcf
 
 metrics = fastq.parse("reads.fastq.gz")  # or fastq.parse_paired(r1, r2)
 result = qc.evaluate(metrics)  # {"overall": "WARN", "checks": [...], "recommendations": [...]}
+summary = vcf.parse("calls.vcf.gz")  # counts, Ts/Tv, QUAL and DP, distributions, header
 ```
 
 Output keys match the Java backend's API, and the tests check every value against the frozen Java output in [`../datasets/golden/`](../datasets/golden/).

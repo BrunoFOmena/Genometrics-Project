@@ -6,10 +6,11 @@ golden files in datasets/golden/.
 
 from __future__ import annotations
 
-import gzip
 import re
 from collections.abc import Iterator
 from pathlib import Path
+
+from .textio import lines, open_text
 
 SAMPLE_LIMIT = 50_000  # reads sampled for duplication, over-represented sequences and adapters
 HEATMAP_MAX_POSITION = 150
@@ -87,24 +88,16 @@ def metric_facts(metrics: dict) -> list[dict]:
     ]
 
 
-def _open_text(path: str | Path):
-    with open(path, "rb") as probe:
-        gzipped = probe.read(2) == b"\x1f\x8b"
-    if gzipped:
-        return gzip.open(path, "rt", encoding="utf-8", newline="")
-    return open(path, encoding="utf-8", newline="")
-
-
 def _records(path: str | Path) -> Iterator[tuple[str, str]]:
     """(sequence, quality) per record; blank lines between records are skipped, as in the Java reader."""
-    with _open_text(path) as handle:
-        lines = (line.rstrip("\n").rstrip("\r") for line in handle)
-        for header in lines:
+    with open_text(path) as handle:
+        rows = lines(handle)
+        for header in rows:
             if not header.strip():
                 continue
             if not header.startswith("@"):
                 raise FastqError("Invalid FASTQ: expected '@' header")
-            seq, plus, qual = next(lines, None), next(lines, None), next(lines, None)
+            seq, plus, qual = next(rows, None), next(rows, None), next(rows, None)
             if seq is None or plus is None or qual is None:
                 raise FastqError("Truncated FASTQ record")
             if not plus.startswith("+"):
