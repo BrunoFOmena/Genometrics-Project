@@ -38,7 +38,7 @@ curl -s http://localhost:8080/mcp \
 
 `explain_qc` uses [Ollama](https://ollama.com) only when `NGS_AI_ENABLED=true` (off by default) and the model responds within the timeout. Otherwise the text is the catalogued facts. Missing facts are reported as unavailable; the tool does not invent a value. Treat model-phrased answers as untrusted text: check the cited facts.
 
-With Docker, the API reaches Ollama on the host through `host.docker.internal`. Ollama listens on `127.0.0.1` by default, which the container cannot reach. Bind it to the Docker bridge address (for example `OLLAMA_HOST=172.17.0.1`) or firewall port 11434 to the Docker subnet; do **not** expose Ollama on `0.0.0.0` on untrusted networks, since its API has no authentication.
+Ollama listens on `127.0.0.1` by default, which is what the API expects (`OLLAMA_BASE_URL=http://localhost:11434`). Do **not** expose Ollama on `0.0.0.0` on untrusted networks, since its API has no authentication.
 
 ## Call a tool
 
@@ -120,4 +120,4 @@ Claude Code and Cursor speak HTTP directly; a bridge is only needed for stdio-on
 }
 ```
 
-Start the API first (`docker compose up -d` or `mvn spring-boot:run`).
+Start the API first (`mvn spring-boot:run` or `./scripts/demo.sh`).

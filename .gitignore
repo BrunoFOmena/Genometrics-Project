@@ -38,12 +38,7 @@ scripts/NGS_ANALYTICS.ps1
 .env
 .env.local
 
-compose.override.yaml
-compose.override.yml
 *.pem
-
-# Docker volumes
-docker/postgres-data/
 
 # Test / coverage
 **/jacoco.exec

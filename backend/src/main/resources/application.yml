@@ -1,5 +1,7 @@
 server:
   port: 8080
+  # Local-only by default (auth is optional here). Override with SERVER_ADDRESS=0.0.0.0 at your own risk.
+  address: ${SERVER_ADDRESS:127.0.0.1}
 
 spring:
   application:

@@ -14,21 +14,22 @@ Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 | MCP | `backend/.../mcp/McpController.java` | JSON-RPC 2.0 over HTTP at `/mcp` (`tools/list`, `tools/call`) |
 | Business logic | `backend/.../fastq/FastqParser.java`, `vcf/VcfParser.java`, `analytics/AnalysisService.java` | Streaming parsers + async analysis |
 | Domain | `backend/.../domain/` | JPA entities and repositories |
+| Agent skill | `.claude/skills/genometrics/` | `SKILL.md` + `scripts/analyze.sh` (starts the API, uploads, waits, prints QC); `scripts/demo.sh` runs it on the fixtures |
 | Fixtures | `datasets/` | Tiny FASTQ/VCF/FASTA samples for manual tests |
 | Local agent harness | `.agents/` | Not in git: maintainer rules (`rules/*.md`) and work logs / PR drafts (`work/`) for any AI agent |
-| CI | `.github/workflows/ci.yml` | Tests on PR/push; GHCR image on push to `main` |
+| CI | `.github/workflows/ci.yml` | Tests + demo on PR/push |
 
 ### Run locally
 
 | Service | Command | URL |
 |---------|---------|-----|
 | API | `cd backend && mvn spring-boot:run` | http://localhost:8080 (Swagger `/swagger-ui.html`) |
-| Stack | `docker compose up --build -d` | Postgres + API on http://localhost:8080 (MCP `/mcp`) |
+| Demo | `./scripts/demo.sh` | Starts the API if needed, loads `datasets/`, checks MCP |
 
-- Default DB: H2 (`dev-h2` profile). Postgres only with `prod` + Compose.
+- Default DB: H2 (`dev-h2` profile). Postgres only with the `prod` profile and your own server (`SPRING_DATASOURCE_*`).
 - **Auth is temporarily disabled** for dev: `ngs.auth.disabled=true`. Re-enable before exposing the API on a network.
 - H2/uploads persist in `data/` (gitignored). Delete to reset.
-- No `mvnw`; use system `mvn`. Cloud Agents: no Docker — do not run Compose or `prod` profile there.
+- No `mvnw`; use system `mvn`. Nothing in this repo needs Docker. Cloud Agents: do not run the `prod` profile there.
 
 ---
 
@@ -83,7 +84,8 @@ Rules: [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, priorities, PR issue link
 ### Before finishing
 
 1. **Delete dead code** you replaced.
-2. **Commit, push and open PRs only after Bruno says yes in the current chat** (separate confirmations; every push needs its own yes). Push only `feature/*`, `fix/*`, `hotfix/*` branches. **Never merge**, never push to `main`, never force-push or push tags, never delete/rename remote branches or change repo settings unless Bruno asks for that specific action.
+2. **Local repository: you may edit freely.** Edit files, create branches, stage explicit paths and commit on `feature/*`, `fix/*`, `hotfix/*` without asking. Do not discard work you did not make (`reset --hard`, `clean`, `stash drop`, `branch -D`) without asking.
+   **Anything that leaves the machine needs Bruno's yes in the current chat, asked each time:** `git push` (every push, even to a branch already pushed) and `gh pr create`. Before asking, run `./scripts/ci-check.sh` (local CI: tests, package, demo); ask only if it passes, and say which branch and commits will be published. **Never merge**, never push to `main`, never force-push or push tags, never delete/rename remote branches or change repo settings unless Bruno asks for that specific action.
 3. **Do not edit README/AGENTS** unless the task requires it.
 4. Summarize what changed, how to test, and any flags (auth, profiles).
 5. **Issue link** — every task maps to a GitHub issue labeled `P0`/`P1`/`P2` (see `CONTRIBUTING.md`). PR drafts start with `Closes #<issue>`; CI rejects PRs without it.
@@ -124,7 +126,7 @@ Rules: [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, priorities, PR issue link
 
 - **Backend:** Java 21, Spring Boot 3, JWT (optional), JPA, in-process `@Async` jobs
 - **DB:** H2 (dev/test) · PostgreSQL (prod)
-- **Deploy:** `docker/Dockerfile.api` → GHCR on push to `main`; Postgres + API via `compose.yaml`
+- **Run:** `mvn spring-boot:run` (H2). No container images are published.
 
 ---
 

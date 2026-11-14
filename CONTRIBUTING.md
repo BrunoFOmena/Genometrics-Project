@@ -15,7 +15,7 @@ GENOMETRICS handles genomic data, which is sensitive personal data.
 
 | Branch | Purpose |
 |--------|---------|
-| **`main`** | Official line: default on GitHub, deployable, Docker images published on push |
+| **`main`** | Official line: default on GitHub, deployable |
 | **`feature/*`**, **`fix/*`**, **`hotfix/*`** | Short-lived work branches |
 
 There is no separate integration branch. Open your PR **into `main`**. (`prod` is only a Spring profile, not a branch.)
@@ -57,12 +57,13 @@ Every pull request **must close an issue** with a closing keyword in the PR body
 ## Maintainer setup (GitHub)
 
 - Default branch: **`main`**.
-- Branch protection on **`main`**: require PR, required status checks, require conversation resolution, restrict merge to maintainer, no force-push.
+- Branch protection on **`main`** (ruleset "Protect main"): changes only through a PR, squash merge only, linear history, no force-push or deletion, required checks (`backend`, `issue-link`; `demo` once it is on `main`) on an up-to-date branch, resolved review conversations.
+- Review: PRs from contributors need **1 approval from a code owner** (`.github/CODEOWNERS`), re-requested after every new push. The maintainer may merge their own PRs without a review (repository-admin bypass, pull requests only; direct pushes stay blocked).
 - Private vulnerability reporting enabled (Settings → Code security).
 
 ## Releases
 
-Merges to **`main`** publish GHCR images (`:latest` and `:${GITHUB_SHA}`). Tagged releases use SemVer (`v0.x.y`).
+Tagged releases use SemVer (`v0.x.y`).
 
 ## Questions
 

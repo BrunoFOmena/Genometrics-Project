@@ -17,7 +17,7 @@ Built by **Bruno Omena** · modular monolith designed to run on a **16 GB RAM la
 
 **GENOMETRICS** focuses on **Next-Generation Sequencing (NGS)** quality control and variant metrics. Instead of a dashboard, the interface is your **AI agent** (Claude Code, Cursor, any MCP client): you load FASTQ/VCF files through the REST API, GENOMETRICS parses them locally with streaming Java parsers, and the agent queries the resulting metric facts through MCP tools.
 
-Everything runs on your machine: the API, MCP endpoint and Postgres listen on `127.0.0.1` only, so data stays local unless you send it somewhere.
+Everything runs on your machine: the API and MCP endpoint listen on `127.0.0.1` only, so data stays local unless you send it somewhere.
 
 > **Research use only.** GENOMETRICS is not a medical device and must not be used for diagnosis.
 
@@ -63,10 +63,8 @@ Everything runs on your machine: the API, MCP endpoint and Postgres listen on `1
 | **FastqParser / VcfParser** | In-process streaming parsers |
 | **SpringDoc OpenAPI** | Swagger documentation |
 | **JWT (JJWT)** | Optional authentication |
-| **H2** / **PostgreSQL** | Local default / Compose database |
+| **H2** / **PostgreSQL** | Local default / optional external database |
 | **GitHub Actions** | CI (`backend`, `issue-link`) |
-| **GHCR** | API Docker image on push to `main` |
-| **Docker Compose** | Postgres + API in one command |
 
 ---
 
@@ -74,18 +72,24 @@ Everything runs on your machine: the API, MCP endpoint and Postgres listen on `1
 
 ### Prerequisites
 
-- **JDK 21** and **Maven 3.9+**, or **Docker** (Compose)
-- `curl` and `jq` for the examples below
+- **JDK 21**, **Maven 3.9+** and `curl`. Docker is **not** required.
+- `jq` only for the manual REST examples below
 
-### Option A: Docker Compose (Postgres + API)
+### Agent skill (clone and ask)
+
+The repository ships a skill at [`.claude/skills/genometrics/`](.claude/skills/genometrics/SKILL.md) and an MCP entry in [`.mcp.json`](.mcp.json). Clone it, open it in Claude Code (or any agent that reads `SKILL.md`) and ask, for example, *"run QC on datasets/sample.fastq"*. The skill starts the API on demand (Maven + H2), analyzes the files and reads the results back.
+
+### One-command demo
 
 ```bash
 git clone https://github.com/BrunoFOmena/Genometrics-Project.git
 cd Genometrics-Project
-docker compose up --build -d
+./scripts/demo.sh
 ```
 
-### Option B: Maven (H2, no Docker)
+Starts the API if it is not running, analyzes the [`datasets/`](datasets/) fixtures and checks the MCP endpoint (`tools/list` + `query_metrics`). CI runs the same script in the `demo` job. Stop the API with `kill $(cat data/api.pid)`.
+
+### Run the API yourself
 
 ```bash
 cd backend
@@ -97,7 +101,6 @@ mvn spring-boot:run
 | API | http://localhost:8080 |
 | MCP | http://localhost:8080/mcp |
 | Swagger | http://localhost:8080/swagger-ui.html |
-| PostgreSQL (Compose only) | localhost:5432 (`ngs` / `ngs`) |
 
 ### Load data
 
@@ -137,7 +140,7 @@ Copy `.env.example` → `.env` to change JWT and auth. Before exposing the API o
 ```bash
 export NGS_AUTH_DISABLED=false
 export NGS_JWT_SECRET="your-32-byte-minimum-secret"
-docker compose up --build -d
+mvn spring-boot:run
 ```
 
 With auth enabled, every `/api/**` call and `/mcp` need a token:
@@ -151,30 +154,18 @@ claude mcp add --transport http genometrics http://localhost:8080/mcp --header "
 
 Add `-H "Authorization: Bearer $TOKEN"` to the curl calls above.
 
-Environment variables (`prod` profile inside the API container):
+### PostgreSQL (optional)
 
-- `SPRING_DATASOURCE_URL` (default in compose: `jdbc:postgresql://postgres:5432/ngs`)
-- `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD`
-- `NGS_JWT_SECRET` (required when auth is enabled)
-- `NGS_STORAGE_LOCAL_DIR` (default in compose: `/data/uploads`, persisted in volume `uploads_data`)
-
-### Pull from GHCR (after merge to `main`)
+H2 is the default. To use your own PostgreSQL server (no container needed), run the `prod` profile:
 
 ```bash
-export GENOMETRICS_API_IMAGE=ghcr.io/<owner>/genometrics-project/api:latest
-cd docker
-docker compose pull
-docker compose up -d
+export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ngs
+export SPRING_DATASOURCE_USERNAME=ngs SPRING_DATASOURCE_PASSWORD=change-me
+export NGS_AUTH_DISABLED=false NGS_JWT_SECRET="your-32-byte-minimum-secret"
+cd backend && mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
 ```
 
-### Postgres only (optional)
-
-```bash
-cd docker
-docker compose up -d postgres
-cd ../backend
-SERVER_ADDRESS=127.0.0.1 mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
-```
+The API listens on `127.0.0.1` only (`SERVER_ADDRESS` overrides it). Other variable: `NGS_STORAGE_LOCAL_DIR` (upload folder).
 
 ---
 
@@ -184,8 +175,6 @@ SERVER_ADDRESS=127.0.0.1 mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
 cd backend && mvn test     # in-memory H2
 ./scripts/ci-check.sh      # same checks as CI
 ```
-
-Optional Postgres smoke test with Docker: `RUN_TESTCONTAINERS=true mvn -Dtest=PostgresContainerIT test`
 
 ---
 
@@ -200,13 +189,12 @@ git push -u origin HEAD
 # Open PR → main · CI · maintainer merges
 ```
 
-| Event | Tests | GHCR image |
-|-------|-------|------------|
-| PR → `main` | ✅ | ❌ |
-| Push to `feature/*`, `fix/*`, `hotfix/*` | ✅ | ❌ |
-| Push to `main` | ✅ | ✅ |
+| Event | Tests + demo |
+|-------|--------------|
+| PR → `main` | ✅ |
+| Push to `main`, `feature/*`, `fix/*`, `hotfix/*` | ✅ |
 
-Protect **`main`**: require PR, checks `backend` / `issue-link`, restrict merge to maintainer.
+**`main`** is protected by a ruleset: PR only, squash merge, checks `backend` / `issue-link`, 1 code-owner approval for contributors. The maintainer can merge their own PRs without a review.
 
 Every PR closes a prioritized issue (`P0` / `P1` / `P2`) with `Closes #<n>`. See [`CONTRIBUTING.md`](CONTRIBUTING.md#issues-priorities-and-prs).
 
@@ -230,7 +218,7 @@ AI agents: see [`AGENTS.md`](AGENTS.md) for project context.
 
 | Resource | Guidance |
 |----------|----------|
-| **RAM** | API heap ~1 GB; Postgres Compose ≤ 512 MB |
+| **RAM** | API heap ~1 GB |
 | **Disk** | Use fixtures in `datasets/`; prune `data/uploads` periodically |
 | **GPU** | Not used |
 

@@ -5,14 +5,14 @@ import com.ngs.analytics.domain.Role;
 import com.ngs.analytics.domain.UserAccount;
 import com.ngs.analytics.domain.UserAccountRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
 @ConditionalOnProperty(prefix = "ngs.auth", name = "disabled", havingValue = "true")
-public class DevAuthBootstrap {
+// Runs before the web server accepts requests, so a first call right after /actuator/health is UP never gets a 401.
+public class DevAuthBootstrap implements SmartInitializingSingleton {
 
     private final NgsProperties properties;
     private final UserAccountRepository userRepository;
@@ -28,8 +28,8 @@ public class DevAuthBootstrap {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void ensureDevUser() {
+    @Override
+    public void afterSingletonsInstantiated() {
         String email = properties.getAuth().getDevEmail();
         if (userRepository.existsByEmailIgnoreCase(email)) {
             return;
