@@ -2,9 +2,13 @@ name: CI
 
 on:
   pull_request:
-    branches: [prod]
+    branches: [main]
   push:
-    branches: [prod, 'feature/**', 'fix/**', 'hotfix/**']
+    branches: [main, 'feature/**', 'fix/**', 'hotfix/**']
+
+# Least privilege by default; the docker job adds packages: write itself.
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -27,43 +31,9 @@ jobs:
         working-directory: backend
         run: mvn -B -DskipTests package
 
-  frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - name: Install and build
-        working-directory: frontend
-        run: |
-          npm ci
-          npm run build
-      - name: Unit tests
-        working-directory: frontend
-        run: npm test -- --watch=false --browsers=ChromeHeadless
-
-  e2e:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - uses: cypress-io/github-action@v6
-        with:
-          working-directory: frontend
-          start: npm start
-          wait-on: http://localhost:4200
-          browser: chrome
-
   docker:
-    needs: [backend, frontend, e2e]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/prod'
+    needs: [backend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -82,8 +52,6 @@ jobs:
           repo="${GITHUB_REPOSITORY,,}"
           echo "api_latest=ghcr.io/${repo}/api:latest" >> "$GITHUB_OUTPUT"
           echo "api_sha=ghcr.io/${repo}/api:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-          echo "frontend_latest=ghcr.io/${repo}/frontend:latest" >> "$GITHUB_OUTPUT"
-          echo "frontend_sha=ghcr.io/${repo}/frontend:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
       - name: Build and push API image
         uses: docker/build-push-action@v6
         with:
@@ -93,12 +61,3 @@ jobs:
           tags: |
             ${{ steps.image.outputs.api_latest }}
             ${{ steps.image.outputs.api_sha }}
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: docker/Dockerfile.frontend
-          push: true
-          tags: |
-            ${{ steps.image.outputs.frontend_latest }}
-            ${{ steps.image.outputs.frontend_sha }}

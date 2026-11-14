@@ -17,23 +17,14 @@ backend/target/
 *.war
 .mvn/wrapper/maven-wrapper.jar
 
-# Node / Angular
-frontend/node_modules/
-frontend/dist/
-frontend/.angular/
-frontend/coverage/
-npm-debug.log*
-frontend/ng-serve-ci.log
-
-# Bruno / agente — não publicar no GitHub
-Docs_Bruno/*
-!Docs_Bruno/README.md
+# Maintainer-local files (not published)
 plan.md
-docs/
+docs/*
+!docs/mcp.md
 AGENT.md
-.cursor/plans/
-.cursor/work/*
-!.cursor/work/README.md
+# Local agent harness (rules + work logs for any AI agent) and IDE-specific folders
+.agents/
+.cursor/
 
 # Data & uploads
 data/
@@ -57,8 +48,6 @@ docker/postgres-data/
 # Test / coverage
 **/jacoco.exec
 **/coverage/
-cypress/videos/
-cypress/screenshots/
 
 # Python (if any tooling)
 __pycache__/

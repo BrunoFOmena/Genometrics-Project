@@ -3,9 +3,11 @@ package com.ngs.analytics.ai;
 import com.ngs.analytics.common.ApiException;
 import com.ngs.analytics.common.NgsProperties;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +19,11 @@ public class OllamaLlmClient implements LlmClient {
 
     public OllamaLlmClient(NgsProperties properties, RestClient.Builder builder) {
         this.properties = properties;
-        this.restClient = builder.baseUrl(properties.getAi().getBaseUrl()).build();
+        // Bounded waits: an unreachable or slow model must not hold request threads and DB connections.
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(Duration.ofSeconds(2));
+        requestFactory.setReadTimeout(Duration.ofSeconds(60));
+        this.restClient = builder.baseUrl(properties.getAi().getBaseUrl()).requestFactory(requestFactory).build();
     }
 
     @Override

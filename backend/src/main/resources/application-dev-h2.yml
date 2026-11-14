@@ -19,3 +19,7 @@ ngs:
     disabled: true
   storage:
     local-dir: ../data/uploads
+
+# Local-only by default (auth is off and the H2 console is on). Override with SERVER_ADDRESS=0.0.0.0 at your own risk.
+server:
+  address: ${SERVER_ADDRESS:127.0.0.1}

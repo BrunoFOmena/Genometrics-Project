@@ -1,0 +1,50 @@
+name: Bug report
+description: Something is broken or behaves unexpectedly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never paste or attach real patient/participant data.** Reproduce with files from `datasets/` or synthetic data.
+        Security issues: use the [private vulnerability report](https://github.com/BrunoFOmena/Genometrics-Project/security/advisories/new) instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Include what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. docker compose up --build
+        2. Upload datasets/sample.vcf
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Backend / API, MCP / agents, Docker / setup, CI, Other]
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: OS, how you run it (Compose or local), commit or version.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      render: shell
+  - type: checkboxes
+    id: data
+    attributes:
+      label: Data policy
+      options:
+        - label: This report contains no real patient/participant data.
+          required: true

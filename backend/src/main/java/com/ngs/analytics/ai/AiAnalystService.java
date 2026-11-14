@@ -8,7 +8,10 @@ import com.ngs.analytics.analytics.AnalyticsQueryService;
 import com.ngs.analytics.analytics.MetricCatalog;
 import com.ngs.analytics.domain.AiInteraction;
 import com.ngs.analytics.domain.AiInteractionRepository;
+import com.ngs.analytics.common.ApiException;
 import com.ngs.analytics.domain.UserAccount;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +20,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class AiAnalystService {
+
+    private static final Logger log = LoggerFactory.getLogger(AiAnalystService.class);
 
     private static final List<String> DEFAULT_METRICS =
             List.of("mean_quality", "gc_content", "duplication_rate", "variant_count", "mean_depth");
@@ -59,22 +64,22 @@ public class AiAnalystService {
                 .collect(Collectors.joining("\n"))
                 + "\n" + String.join("\n", catalog.qcKnowledge());
         String context = toJson(data.rows());
-        String answer = data.rows().isEmpty()
-                ? "The requested data is not available for the selected context."
+        Generated generated = data.rows().isEmpty()
+                ? new Generated("The requested data is not available for the selected context.", "deterministic")
                 : generateAnswer(request.question(), knowledge, context);
 
         AiInteraction interaction = new AiInteraction();
         interaction.setOwner(owner);
         interaction.setQuestion(request.question());
-        interaction.setAnswer(answer);
-        interaction.setModel(llmClient.enabled() ? llmClient.model() : "deterministic");
+        interaction.setAnswer(generated.answer());
+        interaction.setModel(generated.model());
         interaction.setToolTrace(toJson(List.of("query_metrics")));
         interaction.setCitations(toJson(citations));
         interactionRepository.save(interaction);
 
         return new AskResponse(
                 interaction.getId(),
-                answer,
+                generated.answer(),
                 interaction.getModel(),
                 List.of("query_metrics"),
                 citations
@@ -89,9 +94,9 @@ public class AiAnalystService {
                 .toList();
     }
 
-    private String generateAnswer(String question, String knowledge, String context) {
+    private Generated generateAnswer(String question, String knowledge, String context) {
         if (!llmClient.enabled()) {
-            return "Local AI is disabled. Grounded facts: " + context;
+            return new Generated("Local AI is disabled. Grounded facts: " + context, "deterministic");
         }
         String system = """
                 You are the Genometrics analyst. Answer only from METRIC DEFINITIONS and FACTS.
@@ -101,7 +106,15 @@ public class AiAnalystService {
         String prompt = "QUESTION:\n" + question
                 + "\n\nMETRIC DEFINITIONS:\n" + knowledge
                 + "\n\nFACTS:\n" + context;
-        return llmClient.complete(system, prompt);
+        try {
+            return new Generated(llmClient.complete(system, prompt), llmClient.model());
+        } catch (ApiException ex) {
+            log.warn("Local AI unavailable, answering with grounded facts: {}", ex.getMessage());
+            return new Generated("Local AI is unavailable. Grounded facts: " + context, "deterministic");
+        }
+    }
+
+    private record Generated(String answer, String model) {
     }
 
     private List<String> selectMetrics(AskRequest request) {

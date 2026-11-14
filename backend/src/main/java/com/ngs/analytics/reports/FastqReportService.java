@@ -118,7 +118,6 @@ public class FastqReportService {
             }
         }
 
-        html.append("<p><em>For interactive charts, open the sample detail page in the GENOMETRICS UI.</em></p>");
         html.append("</body></html>");
         return html.toString().getBytes(StandardCharsets.UTF_8);
     }
@@ -175,7 +174,6 @@ public class FastqReportService {
                 document.add(new Paragraph("Adapter hits: " + adapters.get("fraction") + "% of sampled reads", body));
             }
 
-            document.add(new Paragraph("Open the GENOMETRICS UI for interactive charts.", body));
             document.close();
             return out.toByteArray();
         } catch (Exception ex) {
