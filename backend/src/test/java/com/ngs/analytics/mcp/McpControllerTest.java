@@ -45,6 +45,43 @@ class McpControllerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void everyToolDeclaresAnObjectOutputSchema() throws Exception {
+        Map<String, Object> response = (Map<String, Object>) controller.handle(objectMapper.readTree("""
+                {"jsonrpc":"2.0","id":1,"method":"tools/list"}
+                """)).getBody();
+        List<Map<String, Object>> tools = (List<Map<String, Object>>) ((Map<String, Object>) response.get("result")).get("tools");
+
+        assertThat(tools).allSatisfy(tool -> {
+            Map<String, Object> schema = (Map<String, Object>) tool.get("outputSchema");
+            assertThat(schema).as(String.valueOf(tool.get("name"))).containsEntry("type", "object").containsKey("required");
+        });
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void returnsStructuredContentAndTheSameJsonAsText() throws Exception {
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        new com.ngs.analytics.domain.UserAccount(), null, List.of()));
+        try {
+            Map<String, Object> response = (Map<String, Object>) controller.handle(objectMapper.readTree("""
+                    {"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_metrics","arguments":{}}}
+                    """)).getBody();
+            Map<String, Object> result = (Map<String, Object>) response.get("result");
+            Map<String, Object> structured = (Map<String, Object>) result.get("structuredContent");
+            List<Map<String, Object>> metrics = (List<Map<String, Object>>) structured.get("metrics");
+            String text = (String) ((List<Map<String, Object>>) result.get("content")).get(0).get("text");
+
+            assertThat(metrics).extracting(m -> m.get("key")).contains("mean_quality", "variant_count");
+            assertThat(objectMapper.readTree(text)).isEqualTo(objectMapper.valueToTree(structured));
+            assertThat(result).doesNotContainKey("isError");
+        } finally {
+            org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
     void doesNotReplyToJsonRpcNotifications() throws Exception {
         var response = controller.handle(objectMapper.readTree("""
                 {"jsonrpc":"2.0","method":"notifications/initialized"}

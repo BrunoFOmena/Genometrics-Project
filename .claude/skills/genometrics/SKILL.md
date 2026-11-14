@@ -42,7 +42,7 @@ curl -s http://localhost:8080/mcp -H 'Content-Type: application/json' -d '{
   "params":{"name":"query_metrics","arguments":{"metrics":["mean_quality","gc_content"],"dimensions":["sample","metric"],"aggregation":"AVG"}}}'
 ```
 
-`result.content[0].text` is a JSON string with `columns` and `rows`.
+`result.structuredContent` holds the payload (`columns` and `rows` here); `result.content[0].text` has the same JSON as a string.
 
 | Tool | Arguments |
 |------|-----------|

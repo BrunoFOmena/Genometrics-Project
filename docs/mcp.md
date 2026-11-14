@@ -88,7 +88,7 @@ curl -s http://localhost:8080/mcp \
   }'
 ```
 
-The `result.content[0].text` field is a JSON string of the tool payload.
+Each successful result carries the payload as `result.structuredContent` (a JSON object matching the tool's `outputSchema` in `tools/list`) and the same JSON as a string in `result.content[0].text`, for clients that ignore structured content. `list_metrics` wraps its list as `{"metrics": [...]}`. Failed calls return `isError: true` with a text message only.
 
 ## Claude Code
 
