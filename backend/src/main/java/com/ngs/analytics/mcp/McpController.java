@@ -109,10 +109,16 @@ public class McpController {
                         UUID.fromString(arguments.path("analysisId").asText()), user);
                 default -> throw new IllegalStateException("Unreachable tool");
             };
-            return Map.of("content", List.of(Map.of(
-                    "type", "text",
-                    "text", writeJson(value)
-            )));
+            // structuredContent must be a JSON object; list_metrics returns a list, so it is wrapped.
+            Object structured = objectMapper.convertValue(value, Object.class);
+            if (structured instanceof List<?> list) {
+                structured = Map.of("metrics", list);
+            }
+            // The spec asks for the same JSON as text too, for clients that ignore structuredContent.
+            return Map.of(
+                    "content", List.of(Map.of("type", "text", "text", writeJson(structured))),
+                    "structuredContent", structured
+            );
         } catch (Exception ex) {
             return Map.of(
                     "isError", true,
@@ -141,9 +147,22 @@ public class McpController {
 
     private List<Map<String, Object>> tools() {
         return List.of(
-                tool("list_metrics", "List metric definitions", Map.of("type", "object")),
+                tool("list_metrics", "List metric definitions", Map.of("type", "object"), object(List.of("metrics"), Map.of(
+                        "metrics", arrayOf(object(List.of("key", "label", "unit"), Map.of(
+                                "key", type("string"),
+                                "label", type("string"),
+                                "domain", type("string"),
+                                "unit", type("string"),
+                                "description", type("string"),
+                                "aggregations", arrayOf(type("string")),
+                                "version", type("integer"))))))),
                 tool("query_metrics", "Query grounded metric facts. To compare samples, group by "
-                        + "dimensions [\"sample\", \"metric\"] with an aggregation such as AVG", querySchema()),
+                        + "dimensions [\"sample\", \"metric\"] with an aggregation such as AVG", querySchema(),
+                        object(List.of("columns", "rows", "total", "truncated"), Map.of(
+                                "columns", arrayOf(type("string")),
+                                "rows", arrayOf(type("object")),
+                                "total", type("integer"),
+                                "truncated", type("boolean")))),
                 tool("explain_qc", "Explain quality metrics with citations", Map.of(
                         "type", "object",
                         "properties", Map.of(
@@ -153,12 +172,30 @@ public class McpController {
                                 "metrics", Map.of("type", "array", "items", Map.of("type", "string"))
                         ),
                         "required", List.of("question")
-                )),
+                ), object(List.of("answer", "model", "citations"), Map.of(
+                        "interactionId", type("string"),
+                        "answer", type("string"),
+                        "model", type("string"),
+                        "tools", arrayOf(type("string")),
+                        "citations", arrayOf(object(List.of("analysisId", "sampleId", "metric", "unit"), Map.of(
+                                "analysisId", type("string"),
+                                "sampleId", type("string"),
+                                "metric", type("string"),
+                                "value", Map.of("type", List.of("number", "null")),
+                                "unit", type("string"))))))),
                 tool("get_analysis_context", "Get one analysis and its metric facts", Map.of(
                         "type", "object",
                         "properties", Map.of("analysisId", Map.of("type", "string")),
                         "required", List.of("analysisId")
-                ))
+                ), object(List.of("analysisId", "sampleId", "sample", "status", "metrics"), Map.of(
+                        "analysisId", type("string"),
+                        "sampleId", type("string"),
+                        "sample", type("string"),
+                        "status", type("string"),
+                        "metrics", arrayOf(object(List.of("key", "unit"), Map.of(
+                                "key", type("string"),
+                                "value", Map.of("type", List.of("number", "null")),
+                                "unit", type("string")))))))
         );
     }
 
@@ -176,8 +213,21 @@ public class McpController {
         );
     }
 
-    private Map<String, Object> tool(String name, String description, Map<String, Object> schema) {
-        return Map.of("name", name, "description", description, "inputSchema", schema);
+    private Map<String, Object> tool(String name, String description, Map<String, Object> schema,
+                                     Map<String, Object> outputSchema) {
+        return Map.of("name", name, "description", description, "inputSchema", schema, "outputSchema", outputSchema);
+    }
+
+    private static Map<String, Object> object(List<String> required, Map<String, Object> properties) {
+        return Map.of("type", "object", "properties", properties, "required", required);
+    }
+
+    private static Map<String, Object> arrayOf(Map<String, Object> items) {
+        return Map.of("type", "array", "items", items);
+    }
+
+    private static Map<String, Object> type(String name) {
+        return Map.of("type", name);
     }
 
     private String writeJson(Object value) {
