@@ -124,7 +124,7 @@ GENOMETRICS speaks MCP (JSON-RPC 2.0) over HTTP at `http://localhost:8080/mcp`. 
 claude mcp add --transport http genometrics http://localhost:8080/mcp
 ```
 
-Other clients (Cursor, stdio bridges), tool arguments and examples: [`docs/mcp.md`](docs/mcp.md).
+Other clients (Cursor, stdio-only clients via `scripts/mcp-stdio.sh`), tool arguments and examples: [`docs/mcp.md`](docs/mcp.md).
 
 Check it from the shell:
 

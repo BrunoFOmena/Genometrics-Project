@@ -29,4 +29,11 @@ for metric in mean_quality variant_count; do
 done
 echo "  mean_quality and variant_count facts returned"
 
+echo "== MCP over stdio =="
+stdio=$(printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
+  '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"query_metrics","arguments":{"metrics":["variant_count"]}}}' \
+  | "$ROOT/scripts/mcp-stdio.sh")
+echo "$stdio" | grep -q 'metric[^,]*variant_count' || { echo "stdio query_metrics returned no variant_count: $stdio" >&2; exit 1; }
+echo "  stdio transport returned variant_count"
+
 echo "== demo ready: MCP at $API/mcp (if this script started the API: kill \$(cat data/api.pid)) =="
