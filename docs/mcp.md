@@ -20,6 +20,8 @@ curl -s http://localhost:8080/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}'
 ```
 
+Supported protocol versions: `2025-06-18` (newest), `2025-03-26` and `2024-11-05`. `initialize` echoes the `protocolVersion` the client asks for when it is one of these, and otherwise answers with `2025-06-18`, leaving the client to decide whether to continue.
+
 The server also answers `ping` with an empty result, for clients that check the connection.
 
 Then list tools:
