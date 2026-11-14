@@ -8,4 +8,4 @@ Tiny synthetic fixtures for local development. Do **not** commit large SRA/ENA d
 | `sample.vcf` | 10 annotated variants for VCF metrics |
 | `sample.fasta` | Tiny reference metadata fixture |
 
-Load these files through the upload API after starting the stack, then query them with an MCP client (see the main README).
+Load them all with `./scripts/demo.sh`, or through the upload API, then query them with an MCP client (see the main README).

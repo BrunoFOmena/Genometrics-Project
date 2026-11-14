@@ -1,9 +1,0 @@
-# GENOMETRICS — Postgres + API + MCP (open-source quick start).
-# Na raiz do repositório:
-#   docker compose up --build -d
-#
-# API: http://localhost:8080  |  MCP: http://localhost:8080/mcp
-# Demo SQL is local-only: ~/projetos/dumps/genometrics/ + compose.override.yaml (see compose.override.example.yaml)
-
-include:
-  - path: docker/docker-compose.yml

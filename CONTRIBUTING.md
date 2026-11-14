@@ -15,7 +15,7 @@ GENOMETRICS handles genomic data, which is sensitive personal data.
 
 | Branch | Purpose |
 |--------|---------|
-| **`main`** | Official line: default on GitHub, deployable, Docker images published on push |
+| **`main`** | Official line: default on GitHub, deployable |
 | **`feature/*`**, **`fix/*`**, **`hotfix/*`** | Short-lived work branches |
 
 There is no separate integration branch. Open your PR **into `main`**. (`prod` is only a Spring profile, not a branch.)
@@ -62,7 +62,7 @@ Every pull request **must close an issue** with a closing keyword in the PR body
 
 ## Releases
 
-Merges to **`main`** publish GHCR images (`:latest` and `:${GITHUB_SHA}`). Tagged releases use SemVer (`v0.x.y`).
+Tagged releases use SemVer (`v0.x.y`).
 
 ## Questions
 
