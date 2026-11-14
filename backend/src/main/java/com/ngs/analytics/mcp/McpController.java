@@ -156,8 +156,9 @@ public class McpController {
     private List<Map<String, Object>> tools() {
         List<Map<String, Object>> tools = new ArrayList<>(baseTools());
         if (localFileAnalyzer.enabled()) {
-            tools.add(tool("analyze_file", "Analyze local FASTQ/VCF files (absolute paths inside NGS_MCP_ANALYZE_ROOTS). "
-                    + "Pass R1 and R2 together for paired-end. Returns analysis ids with status QUEUED; poll "
+            tools.add(tool("analyze_file", "Analyze local FASTQ, VCF or FASTA files (absolute paths inside "
+                    + "NGS_MCP_ANALYZE_ROOTS). Pass the R1 and R2 FASTQ of one sample together for paired-end; R1 also "
+                    + "gets its own single-end analysis. Returns analysis ids with status QUEUED; poll "
                     + "get_analysis_context until status is DONE, then query the metrics", Map.of(
                     "type", "object",
                     "properties", Map.of(

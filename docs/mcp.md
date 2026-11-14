@@ -44,7 +44,7 @@ Ollama listens on `127.0.0.1` by default, which is what the API expects (`OLLAMA
 
 ### Analyze a file from MCP
 
-Start the API with the directories the tool may read, for example `NGS_MCP_ANALYZE_ROOTS=/data/runs mvn spring-boot:run`, then call `analyze_file` with absolute paths. Pass R1 and R2 together for paired-end, in any order. Analyses start as `QUEUED`; poll `get_analysis_context` until `status` is `DONE`, then query the metrics. Without the variable the tool is not listed (see `SECURITY.md`).
+Start the API with the directories the tool may read, for example `NGS_MCP_ANALYZE_ROOTS=/data/runs mvn spring-boot:run`, then call `analyze_file` with absolute paths. Pass the R1 and R2 FASTQ of one sample together for paired-end, in any order (the names must match apart from R1/R2); R1 also gets its own single-end analysis, so a pair returns two entries. Files are copied into storage during the call, so a multi-GB file takes a while before the tool answers. Analyses start as `QUEUED`; poll `get_analysis_context` until `status` is `DONE`, then query the metrics. Without the variable the tool is not listed (see `SECURITY.md`).
 
 To compare samples, group by sample and metric:
 

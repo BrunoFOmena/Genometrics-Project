@@ -26,7 +26,7 @@ With auth off (the default), the API trusts anything that can reach `127.0.0.1`,
 
 ## Reading local files from MCP (`analyze_file`)
 
-The `analyze_file` tool lets an agent analyze a file by path. It is **off by default** and only appears once `NGS_MCP_ANALYZE_ROOTS` lists the directories it may read (comma separated). It then reads only absolute paths to regular files whose real location, after resolving symlinks and `..`, is inside one of those directories; anything else is refused. Files must have a FASTQ, VCF or FASTA name, stay under the upload size limit, and are copied into `NGS_STORAGE_LOCAL_DIR` like an upload. List only directories that hold sequencing data, never your home directory.
+The `analyze_file` tool lets an agent analyze a file by path. It is **off by default** and only appears once `NGS_MCP_ANALYZE_ROOTS` lists the directories it may read (comma separated). It then reads only absolute paths to regular files whose real location, after resolving symlinks and `..`, is inside one of those directories; anything else is refused. Files must have a FASTQ, VCF or FASTA name, stay under the upload size limit, and are copied into `NGS_STORAGE_LOCAL_DIR` like an upload. Blank, relative and `/` entries are ignored. Paths outside the roots all get the same error, so the tool cannot be used to find out which files exist elsewhere. With auth enabled, only `ADMIN` accounts may use it. List only directories that hold sequencing data, never your home directory, and keep them writable only by people you trust: a file swapped or grown after the check is refused, but a hard link placed inside a root cannot be told apart from a normal file.
 
 ## Deployment requirements
 
