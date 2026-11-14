@@ -21,7 +21,7 @@ import java.util.*;
 public class McpController {
 
     private static final Set<String> TOOL_NAMES = Set.of(
-            "list_metrics", "query_metrics", "compare_analyses", "explain_qc", "get_analysis_context");
+            "list_metrics", "query_metrics", "explain_qc", "get_analysis_context");
 
     private final ObjectMapper objectMapper;
     private final MetricCatalog catalog;
@@ -101,7 +101,7 @@ public class McpController {
         try {
             Object value = switch (name) {
                 case "list_metrics" -> catalog.all();
-                case "query_metrics", "compare_analyses" -> queryService.query(
+                case "query_metrics" -> queryService.query(
                         objectMapper.convertValue(arguments, AnalyticsDtos.QueryRequest.class), user.getId());
                 case "explain_qc" -> analystService.ask(
                         objectMapper.convertValue(arguments, AiDtos.AskRequest.class), user);
@@ -142,8 +142,8 @@ public class McpController {
     private List<Map<String, Object>> tools() {
         return List.of(
                 tool("list_metrics", "List metric definitions", Map.of("type", "object")),
-                tool("query_metrics", "Query grounded metric facts", querySchema()),
-                tool("compare_analyses", "Compare metrics across samples", querySchema()),
+                tool("query_metrics", "Query grounded metric facts. To compare samples, group by "
+                        + "dimensions [\"sample\", \"metric\"] with an aggregation such as AVG", querySchema()),
                 tool("explain_qc", "Explain quality metrics with citations", Map.of(
                         "type", "object",
                         "properties", Map.of(

@@ -39,7 +39,6 @@ class McpControllerTest {
                 .containsExactly(
                         "list_metrics",
                         "query_metrics",
-                        "compare_analyses",
                         "explain_qc",
                         "get_analysis_context"
                 );

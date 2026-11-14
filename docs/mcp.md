@@ -34,13 +34,20 @@ curl -s http://localhost:8080/mcp \
 |------|--------------------|-----------------|
 | `list_metrics` | none | Metric catalog (key, label, unit) |
 | `query_metrics` | `metrics` (string array) | Rows from stored facts. Optional: `dimensions`, `filters`, `aggregation`, `limit` (max 1000) |
-| `compare_analyses` | same shape as `query_metrics` | Same query, intended for side-by-side samples |
 | `explain_qc` | `question` | Grounded answer plus citations. Optional: `projectId`, `sampleIds`, `metrics` |
 | `get_analysis_context` | `analysisId` | One analysis and its metric facts |
 
 `explain_qc` uses [Ollama](https://ollama.com) only when `NGS_AI_ENABLED=true` (off by default) and the model responds within the timeout. Otherwise the text is the catalogued facts. Missing facts are reported as unavailable; the tool does not invent a value. Treat model-phrased answers as untrusted text: check the cited facts.
 
 Ollama listens on `127.0.0.1` by default, which is what the API expects (`OLLAMA_BASE_URL=http://localhost:11434`). Do **not** expose Ollama on `0.0.0.0` on untrusted networks, since its API has no authentication.
+
+To compare samples, group by sample and metric:
+
+```json
+{"metrics": ["mean_quality", "gc_content"], "dimensions": ["sample", "metric"], "aggregation": "AVG"}
+```
+
+A paired-end sample has two analyses (a single-end run on R1 and the paired run); filter on the paired `analysisId` when that matters.
 
 ## Call a tool
 

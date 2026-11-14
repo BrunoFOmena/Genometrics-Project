@@ -30,7 +30,7 @@ This is option 1 of #30. Not chosen:
 
 The migration is judged against behavior that already exists and is tested:
 
-- The **MCP tools** and their arguments: `list_metrics`, `query_metrics`, `compare_analyses`, `explain_qc`, `get_analysis_context` (some will change under #49 to #54; the contract is whatever is on `main` when each step starts).
+- The **MCP tools** and their arguments: `list_metrics`, `query_metrics`, `explain_qc`, `get_analysis_context` (`compare_analyses` was removed in #54; others may change under #49 to #54; the contract is whatever is on `main` when each step starts).
 - The **metric keys and units** in `MetricCatalog`, and the **QC thresholds and verdicts** in `FastqQcThresholds` / `FastqQcEvaluator`.
 - The **fixtures** in `datasets/` and the grounded-answer cases in `datasets/evals/grounded-questions.json`.
 - The **local-first guarantees**: loopback only, Host/Origin guard, optional bearer token, research-use-only notice.

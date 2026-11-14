@@ -19,7 +19,7 @@ project=$(echo "$out" | sed -n 's/^project=\([^ ]*\) .*/\1/p')
 
 echo "== MCP tools/list =="
 tools=$(mcp '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | grep -o '"name":"[a-z_]*"')
-[ "$(echo "$tools" | wc -l)" -eq 5 ] || { echo "Expected 5 MCP tools, got: $tools" >&2; exit 1; }
+[ "$(echo "$tools" | wc -l)" -eq 4 ] || { echo "Expected 4 MCP tools, got: $tools" >&2; exit 1; }
 echo "$tools" | sed 's/^/  /'
 
 echo "== MCP query_metrics =="

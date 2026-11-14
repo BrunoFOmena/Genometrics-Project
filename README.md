@@ -87,8 +87,7 @@ The script starts the API if needed, uploads the files (`.gz` works too), waits 
 | MCP tool | What it does |
 |----------|--------------|
 | `list_metrics` | Lists every metric with its unit and description |
-| `query_metrics` | Queries stored metrics with filters, grouping and aggregation |
-| `compare_analyses` | Compares metrics across samples |
+| `query_metrics` | Queries and compares stored metrics with filters, grouping and aggregation |
 | `explain_qc` | Explains QC results with citations (phrased by a local [Ollama](https://ollama.com) model when `NGS_AI_ENABLED=true`, otherwise the grounded facts) |
 | `get_analysis_context` | Returns one analysis with all of its metrics |
 
