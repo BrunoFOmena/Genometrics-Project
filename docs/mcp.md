@@ -37,7 +37,7 @@ curl -s http://localhost:8080/mcp \
 | `explain_qc` | `question` | Grounded answer plus citations. Optional: `projectId`, `sampleIds`, `metrics` |
 | `get_analysis_context` | `analysisId` | One analysis and its metric facts |
 
-`explain_qc` uses [Ollama](https://ollama.com) only when `NGS_AI_ENABLED=true` (off by default) and the model responds within the timeout. Otherwise the text is the catalogued facts. Missing facts are reported as unavailable; the tool does not invent a value. Treat model-phrased answers as untrusted text: check the cited facts.
+`explain_qc` uses [Ollama](https://ollama.com) only when `NGS_AI_ENABLED=true` (off by default) and the model responds within the timeout. Otherwise `answer` is a deterministic summary: one block per analysis with its FASTQ QC verdict (PASS / WARN / FAIL), one line per metric and the checks that did not pass, then the requested metrics that have no data. `citations` lists every fact behind it. Missing facts are reported as unavailable; the tool does not invent a value. Treat model-phrased answers as untrusted text: check the cited facts.
 
 Ollama listens on `127.0.0.1` by default, which is what the API expects (`OLLAMA_BASE_URL=http://localhost:11434`). Do **not** expose Ollama on `0.0.0.0` on untrusted networks, since its API has no authentication.
 
