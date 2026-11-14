@@ -20,8 +20,9 @@ import java.util.Set;
  * <ul>
  *   <li>Auth off: the {@code Host} header must be loopback or in {@code ngs.security.allowed-hosts}. A rebinding page
  *       reaches 127.0.0.1 with its own host name, so it is rejected here.</li>
- *   <li>Always: on {@code /mcp} and state-changing {@code /api/**} requests, an {@code Origin} header must be
- *       same-origin or in {@code ngs.security.allowed-origins}. Non-browser clients send no {@code Origin}.</li>
+ *   <li>Always: any state-changing request (not GET/HEAD/OPTIONS/TRACE) that carries an {@code Origin} header, which
+ *       covers {@code /mcp} and every {@code /api} call, must be same-host or in {@code ngs.security.allowed-origins}.
+ *       Matching is by method, not path, so it fails closed. Non-browser clients send no {@code Origin}.</li>
  * </ul>
  */
 @Component
@@ -46,7 +47,7 @@ public class LocalRequestGuardFilter extends OncePerRequestFilter {
             return;
         }
         String origin = request.getHeader("Origin");
-        if (origin != null && isProtected(request) && !originAllowed(origin, hostHeader)) {
+        if (origin != null && !SAFE_METHODS.contains(request.getMethod()) && !originAllowed(origin, hostHeader)) {
             reject(response, "Origin not allowed");
             return;
         }
@@ -56,7 +57,7 @@ public class LocalRequestGuardFilter extends OncePerRequestFilter {
     private boolean hostAllowed(String hostHeader) {
         String host = hostName(hostHeader);
         return host != null && (LOOPBACK_HOSTS.contains(host)
-                || properties.getSecurity().getAllowedHosts().stream().anyMatch(h -> h.trim().equalsIgnoreCase(host)));
+                || properties.getSecurity().getAllowedHosts().stream().anyMatch(h -> host.equals(hostName(h))));
     }
 
     private boolean originAllowed(String origin, String hostHeader) {
@@ -67,12 +68,6 @@ public class LocalRequestGuardFilter extends OncePerRequestFilter {
         }
         int scheme = normalized.indexOf("://");
         return scheme > 0 && hostHeader != null && normalized.substring(scheme + 3).equals(hostHeader.trim().toLowerCase(Locale.ROOT));
-    }
-
-    private static boolean isProtected(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        return path.equals("/mcp") || path.startsWith("/mcp/")
-                || (path.startsWith("/api/") && !SAFE_METHODS.contains(request.getMethod()));
     }
 
     /** Host header without port, lower case; IPv6 literals keep their brackets. */

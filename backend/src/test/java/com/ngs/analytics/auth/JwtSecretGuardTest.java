@@ -21,6 +21,16 @@ class JwtSecretGuardTest {
     }
 
     @Test
+    void refusesMissingBlankOrShortSecretsWhenAuthIsOn() {
+        properties.getAuth().setDisabled(false);
+
+        for (String secret : new String[] {null, "", "   ", "too-short-secret"}) {
+            properties.getJwt().setSecret(secret);
+            assertThatThrownBy(guard::afterSingletonsInstantiated).isInstanceOf(IllegalStateException.class);
+        }
+    }
+
+    @Test
     void startsWithACustomSecretOrWhenAuthIsOff() {
         properties.getAuth().setDisabled(false);
         properties.getJwt().setSecret("a-unique-secret-that-is-at-least-32-bytes-long");

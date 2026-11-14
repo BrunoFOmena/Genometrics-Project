@@ -143,7 +143,7 @@ export NGS_JWT_SECRET="your-32-byte-minimum-secret"
 mvn spring-boot:run
 ```
 
-Browser pages cannot reach the local API: requests with a foreign `Host` (DNS rebinding) or a foreign `Origin` on `/mcp` and state-changing `/api` calls get `403`. If you use another host name or a browser-based client, allow it with `NGS_SECURITY_ALLOWED_HOSTS` / `NGS_SECURITY_ALLOWED_ORIGINS` (comma separated). With auth enabled the API also refuses to start while `NGS_JWT_SECRET` is the public default.
+Browser pages cannot reach the local API: requests with a foreign `Host` (DNS rebinding, auth off) or a foreign `Origin` on state-changing calls (`/mcp`, `/api`) get `403`. If you reach the API through another host name, list it in `NGS_SECURITY_ALLOWED_HOSTS` (comma separated, no port); see [`SECURITY.md`](SECURITY.md) for `NGS_SECURITY_ALLOWED_ORIGINS`. With auth enabled the API also refuses to start while `NGS_JWT_SECRET` is missing, shorter than 32 bytes or the public default.
 
 With auth enabled, every `/api/**` call and `/mcp` need a token:
 

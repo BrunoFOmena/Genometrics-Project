@@ -4,7 +4,9 @@ import com.ngs.analytics.common.NgsProperties;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.stereotype.Component;
 
-/** Refuses to start with auth enabled and the public default JWT secret: anyone could forge tokens. */
+import java.nio.charset.StandardCharsets;
+
+/** Refuses to start with auth enabled and a missing, short or public-default JWT secret: anyone could forge tokens. */
 @Component
 public class JwtSecretGuard implements SmartInitializingSingleton {
 
@@ -16,10 +18,15 @@ public class JwtSecretGuard implements SmartInitializingSingleton {
 
     @Override
     public void afterSingletonsInstantiated() {
-        if (!properties.getAuth().isDisabled()
-                && NgsProperties.Jwt.PUBLIC_DEFAULT_SECRET.equals(properties.getJwt().getSecret())) {
+        if (properties.getAuth().isDisabled()) {
+            return;
+        }
+        String secret = properties.getJwt().getSecret();
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32
+                || NgsProperties.Jwt.PUBLIC_DEFAULT_SECRET.equals(secret)) {
             throw new IllegalStateException(
-                    "Auth is enabled but NGS_JWT_SECRET is the public default. Set a unique secret of at least 32 bytes.");
+                    "Auth is enabled but NGS_JWT_SECRET is missing, shorter than 32 bytes or the public default. "
+                            + "Set a unique secret of at least 32 bytes.");
         }
     }
 }

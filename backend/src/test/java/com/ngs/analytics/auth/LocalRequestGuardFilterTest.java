@@ -94,6 +94,34 @@ class LocalRequestGuardFilterTest {
     }
 
     @Test
+    void checksOriginOnEveryStateChangingRequestWhateverThePath() throws Exception {
+        properties.getAuth().setDisabled(true);
+
+        assertThat(status("POST", "/MCP", "localhost:8080", "http://evil.example")).isEqualTo(403);
+        assertThat(status("POST", "/mcp;x=y", "localhost:8080", "http://evil.example")).isEqualTo(403);
+        assertThat(status("PUT", "/x/../mcp", "localhost:8080", "http://evil.example")).isEqualTo(403);
+        assertThat(status("POST", "/h2-console/login", "localhost:8080", "http://evil.example")).isEqualTo(403);
+        assertThat(status("POST", "/mcp", "localhost:8080", "")).isEqualTo(403);
+    }
+
+    @Test
+    void rejectsTrickyHostValues() throws Exception {
+        properties.getAuth().setDisabled(true);
+
+        assertThat(status("GET", "/api/projects", "localhost@evil.example", null)).isEqualTo(403);
+        assertThat(status("GET", "/api/projects", "localhost.evil.example", null)).isEqualTo(403);
+        assertThat(status("GET", "/api/projects", "", null)).isEqualTo(403);
+    }
+
+    @Test
+    void allowedHostEntriesMayCarryAPort() throws Exception {
+        properties.getAuth().setDisabled(true);
+        properties.getSecurity().setAllowedHosts(List.of("Genometrics.lan:8080"));
+
+        assertThat(status("GET", "/api/projects", "genometrics.lan:8080", null)).isEqualTo(200);
+    }
+
+    @Test
     void checksOriginEvenWhenAuthIsOn() throws Exception {
         properties.getAuth().setDisabled(false);
 

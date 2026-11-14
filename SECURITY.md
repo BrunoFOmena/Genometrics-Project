@@ -18,11 +18,11 @@ Only the latest commit on `main` receives fixes (and the latest release, once ta
 
 With auth off (the default), the API trusts anything that can reach `127.0.0.1`, so a web page open in your browser must not be able to talk to it:
 
-- **DNS rebinding:** requests whose `Host` is not `localhost`, `127.0.0.1` or `[::1]` get `403`. Add your own names with `NGS_SECURITY_ALLOWED_HOSTS` (comma separated) if you reach the API through another host name.
-- **Cross-site requests:** `/mcp` and state-changing `/api/**` calls that carry an `Origin` header are rejected unless the origin is the API itself or is listed in `NGS_SECURITY_ALLOWED_ORIGINS` (for example `http://localhost:3000`). Command-line and MCP clients send no `Origin` and are not affected.
-- **Default JWT secret:** with auth enabled the API refuses to start while `NGS_JWT_SECRET` is the public default.
+- **DNS rebinding:** requests whose `Host` is not `localhost`, `127.0.0.1` or `[::1]` get `403`. Add your own names with `NGS_SECURITY_ALLOWED_HOSTS` (comma separated, no port) if you reach the API through another host name.
+- **Cross-site requests:** state-changing requests (anything but GET, HEAD, OPTIONS, TRACE) that carry an `Origin` header, which includes `/mcp` and every `/api` call, are rejected unless the origin has the same host and port as the request or is listed in `NGS_SECURITY_ALLOWED_ORIGINS`. Command-line and MCP clients send no `Origin` and are not affected.
+- **JWT secret:** with auth enabled the API refuses to start while `NGS_JWT_SECRET` is missing, shorter than 32 bytes or the public default.
 
-Only widen these lists for hosts and origins you control.
+`NGS_SECURITY_ALLOWED_HOSTS` takes host names or IPs without a port. Bare IPs other than `127.0.0.1` and `::1` (for example a LAN address when you set `SERVER_ADDRESS=0.0.0.0`) must be listed too. `NGS_SECURITY_ALLOWED_ORIGINS` only lets a request carrying that `Origin` through; the API sends no CORS headers, so a web page still cannot read cross-origin responses. Only widen these lists for hosts and origins you control.
 
 ## Deployment requirements
 
