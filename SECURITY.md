@@ -24,6 +24,10 @@ With auth off (the default), the API trusts anything that can reach `127.0.0.1`,
 
 `NGS_SECURITY_ALLOWED_HOSTS` takes host names or IPs without a port. Bare IPs other than `127.0.0.1` and `::1` (for example a LAN address when you set `SERVER_ADDRESS=0.0.0.0`) must be listed too. `NGS_SECURITY_ALLOWED_ORIGINS` only lets a request carrying that `Origin` through; the API sends no CORS headers, so a web page still cannot read cross-origin responses. Only widen these lists for hosts and origins you control.
 
+## Reading local files from MCP (`analyze_file`)
+
+The `analyze_file` tool lets an agent analyze a file by path. It is **off by default** and only appears once `NGS_MCP_ANALYZE_ROOTS` lists the directories it may read (comma separated). It then reads only absolute paths to regular files whose real location, after resolving symlinks and `..`, is inside one of those directories; anything else is refused. Files must have a FASTQ, VCF or FASTA name, stay under the upload size limit, and are copied into `NGS_STORAGE_LOCAL_DIR` like an upload. List only directories that hold sequencing data, never your home directory.
+
 ## Deployment requirements
 
 The defaults are for a single local machine only. Before exposing GENOMETRICS on **any** network you **must**:

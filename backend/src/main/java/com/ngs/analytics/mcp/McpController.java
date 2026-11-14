@@ -21,7 +21,7 @@ import java.util.*;
 public class McpController {
 
     private static final Set<String> TOOL_NAMES = Set.of(
-            "list_metrics", "query_metrics", "explain_qc", "get_analysis_context");
+            "list_metrics", "query_metrics", "explain_qc", "get_analysis_context", "analyze_file");
 
     private final ObjectMapper objectMapper;
     private final MetricCatalog catalog;
@@ -29,6 +29,7 @@ public class McpController {
     private final AiAnalystService analystService;
     private final AnalysisService analysisService;
     private final MetricFactRepository metricFactRepository;
+    private final LocalFileAnalyzer localFileAnalyzer;
 
     public McpController(
             ObjectMapper objectMapper,
@@ -36,7 +37,8 @@ public class McpController {
             AnalyticsQueryService queryService,
             AiAnalystService analystService,
             AnalysisService analysisService,
-            MetricFactRepository metricFactRepository
+            MetricFactRepository metricFactRepository,
+            LocalFileAnalyzer localFileAnalyzer
     ) {
         this.objectMapper = objectMapper;
         this.catalog = catalog;
@@ -44,6 +46,7 @@ public class McpController {
         this.analystService = analystService;
         this.analysisService = analysisService;
         this.metricFactRepository = metricFactRepository;
+        this.localFileAnalyzer = localFileAnalyzer;
     }
 
     @PostMapping
@@ -107,6 +110,11 @@ public class McpController {
                         objectMapper.convertValue(arguments, AiDtos.AskRequest.class), user);
                 case "get_analysis_context" -> analysisContext(
                         UUID.fromString(arguments.path("analysisId").asText()), user);
+                case "analyze_file" -> localFileAnalyzer.analyze(
+                        objectMapper.convertValue(arguments.path("paths"), new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {}),
+                        arguments.path("sampleName").asText(null),
+                        arguments.hasNonNull("projectId") ? UUID.fromString(arguments.path("projectId").asText()) : null,
+                        user);
                 default -> throw new IllegalStateException("Unreachable tool");
             };
             // structuredContent must be a JSON object; list_metrics returns a list, so it is wrapped.
@@ -146,6 +154,30 @@ public class McpController {
     }
 
     private List<Map<String, Object>> tools() {
+        List<Map<String, Object>> tools = new ArrayList<>(baseTools());
+        if (localFileAnalyzer.enabled()) {
+            tools.add(tool("analyze_file", "Analyze local FASTQ/VCF files (absolute paths inside NGS_MCP_ANALYZE_ROOTS). "
+                    + "Pass R1 and R2 together for paired-end. Returns analysis ids with status QUEUED; poll "
+                    + "get_analysis_context until status is DONE, then query the metrics", Map.of(
+                    "type", "object",
+                    "properties", Map.of(
+                            "paths", Map.of("type", "array", "items", type("string"), "minItems", 1, "maxItems", 2),
+                            "sampleName", type("string"),
+                            "projectId", type("string")),
+                    "required", List.of("paths")
+            ), object(List.of("projectId", "sampleId", "analyses"), Map.of(
+                    "projectId", type("string"),
+                    "sampleId", type("string"),
+                    "analyses", arrayOf(object(List.of("analysisId", "file", "status", "paired"), Map.of(
+                            "analysisId", type("string"),
+                            "file", type("string"),
+                            "status", type("string"),
+                            "paired", type("boolean"))))))));
+        }
+        return tools;
+    }
+
+    private List<Map<String, Object>> baseTools() {
         return List.of(
                 tool("list_metrics", "List metric definitions", Map.of("type", "object"), object(List.of("metrics"), Map.of(
                         "metrics", arrayOf(object(List.of("key", "label", "unit"), Map.of(

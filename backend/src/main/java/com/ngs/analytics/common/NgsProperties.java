@@ -13,6 +13,7 @@ public class NgsProperties {
     private final Auth auth = new Auth();
     private final Ai ai = new Ai();
     private final Security security = new Security();
+    private final Mcp mcp = new Mcp();
 
     public Jwt getJwt() {
         return jwt;
@@ -32,6 +33,10 @@ public class NgsProperties {
 
     public Security getSecurity() {
         return security;
+    }
+
+    public Mcp getMcp() {
+        return mcp;
     }
 
     public static class Jwt {
@@ -109,6 +114,14 @@ public class NgsProperties {
         public void setAllowedHosts(List<String> allowedHosts) { this.allowedHosts = allowedHosts; }
         public List<String> getAllowedOrigins() { return allowedOrigins; }
         public void setAllowedOrigins(List<String> allowedOrigins) { this.allowedOrigins = allowedOrigins; }
+    }
+
+    /** Directories the analyze_file MCP tool may read (empty: the tool is disabled). */
+    public static class Mcp {
+        private List<String> analyzeRoots = new ArrayList<>();
+
+        public List<String> getAnalyzeRoots() { return analyzeRoots; }
+        public void setAnalyzeRoots(List<String> analyzeRoots) { this.analyzeRoots = analyzeRoots; }
     }
 
     public static class Ai {
