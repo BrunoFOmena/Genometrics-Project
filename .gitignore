@@ -48,3 +48,8 @@ scripts/NGS_ANALYTICS.ps1
 # Python (if any tooling)
 __pycache__/
 .venv/
+
+# Python core
+python/.venv/
+.pytest_cache/
+.ruff_cache/

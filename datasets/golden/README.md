@@ -34,7 +34,7 @@ Every file is a JSON object with sorted keys:
 
 ## Keeping them honest
 
-`GoldenContractTest` (backend) fails when the Java output drifts from these files. To change them on purpose:
+`GoldenContractTest` (backend) fails when the Java output drifts from these files, and `python/tests/test_golden_fastq.py` fails when the Python core does. To change them on purpose:
 
 ```bash
 cd backend && mvn test -Dtest=GoldenContractTest -Dgolden.update=true
