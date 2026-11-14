@@ -83,6 +83,16 @@ class McpControllerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void answersPingWithAnEmptyResult() throws Exception {
+        Map<String, Object> response = (Map<String, Object>) controller.handle(objectMapper.readTree("""
+                {"jsonrpc":"2.0","id":"p1","method":"ping"}
+                """)).getBody();
+
+        assertThat(response).containsEntry("id", "p1").containsEntry("result", Map.of()).doesNotContainKey("error");
+    }
+
+    @Test
     void doesNotReplyToJsonRpcNotifications() throws Exception {
         var response = controller.handle(objectMapper.readTree("""
                 {"jsonrpc":"2.0","method":"notifications/initialized"}
