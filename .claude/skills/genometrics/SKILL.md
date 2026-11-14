@@ -57,6 +57,10 @@ curl -s http://localhost:8080/mcp -H 'Content-Type: application/json' -d '{
 - Aggregations: `NONE` (default, one row per fact), `AVG`, `SUM`, `MIN`, `MAX`. When aggregating more than one metric, always include `metric` in `dimensions`; otherwise different metrics are averaged together.
 - Filters: `projectId`, `sampleIds`, `statuses`, `from`, `to` (ISO-8601 instants).
 
+## Python MCP server (no API to run)
+
+If the `genometrics-mcp` tools are connected (`claude mcp add genometrics -- uvx genometrics-mcp`), use them instead of the API above: `qc_fastq(paths)`, `summarize_vcf(path)`, `compare(paths)`, `explain_check(check)` and `report(paths)`. They answer synchronously with absolute paths, and results are cached by file hash. Quote the verdict and messages; a first QC of a very large FASTQ takes minutes.
+
 ## Rules
 
 - Report only values returned by the API. If a metric is missing, say it is not available.
