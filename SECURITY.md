@@ -33,7 +33,6 @@ The `analyze_file` tool lets an agent analyze a file by path. It is **off by def
 The defaults are for a single local machine only. Before exposing GENOMETRICS on **any** network you **must**:
 
 - set `NGS_AUTH_DISABLED=false` (auth is disabled by default for local development);
-- set a unique `NGS_JWT_SECRET` (the default is public in `backend/src/main/resources/application.yml`);
-- if you use PostgreSQL, set your own `SPRING_DATASOURCE_*` credentials.
+- set a unique `NGS_JWT_SECRET` (the default is public in `backend/src/main/resources/application.yml`).
 
 Reports that only show these defaults being insecure on an exposed instance are treated as misconfiguration, not vulnerabilities.

@@ -1,4 +1,4 @@
-# Default for local/Cloud Agents (no Postgres required).
+# Default profile: file-based H2, nothing else to install.
 #   mvn spring-boot:run
 #   mvn spring-boot:run "-Dspring-boot.run.profiles=dev-h2"
 spring:

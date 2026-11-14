@@ -18,7 +18,7 @@ GENOMETRICS handles genomic data, which is sensitive personal data.
 | **`main`** | Official line: default on GitHub, deployable |
 | **`feature/*`**, **`fix/*`**, **`hotfix/*`** | Short-lived work branches |
 
-There is no separate integration branch. Open your PR **into `main`**. (`prod` is only a Spring profile, not a branch.)
+There is no separate integration branch. Open your PR **into `main`**.
 
 ## Issues, priorities and PRs
 

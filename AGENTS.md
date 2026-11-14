@@ -26,16 +26,16 @@ Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 | API | `cd backend && mvn spring-boot:run` | http://localhost:8080 (Swagger `/swagger-ui.html`) |
 | Demo | `./scripts/demo.sh` | Starts the API if needed, loads `datasets/`, checks MCP |
 
-- Default DB: H2 (`dev-h2` profile). Postgres only with the `prod` profile and your own server (`SPRING_DATASOURCE_*`).
+- DB: embedded H2 only (`dev-h2` profile). There is no PostgreSQL support.
 - **Auth is temporarily disabled** for dev: `ngs.auth.disabled=true`. Re-enable before exposing the API on a network.
 - H2/uploads persist in `data/` (gitignored). Delete to reset.
-- No `mvnw`; use system `mvn`. Nothing in this repo needs Docker. Cloud Agents: do not run the `prod` profile there.
+- No `mvnw`; use system `mvn`. Nothing in this repo needs Docker.
 
 ---
 
 ## Branches and deploy (`main` only)
 
-Official branch: **`main`** (renamed from `prod`; `prod` is now only a Spring profile). Do not use legacy **`test`**.
+Official branch: **`main`** (renamed from `prod`). Do not use legacy **`test`**.
 
 ```
 feature/*  fix/*  hotfix/*  ──► PR (Bruno merges) ──► main
@@ -127,7 +127,7 @@ Rules: [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, priorities, PR issue link
 > **Direction:** the core is moving to Python (MCP server first), with the Java backend kept as the reference implementation until parity. See [`docs/adr/0001-core-language.md`](docs/adr/0001-core-language.md). Until the cutover, only fix bugs or change contracts in Java; do not add new features there.
 
 - **Backend:** Java 21, Spring Boot 3, JWT (optional), JPA, in-process `@Async` jobs
-- **DB:** H2 (dev/test) · PostgreSQL (prod)
+- **DB:** H2 (embedded)
 - **Run:** `mvn spring-boot:run` (H2). No container images are published.
 
 ---
