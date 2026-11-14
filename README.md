@@ -104,7 +104,7 @@ GENOMETRICS inspects and summarizes data you already have. It does not align rea
                          metric facts, reports
 ```
 
-Built with Java 21 and Spring Boot, with H2 by default and optional PostgreSQL.
+Built with Java 21 and Spring Boot, with an embedded H2 database: nothing else to install.
 
 ## Good to know
 
@@ -133,21 +133,6 @@ Requests with a foreign `Host` or `Origin` are rejected; to reach the API throug
 </details>
 
 <details>
-<summary><b>Use PostgreSQL instead of H2</b></summary>
-
-Point the `prod` profile at your own server:
-
-```bash
-export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ngs
-export SPRING_DATASOURCE_USERNAME=ngs SPRING_DATASOURCE_PASSWORD=change-me
-export NGS_AUTH_DISABLED=false NGS_JWT_SECRET="your-32-byte-minimum-secret"
-cd backend && mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
-```
-
-Uploads go to `NGS_STORAGE_LOCAL_DIR`. Copy `.env.example` for the main options.
-</details>
-
-<details>
 <summary><b>Run the API and explore it by hand</b></summary>
 
 ```bash
@@ -161,6 +146,8 @@ cd backend && mvn spring-boot:run
 | Swagger | http://localhost:8080/swagger-ui.html |
 
 Reports for a sample: `/api/reports/{sampleId}` (JSON), `/csv`, `/fastq/pdf` and `/fastq/html`.
+
+The database and uploads live in `data/` (delete it to reset); `NGS_STORAGE_LOCAL_DIR` moves the uploads. `.env.example` lists the main options.
 </details>
 
 <details>

@@ -14,8 +14,6 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
-  flyway:
-    enabled: false
   servlet:
     multipart:
       max-file-size: 2GB
@@ -79,26 +77,6 @@ ngs:
     secret: "test-only-secret-ngs-analytics-platform-jwt-key-32bytes-min"
   storage:
     local-dir: ${java.io.tmpdir}/ngs-test-uploads
-
----
-# Production / staging: Postgres (override URL via env when deploying).
-# Activate with: -Dspring-boot.run.profiles=prod
-spring:
-  config:
-    activate:
-      on-profile: prod
-  datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ngs}
-    username: ${SPRING_DATASOURCE_USERNAME:ngs}
-    password: ${SPRING_DATASOURCE_PASSWORD:ngs}
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: validate
-  flyway:
-    enabled: true
-    baseline-on-migrate: true
-    baseline-version: 0
 
 ---
 # MCP over stdio (scripts/mcp-stdio.sh): no web server, no banner, logs on stderr (stdout is the protocol).

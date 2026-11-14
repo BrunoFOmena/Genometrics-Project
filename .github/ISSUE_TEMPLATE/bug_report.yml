@@ -35,7 +35,7 @@ body:
     id: env
     attributes:
       label: Environment
-      description: OS, how you run it (H2 or PostgreSQL), commit or version.
+      description: OS, how you run it (demo script, Maven, stdio), commit or version.
   - type: textarea
     id: logs
     attributes:
