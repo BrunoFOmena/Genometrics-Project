@@ -193,7 +193,7 @@ git push -u origin HEAD
 | PR → `main` | ✅ |
 | Push to `main`, `feature/*`, `fix/*`, `hotfix/*` | ✅ |
 
-Protect **`main`**: require PR, checks `backend` / `demo` / `issue-link`, restrict merge to maintainer.
+**`main`** is protected by a ruleset: PR only, squash merge, checks `backend` / `issue-link`, 1 code-owner approval for contributors. The maintainer can merge their own PRs without a review.
 
 Every PR closes a prioritized issue (`P0` / `P1` / `P2`) with `Closes #<n>`. See [`CONTRIBUTING.md`](CONTRIBUTING.md#issues-priorities-and-prs).
 
