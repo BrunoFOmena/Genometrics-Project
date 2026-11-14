@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Component
@@ -73,13 +74,13 @@ public class FastqQcEvaluator {
         String message;
         if (meanQ >= FastqQcThresholds.MEAN_Q_PASS) {
             status = FastqQcStatus.PASS;
-            message = String.format("Mean quality %.1f is acceptable", meanQ);
+            message = String.format(Locale.ROOT, "Mean quality %.1f is acceptable", meanQ);
         } else if (meanQ >= FastqQcThresholds.MEAN_Q_WARN) {
             status = FastqQcStatus.WARN;
-            message = String.format("Mean quality %.1f below %.0f", meanQ, FastqQcThresholds.MEAN_Q_PASS);
+            message = String.format(Locale.ROOT, "Mean quality %.1f below %.0f", meanQ, FastqQcThresholds.MEAN_Q_PASS);
         } else {
             status = FastqQcStatus.FAIL;
-            message = String.format("Mean quality %.1f below %.0f", meanQ, FastqQcThresholds.MEAN_Q_WARN);
+            message = String.format(Locale.ROOT, "Mean quality %.1f below %.0f", meanQ, FastqQcThresholds.MEAN_Q_WARN);
         }
         return new FastqQcCheck("meanQuality", status, meanQ, message);
     }
@@ -89,13 +90,13 @@ public class FastqQcEvaluator {
         String message;
         if (gc >= FastqQcThresholds.GC_PASS_MIN && gc <= FastqQcThresholds.GC_PASS_MAX) {
             status = FastqQcStatus.PASS;
-            message = String.format("GC %.1f%% within 40–60%%", gc);
+            message = String.format(Locale.ROOT, "GC %.1f%% within 40–60%%", gc);
         } else if (gc >= FastqQcThresholds.GC_WARN_MIN && gc <= FastqQcThresholds.GC_WARN_MAX) {
             status = FastqQcStatus.WARN;
-            message = String.format("GC %.1f%% outside 40–60%%", gc);
+            message = String.format(Locale.ROOT, "GC %.1f%% outside 40–60%%", gc);
         } else {
             status = FastqQcStatus.FAIL;
-            message = String.format("GC %.1f%% outside 35–65%%", gc);
+            message = String.format(Locale.ROOT, "GC %.1f%% outside 35–65%%", gc);
         }
         return new FastqQcCheck("gcContent", status, gc, message);
     }
@@ -105,13 +106,13 @@ public class FastqQcEvaluator {
         String message;
         if (nPct <= FastqQcThresholds.N_PASS_MAX) {
             status = FastqQcStatus.PASS;
-            message = String.format("N content %.2f%% is low", nPct);
+            message = String.format(Locale.ROOT, "N content %.2f%% is low", nPct);
         } else if (nPct <= FastqQcThresholds.N_WARN_MAX) {
             status = FastqQcStatus.WARN;
-            message = String.format("N content %.2f%% elevated", nPct);
+            message = String.format(Locale.ROOT, "N content %.2f%% elevated", nPct);
         } else {
             status = FastqQcStatus.FAIL;
-            message = String.format("N content %.2f%% above %.0f%%", nPct, FastqQcThresholds.N_WARN_MAX);
+            message = String.format(Locale.ROOT, "N content %.2f%% above %.0f%%", nPct, FastqQcThresholds.N_WARN_MAX);
         }
         return new FastqQcCheck("nContent", status, nPct, message);
     }
@@ -121,13 +122,13 @@ public class FastqQcEvaluator {
         String message;
         if (dupRate <= FastqQcThresholds.DUP_PASS_MAX) {
             status = FastqQcStatus.PASS;
-            message = String.format("Duplication %.1f%% is acceptable", dupRate);
+            message = String.format(Locale.ROOT, "Duplication %.1f%% is acceptable", dupRate);
         } else if (dupRate <= FastqQcThresholds.DUP_WARN_MAX) {
             status = FastqQcStatus.WARN;
-            message = String.format("Duplication %.1f%% elevated", dupRate);
+            message = String.format(Locale.ROOT, "Duplication %.1f%% elevated", dupRate);
         } else {
             status = FastqQcStatus.FAIL;
-            message = String.format("Duplication %.1f%% above %.0f%%", dupRate, FastqQcThresholds.DUP_WARN_MAX);
+            message = String.format(Locale.ROOT, "Duplication %.1f%% above %.0f%%", dupRate, FastqQcThresholds.DUP_WARN_MAX);
         }
         return new FastqQcCheck("duplicationRate", status, dupRate, message);
     }
@@ -137,13 +138,13 @@ public class FastqQcEvaluator {
         String message;
         if (readCount >= FastqQcThresholds.READ_COUNT_PASS) {
             status = FastqQcStatus.PASS;
-            message = String.format("Read count %,d is sufficient", readCount);
+            message = String.format(Locale.ROOT, "Read count %,d is sufficient", readCount);
         } else if (readCount >= FastqQcThresholds.READ_COUNT_WARN) {
             status = FastqQcStatus.WARN;
-            message = String.format("Read count %,d below 100k", readCount);
+            message = String.format(Locale.ROOT, "Read count %,d below 100k", readCount);
         } else {
             status = FastqQcStatus.WARN;
-            message = String.format("Read count %,d is very low (fixture or failed run?)", readCount);
+            message = String.format(Locale.ROOT, "Read count %,d is very low (fixture or failed run?)", readCount);
         }
         return new FastqQcCheck("readCount", status, readCount, message);
     }
@@ -159,7 +160,7 @@ public class FastqQcEvaluator {
 
         if (perPos.values().stream().anyMatch(q -> q < FastqQcThresholds.PER_POSITION_Q_WARN)) {
             status = FastqQcStatus.WARN;
-            message = String.format("Quality drops below %.0f at some positions", FastqQcThresholds.PER_POSITION_Q_WARN);
+            message = String.format(Locale.ROOT, "Quality drops below %.0f at some positions", FastqQcThresholds.PER_POSITION_Q_WARN);
         }
 
         List<Integer> positions = perPos.keySet().stream().sorted().toList();
@@ -172,7 +173,7 @@ public class FastqQcEvaluator {
                     .mapToDouble(perPos::get).average().orElse(0);
             if (headAvg - tailAvg > FastqQcThresholds.TRAILING_DROP_DELTA) {
                 status = FastqQcStatus.WARN;
-                message = String.format("Trailing cycles avg Q %.1f vs head %.1f", tailAvg, headAvg);
+                message = String.format(Locale.ROOT, "Trailing cycles avg Q %.1f vs head %.1f", tailAvg, headAvg);
             }
         }
 
@@ -190,7 +191,7 @@ public class FastqQcEvaluator {
         double fraction = sampleSize == 0 ? 0 : (double) topCount / sampleSize;
         if (fraction > FastqQcThresholds.OVERREP_FRACTION_WARN) {
             return new FastqQcCheck("overrepresented", FastqQcStatus.WARN, fraction * 100,
-                    String.format("Top sequence appears in %.1f%% of sampled reads", fraction * 100));
+                    String.format(Locale.ROOT, "Top sequence appears in %.1f%% of sampled reads", fraction * 100));
         }
         return new FastqQcCheck("overrepresented", FastqQcStatus.PASS, fraction * 100,
                 "Overrepresented sequences within normal range");
@@ -202,7 +203,7 @@ public class FastqQcEvaluator {
         long readsWithHit = ((Number) hits.getOrDefault("readsWithHit", 0L)).longValue();
         if (fraction > FastqQcThresholds.ADAPTER_FRACTION_WARN) {
             return new FastqQcCheck("adapterContent", FastqQcStatus.WARN, fraction,
-                    String.format("Adapter hits in %.1f%% of sampled reads (%d hits)", fraction, readsWithHit));
+                    String.format(Locale.ROOT, "Adapter hits in %.1f%% of sampled reads (%d hits)", fraction, readsWithHit));
         }
         return new FastqQcCheck("adapterContent", FastqQcStatus.PASS, fraction,
                 "Adapter contamination within normal range");

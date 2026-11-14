@@ -1,0 +1,246 @@
+{
+  "inputs" : [ "sample.fastq" ],
+  "kind" : "fastq",
+  "metricFacts" : [ {
+    "key" : "read_count",
+    "unit" : "reads",
+    "value" : 8.0
+  }, {
+    "key" : "average_length",
+    "unit" : "bp",
+    "value" : 60.125
+  }, {
+    "key" : "gc_content",
+    "unit" : "%",
+    "value" : 38.66943866943867
+  }, {
+    "key" : "n_content",
+    "unit" : "%",
+    "value" : 0.8316008316008316
+  }, {
+    "key" : "mean_quality",
+    "unit" : "Phred",
+    "value" : 24.416666666666668
+  }, {
+    "key" : "duplication_rate",
+    "unit" : "%",
+    "value" : 12.5
+  } ],
+  "metrics" : {
+    "adapterHits" : {
+      "adapters" : [ ],
+      "fraction" : 0.0,
+      "readsSampled" : 8,
+      "readsWithHit" : 0
+    },
+    "atContent" : 60.4989604989605,
+    "avgLength" : 60.125,
+    "baseComposition" : {
+      "A" : 146,
+      "C" : 121,
+      "G" : 65,
+      "N" : 4,
+      "T" : 145
+    },
+    "duplicationRate" : 12.5,
+    "gcContent" : 38.66943866943867,
+    "lengthDistribution" : {
+      "60" : 7,
+      "61" : 1
+    },
+    "maxLength" : 61,
+    "meanQuality" : 24.416666666666668,
+    "minLength" : 60,
+    "nContent" : 0.8316008316008316,
+    "overrepresented" : [ {
+      "count" : 2,
+      "sequence" : "GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCACAGTTT"
+    } ],
+    "pairedEnd" : false,
+    "perPositionQuality" : {
+      "1" : 15.0,
+      "10" : 20.625,
+      "11" : 20.625,
+      "12" : 21.25,
+      "13" : 20.0,
+      "14" : 20.0,
+      "15" : 17.5,
+      "16" : 17.5,
+      "17" : 17.5,
+      "18" : 21.25,
+      "19" : 21.25,
+      "2" : 18.75,
+      "20" : 20.0,
+      "21" : 19.375,
+      "22" : 17.5,
+      "23" : 17.5,
+      "24" : 17.5,
+      "25" : 17.5,
+      "26" : 20.0,
+      "27" : 23.125,
+      "28" : 25.0,
+      "29" : 20.625,
+      "3" : 18.75,
+      "30" : 20.625,
+      "31" : 20.625,
+      "32" : 22.5,
+      "33" : 21.25,
+      "34" : 20.625,
+      "35" : 18.75,
+      "36" : 18.75,
+      "37" : 20.0,
+      "38" : 20.0,
+      "39" : 20.625,
+      "4" : 20.625,
+      "40" : 20.625,
+      "41" : 27.5,
+      "42" : 27.5,
+      "43" : 36.25,
+      "44" : 36.25,
+      "45" : 38.125,
+      "46" : 33.125,
+      "47" : 33.125,
+      "48" : 33.125,
+      "49" : 33.125,
+      "5" : 19.375,
+      "50" : 33.125,
+      "51" : 33.125,
+      "52" : 36.25,
+      "53" : 36.25,
+      "54" : 36.25,
+      "55" : 36.25,
+      "56" : 36.25,
+      "57" : 36.25,
+      "58" : 36.25,
+      "59" : 28.125,
+      "6" : 19.375,
+      "60" : 27.5,
+      "7" : 19.375,
+      "8" : 19.375,
+      "9" : 20.625
+    },
+    "phredSummary" : {
+      "encoding" : "Phred+33",
+      "mean" : 24.416666666666668
+    },
+    "qualityHeatmap" : {
+      "bins" : 41,
+      "data" : [ [ 1, 0, 5 ], [ 1, 40, 3 ], [ 2, 6, 5 ], [ 2, 40, 3 ], [ 3, 6, 5 ], [ 3, 40, 3 ], [ 4, 9, 5 ], [ 4, 40, 3 ], [ 5, 7, 5 ], [ 5, 40, 3 ], [ 6, 7, 5 ], [ 6, 40, 3 ], [ 7, 7, 5 ], [ 7, 40, 3 ], [ 8, 7, 5 ], [ 8, 40, 3 ], [ 9, 9, 5 ], [ 9, 40, 3 ], [ 10, 9, 5 ], [ 10, 40, 3 ], [ 11, 9, 5 ], [ 11, 40, 3 ], [ 12, 10, 5 ], [ 12, 40, 3 ], [ 13, 8, 5 ], [ 13, 40, 3 ], [ 14, 8, 5 ], [ 14, 40, 3 ], [ 15, 4, 5 ], [ 15, 40, 3 ], [ 16, 4, 5 ], [ 16, 40, 3 ], [ 17, 4, 5 ], [ 17, 40, 3 ], [ 18, 10, 5 ], [ 18, 40, 3 ], [ 19, 10, 5 ], [ 19, 40, 3 ], [ 20, 8, 5 ], [ 20, 40, 3 ], [ 21, 7, 5 ], [ 21, 40, 3 ], [ 22, 4, 5 ], [ 22, 40, 3 ], [ 23, 4, 5 ], [ 23, 40, 3 ], [ 24, 4, 5 ], [ 24, 40, 3 ], [ 25, 4, 5 ], [ 25, 40, 3 ], [ 26, 8, 5 ], [ 26, 40, 3 ], [ 27, 13, 5 ], [ 27, 40, 3 ], [ 28, 16, 5 ], [ 28, 40, 3 ], [ 29, 9, 5 ], [ 29, 40, 3 ], [ 30, 9, 5 ], [ 30, 40, 3 ], [ 31, 9, 5 ], [ 31, 40, 3 ], [ 32, 12, 5 ], [ 32, 40, 3 ], [ 33, 10, 5 ], [ 33, 40, 3 ], [ 34, 9, 5 ], [ 34, 40, 3 ], [ 35, 6, 5 ], [ 35, 40, 3 ], [ 36, 6, 5 ], [ 36, 40, 3 ], [ 37, 8, 5 ], [ 37, 40, 3 ], [ 38, 8, 5 ], [ 38, 40, 3 ], [ 39, 9, 5 ], [ 39, 40, 3 ], [ 40, 9, 5 ], [ 40, 40, 3 ], [ 41, 20, 5 ], [ 41, 40, 3 ], [ 42, 20, 5 ], [ 42, 40, 3 ], [ 43, 34, 5 ], [ 43, 40, 3 ], [ 44, 34, 5 ], [ 44, 40, 3 ], [ 45, 37, 5 ], [ 45, 40, 3 ], [ 46, 29, 5 ], [ 46, 40, 3 ], [ 47, 29, 5 ], [ 47, 40, 3 ], [ 48, 29, 5 ], [ 48, 40, 3 ], [ 49, 29, 5 ], [ 49, 40, 3 ], [ 50, 29, 5 ], [ 50, 40, 3 ], [ 51, 29, 5 ], [ 51, 40, 3 ], [ 52, 34, 5 ], [ 52, 40, 3 ], [ 53, 34, 5 ], [ 53, 40, 3 ], [ 54, 34, 5 ], [ 54, 40, 3 ], [ 55, 34, 5 ], [ 55, 40, 3 ], [ 56, 34, 5 ], [ 56, 40, 3 ], [ 57, 34, 5 ], [ 57, 40, 3 ], [ 58, 34, 5 ], [ 58, 40, 3 ], [ 59, 21, 5 ], [ 59, 40, 3 ], [ 60, 20, 5 ], [ 60, 40, 3 ] ],
+      "maxPosition" : 60
+    },
+    "readCount" : 8,
+    "readCountR1" : 0,
+    "readCountR2" : 0
+  },
+  "qc" : {
+    "checks" : [ {
+      "id" : "meanQuality",
+      "message" : "Mean quality 24.4 below 28",
+      "status" : "WARN",
+      "value" : 24.416666666666668
+    }, {
+      "id" : "gcContent",
+      "message" : "GC 38.7% outside 40–60%",
+      "status" : "WARN",
+      "value" : 38.66943866943867
+    }, {
+      "id" : "nContent",
+      "message" : "N content 0.83% is low",
+      "status" : "PASS",
+      "value" : 0.8316008316008316
+    }, {
+      "id" : "duplicationRate",
+      "message" : "Duplication 12.5% is acceptable",
+      "status" : "PASS",
+      "value" : 12.5
+    }, {
+      "id" : "readCount",
+      "message" : "Read count 8 is very low (fixture or failed run?)",
+      "status" : "WARN",
+      "value" : 8.0
+    }, {
+      "id" : "perPositionQuality",
+      "message" : "Quality drops below 20 at some positions",
+      "status" : "WARN",
+      "value" : 15.0
+    }, {
+      "id" : "overrepresented",
+      "message" : "Top sequence appears in 25.0% of sampled reads",
+      "status" : "WARN",
+      "value" : 25.0
+    }, {
+      "id" : "adapterContent",
+      "message" : "Adapter contamination within normal range",
+      "status" : "PASS",
+      "value" : 0.0
+    } ],
+    "overall" : "WARN"
+  },
+  "qcChecks" : [ {
+    "key" : "overall",
+    "message" : "Overall FASTQ quality control",
+    "status" : "WARN",
+    "value" : null
+  }, {
+    "key" : "meanQuality",
+    "message" : "Mean quality 24.4 below 28",
+    "status" : "WARN",
+    "value" : 24.416666666666668
+  }, {
+    "key" : "gcContent",
+    "message" : "GC 38.7% outside 40–60%",
+    "status" : "WARN",
+    "value" : 38.66943866943867
+  }, {
+    "key" : "nContent",
+    "message" : "N content 0.83% is low",
+    "status" : "PASS",
+    "value" : 0.8316008316008316
+  }, {
+    "key" : "duplicationRate",
+    "message" : "Duplication 12.5% is acceptable",
+    "status" : "PASS",
+    "value" : 12.5
+  }, {
+    "key" : "readCount",
+    "message" : "Read count 8 is very low (fixture or failed run?)",
+    "status" : "WARN",
+    "value" : 8.0
+  }, {
+    "key" : "perPositionQuality",
+    "message" : "Quality drops below 20 at some positions",
+    "status" : "WARN",
+    "value" : 15.0
+  }, {
+    "key" : "overrepresented",
+    "message" : "Top sequence appears in 25.0% of sampled reads",
+    "status" : "WARN",
+    "value" : 25.0
+  }, {
+    "key" : "adapterContent",
+    "message" : "Adapter contamination within normal range",
+    "status" : "PASS",
+    "value" : 0.0
+  } ],
+  "recommendations" : [ {
+    "detail" : "Consider quality trimming; inspect the per-position quality chart.",
+    "severity" : "WARN",
+    "title" : "Low mean quality"
+  }, {
+    "detail" : "Verify species reference and library prep; compare with expected genome GC%.",
+    "severity" : "WARN",
+    "title" : "Unusual GC content"
+  }, {
+    "detail" : "Confirm sequencing yield; low counts may indicate failed run or test fixture.",
+    "severity" : "WARN",
+    "title" : "Low read count"
+  }, {
+    "detail" : "Consider 3' trimming to cycle 1 where quality falls below 20.",
+    "severity" : "WARN",
+    "title" : "Quality drop at 3' end"
+  }, {
+    "detail" : "Inspect the Overrepresented sequences table; consider adapter trimming.",
+    "severity" : "WARN",
+    "title" : "Possible adapter contamination"
+  } ]
+}
