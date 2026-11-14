@@ -1,0 +1,8 @@
+{
+  "name": "genometrics",
+  "version": "0.1.0",
+  "description": "Local FASTQ and VCF quality control for AI agents. Nothing leaves your machine.",
+  "author": { "name": "Bruno Omena" },
+  "homepage": "https://github.com/BrunoFOmena/Genometrics-Project",
+  "license": "Apache-2.0"
+}

@@ -1,11 +1,16 @@
 [project]
-name = "genometrics"
+name = "genometrics-mcp"
 version = "0.1.0.dev0"
 description = "Local-first FASTQ and VCF quality control for AI agents"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "mcp>=2.3.0",
+]
+
+[project.scripts]
+genometrics-mcp = "genometrics.server:main"
 
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.6"]

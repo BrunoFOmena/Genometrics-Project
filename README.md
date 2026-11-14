@@ -63,6 +63,15 @@ The demo starts the API, analyzes the sample FASTQ and VCF files in [`datasets/`
 
 ### Use it with your agent
 
+**Claude Code plugin (no API to run).** Needs [`uv`](https://docs.astral.sh/uv/). In Claude Code:
+
+```text
+/plugin marketplace add BrunoFOmena/Genometrics-Project
+/plugin install genometrics@genometrics
+```
+
+It adds the Python MCP server (`qc_fastq`, `summarize_vcf`, `compare`, `explain_check`, `report`) and a skill. Details in [`python/`](python/README.md).
+
 **Claude Code, zero setup.** The repository ships a skill ([`.claude/skills/genometrics`](.claude/skills/genometrics/SKILL.md)) and an [`.mcp.json`](.mcp.json). Open the project and ask: *"run QC on datasets/sample.fastq"*. The skill starts the API on demand, analyzes your files and reads the results back.
 
 **Any MCP client.**
