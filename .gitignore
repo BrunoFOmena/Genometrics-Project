@@ -21,6 +21,7 @@ backend/target/
 plan.md
 docs/*
 !docs/mcp.md
+!docs/adr/
 AGENT.md
 # Local agent harness (rules + work logs for any AI agent) and IDE-specific folders
 .agents/

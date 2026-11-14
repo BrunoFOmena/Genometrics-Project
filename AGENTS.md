@@ -124,6 +124,8 @@ Rules: [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, priorities, PR issue link
 
 ## Stack reference
 
+> **Direction:** the core is moving to Python (MCP server first), with the Java backend kept as the reference implementation until parity. See [`docs/adr/0001-core-language.md`](docs/adr/0001-core-language.md). Until the cutover, only fix bugs or change contracts in Java; do not add new features there.
+
 - **Backend:** Java 21, Spring Boot 3, JWT (optional), JPA, in-process `@Async` jobs
 - **DB:** H2 (dev/test) · PostgreSQL (prod)
 - **Run:** `mvn spring-boot:run` (H2). No container images are published.
