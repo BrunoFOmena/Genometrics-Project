@@ -9,8 +9,8 @@ Closes #
 
 ## Test plan
 
-- [ ] `cd backend && mvn test`
-- [ ] Manual smoke via REST/MCP (if API or MCP behavior changed)
+- [ ] `ruff check && ruff format --check && pytest`
+- [ ] Manual run of the CLI on `datasets/` (if the skill or its output changed)
 - [ ] No real patient/participant data in code, fixtures, logs or screenshots
 
 ## Agent notes

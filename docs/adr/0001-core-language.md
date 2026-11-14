@@ -51,6 +51,8 @@ Strangler, not big-bang. The `backend` CI job and its required check stay green 
 
 ### Steps
 
+**Amended 2026-11-14: Java removed.** The Java backend, its CI job and its demo were deleted together with the MCP server. The skill runs the Python core directly (`python3 -m genometrics`), with no server, no plugin dependency and no dependencies. The golden files stay as the frozen contract.
+
 **Amended 2026-11-14: vertical slice.** Instead of porting every component before publishing, ship a small Python MCP server that people can install in one line, then grow it. The previous step list is replaced by:
 
 1. **Freeze the contract** (#62, done): golden files in `datasets/golden/` with the Java output for every fixture.

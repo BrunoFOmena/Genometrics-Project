@@ -34,11 +34,7 @@ Every file is a JSON object with sorted keys:
 
 ## Keeping them honest
 
-`GoldenContractTest` (backend) fails when the Java output drifts from these files, and `python/tests/test_golden.py` fails when the Python core does. To change them on purpose:
-
-```bash
-cd backend && mvn test -Dtest=GoldenContractTest -Dgolden.update=true
-```
+`tests/test_golden.py` fails when the Python core drifts from these files. The Java backend that produced them was removed, so they are frozen: change them only with a deliberate contract change that is reviewed like any other.
 
 Then review the diff and commit it together with the code change.
 

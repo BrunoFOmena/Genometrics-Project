@@ -1,0 +1,12 @@
+# Tooling only: the skill's scripts have no dependencies, so there is no package to build.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["skills/genometrics/scripts"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
