@@ -1,85 +1,57 @@
-# 🧬 GENOMETRICS — NGS QC & Metrics for AI agents
+# 🧬 GENOMETRICS
 
-**Local-first FASTQ/VCF analytics exposed as an MCP server, so AI agents can query grounded genomics metrics on your own machine.**
+### Ask your sequencing data questions. Get answers you can trace.
 
-Built by **Bruno Omena** · modular monolith designed to run on a **16 GB RAM laptop**.
+**Local-first FASTQ and VCF quality control that your AI agent can talk to.** Drop in a file, ask in plain language, and get a verdict backed by real metrics, on your own machine.
 
-![Status](https://img.shields.io/badge/Status-Active-success)
-![MCP](https://img.shields.io/badge/MCP-JSON--RPC%20over%20HTTP-6E56CF)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3-6DB33F?logo=springboot&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP-ready-6E56CF)
+![Local-first](https://img.shields.io/badge/Local--first-your%20data%20stays%20put-success)
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)
-![Database](https://img.shields.io/badge/Database-H2%20%7C%20PostgreSQL-336791?logo=postgresql&logoColor=white)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue)
-
----
-
-## 📖 About the Project
-
-**GENOMETRICS** focuses on **Next-Generation Sequencing (NGS)** quality control and variant metrics. Instead of a dashboard, the interface is your **AI agent** (Claude Code, Cursor, any MCP client): you load FASTQ/VCF files through the REST API, GENOMETRICS parses them locally with streaming Java parsers, and the agent queries the resulting metric facts through MCP tools.
-
-Everything runs on your machine: the API and MCP endpoint listen on `127.0.0.1` only, so data stays local unless you send it somewhere.
 
 > **Research use only.** GENOMETRICS is not a medical device and must not be used for diagnosis.
 
 ---
 
-## ✨ Features
+## Why GENOMETRICS
 
-### 🤖 MCP server (`/mcp`)
-| Tool | What it does |
-|------|--------------|
-| `list_metrics` | Metric catalog (keys, units, descriptions) |
-| `query_metrics` | Query grounded metric facts with filters and aggregation |
-| `compare_analyses` | Compare metrics across samples |
-| `explain_qc` | Explain QC results with citations to metric facts (phrased by a local [Ollama](https://ollama.com) model when `NGS_AI_ENABLED=true`, otherwise the grounded facts) |
-| `get_analysis_context` | One analysis with all its metric facts |
+Checking a sequencing run usually means stitching together command-line tools, reading plots and remembering what each threshold means. GENOMETRICS turns that into a conversation:
 
-### 📁 Projects & Samples (REST)
-- Create **projects** and **samples**; upload **FASTQ** (single and paired-end) and **VCF** files (up to 2 GB).
-- Async analysis with status `QUEUED` → `RUNNING` → `DONE`.
+> *"Is this FASTQ good enough to align?"*
+> *"Compare the mean quality of these two samples."*
+> *"How many SNPs and indels are in this VCF?"*
 
-### 🔬 FASTQ QC
-- **Phred**, **GC content**, **duplication**, **N-content**, **adapter** detection, **over-represented** sequences.
-- **Paired-end** support with automatic mate detection (`R1`/`R2`).
-- **PASS / WARN / FAIL** evaluation with recommendations.
+Your agent (Claude Code, Cursor, any MCP client) calls GENOMETRICS, which parses the files **on your machine**, computes the metrics and answers with the numbers it actually measured, cited by sample and analysis. When a metric is missing, the tools report it as unavailable instead of guessing.
 
-### 🧪 VCF Metrics
-- Variant counts by type, quality and chromosomal distribution.
+## What you get
 
-### 📄 Reports
-- Metrics as **JSON**, **CSV** and **PDF**/**HTML** (FASTQ QC report) via `/api/reports/...`.
-- Swagger UI for REST API exploration.
+- **Instant FASTQ QC.** Read count and length, Phred quality, GC and N content, duplication, adapter contamination and over-represented sequences, with a clear **PASS / WARN / FAIL** verdict per check and actionable recommendations. Paired-end runs are detected automatically from `R1` / `R2`.
+- **VCF at a glance.** Variant count, SNP and indel split, Ts/Tv ratio, mean quality and mean depth.
+- **Answers with receipts.** Every value your agent reports comes from a stored metric with its sample, analysis and unit attached.
+- **Side-by-side comparison.** Query and compare any metric across samples, projects and analyses.
+- **Reports you can hand over.** Export **PDF**, **HTML**, **CSV** or **JSON**.
+- **Private by design.** The API listens on `127.0.0.1` only, nothing is uploaded anywhere, and browser pages cannot reach it (see [`SECURITY.md`](SECURITY.md)).
+- **Plugs into your tools.** MCP over HTTP or stdio, plus a ready-made agent skill and a REST API with Swagger.
 
-### 🔐 Authentication *(off by default for local use)*
-- Optional JWT login (Spring Security); `NGS_AUTH_DISABLED=true` by default.
+## See it in action
 
----
+Using the tiny demo file `datasets/sample.fastq`:
 
-## 🛠️ Tech Stack
+```text
+You:    Run QC on datasets/sample.fastq and tell me if I can trust it.
 
-| Technology | Role |
-|------------|------|
-| **Java 21** + **Spring Boot 3.3** | REST API, MCP endpoint, security, JPA |
-| **FastqParser / VcfParser** | In-process streaming parsers |
-| **SpringDoc OpenAPI** | Swagger documentation |
-| **JWT (JJWT)** | Optional authentication |
-| **H2** / **PostgreSQL** | Local default / optional external database |
-| **GitHub Actions** | CI (`backend`, `issue-link`) |
+Agent:  Overall: WARN
+        - Mean quality 24.4 is below 28
+        - GC content 38.7% is outside the 40-60% range
+        - N content 0.83% and duplication 12.5% are acceptable
+        - Only 8 reads: fine for a fixture, suspicious for a real run
+```
 
----
+The verdicts and numbers above are what GENOMETRICS returns for that file; the wording is your agent's.
 
-## 🚀 How to Run
+## Quick start
 
-### Prerequisites
-
-- **JDK 21**, **Maven 3.9+** and `curl`. Docker is **not** required.
-- `jq` only for the manual REST examples below
-
-### Agent skill (clone and ask)
-
-The repository ships a skill at [`.claude/skills/genometrics/`](.claude/skills/genometrics/SKILL.md) and an MCP entry in [`.mcp.json`](.mcp.json). Clone it, open it in Claude Code (or any agent that reads `SKILL.md`) and ask, for example, *"run QC on datasets/sample.fastq"*. The skill starts the API on demand (Maven + H2), analyzes the files and reads the results back.
-
-### One-command demo
+You need **JDK 21**, **Maven 3.9+** and `curl`. No containers, no cloud account.
 
 ```bash
 git clone https://github.com/BrunoFOmena/Genometrics-Project.git
@@ -87,78 +59,83 @@ cd Genometrics-Project
 ./scripts/demo.sh
 ```
 
-Starts the API if it is not running, analyzes the [`datasets/`](datasets/) fixtures and checks the MCP endpoint (`tools/list` + `query_metrics`). CI runs the same script in the `demo` job. Stop the API with `kill $(cat data/api.pid)`.
+The demo starts the API, analyzes the sample FASTQ and VCF files in [`datasets/`](datasets/) and checks that your agent can query them. When it ends, the API is ready at `http://localhost:8080` (stop it with `kill $(cat data/api.pid)`).
 
-### Run the API yourself
+### Use it with your agent
 
-```bash
-cd backend
-mvn spring-boot:run
-```
+**Claude Code, zero setup.** The repository ships a skill ([`.claude/skills/genometrics`](.claude/skills/genometrics/SKILL.md)) and an [`.mcp.json`](.mcp.json). Open the project and ask: *"run QC on datasets/sample.fastq"*. The skill starts the API on demand, analyzes your files and reads the results back.
 
-| Service | URL |
-|---------|-----|
-| API | http://localhost:8080 |
-| MCP | http://localhost:8080/mcp |
-| Swagger | http://localhost:8080/swagger-ui.html |
-
-### Load data
-
-From the repository root:
-
-```bash
-API=http://localhost:8080
-PROJECT=$(curl -s -X POST $API/api/projects -H 'Content-Type: application/json' -d '{"name":"Demo"}' | jq -r .id)
-SAMPLE=$(curl -s -X POST $API/api/projects/$PROJECT/samples -H 'Content-Type: application/json' -d '{"name":"S1"}' | jq -r .id)
-curl -s -F file=@datasets/sample.fastq $API/api/samples/$SAMPLE/files
-curl -s -F file=@datasets/sample.vcf $API/api/samples/$SAMPLE/files
-```
-
-Fixtures live in [`datasets/`](datasets/) (FASTQ single/paired-end, VCF). Reports per sample: `curl -o qc.pdf $API/api/reports/$SAMPLE/fastq/pdf` (also `/csv`, `/fastq/html`, JSON at `/api/reports/$SAMPLE`).
-
-### Connect your agent
-
-GENOMETRICS speaks MCP (JSON-RPC 2.0) over HTTP at `http://localhost:8080/mcp`. Example for Claude Code:
+**Any MCP client.**
 
 ```bash
 claude mcp add --transport http genometrics http://localhost:8080/mcp
 ```
 
-Other clients (Cursor, stdio-only clients via `scripts/mcp-stdio.sh`), tool arguments and examples: [`docs/mcp.md`](docs/mcp.md).
+Cursor, stdio-only clients and tool examples are in [`docs/mcp.md`](docs/mcp.md).
 
-Check it from the shell:
+### Analyze your own files
 
 ```bash
-curl -s -X POST http://localhost:8080/mcp -H 'Content-Type: application/json' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+./.claude/skills/genometrics/scripts/analyze.sh path/to/reads_R1.fastq path/to/reads_R2.fastq
+./.claude/skills/genometrics/scripts/analyze.sh path/to/variants.vcf
 ```
 
-### Configuration
+The script starts the API if needed, uploads the files (`.gz` works too), waits for the analysis and prints the QC verdict plus a link to the report. Then just ask your agent about it.
 
-Copy `.env.example` → `.env` to change JWT and auth. Before exposing the API on any network, enable auth and set a strong secret:
+## What your agent can do
+
+| MCP tool | What it does |
+|----------|--------------|
+| `list_metrics` | Lists every metric with its unit and description |
+| `query_metrics` | Queries stored metrics with filters, grouping and aggregation |
+| `compare_analyses` | Compares metrics across samples |
+| `explain_qc` | Explains QC results with citations (phrased by a local [Ollama](https://ollama.com) model when `NGS_AI_ENABLED=true`, otherwise the grounded facts) |
+| `get_analysis_context` | Returns one analysis with all of its metrics |
+
+## What it is not
+
+GENOMETRICS inspects and summarizes data you already have. It does not align reads, call variants or annotate them. Think of it as the fast, trustworthy first look before you invest hours in a pipeline.
+
+## How it works
+
+```text
+ FASTQ / VCF files ──►  GENOMETRICS (on your machine)  ──►  MCP tools  ──►  your AI agent
+                         streaming parsers, QC checks,
+                         metric facts, reports
+```
+
+Built with Java 21 and Spring Boot, with H2 by default and optional PostgreSQL.
+
+## Good to know
+
+<details>
+<summary><b>Turn on authentication</b></summary>
+
+Auth is off by default because the API only listens on your own machine. Before exposing it on any network, enable it and set a strong secret (the API refuses to start with a missing, short or public-default secret):
 
 ```bash
 export NGS_AUTH_DISABLED=false
 export NGS_JWT_SECRET="your-32-byte-minimum-secret"
-mvn spring-boot:run
+cd backend && mvn spring-boot:run
 ```
 
-Browser pages cannot reach the local API: requests with a foreign `Host` (DNS rebinding, auth off) or a foreign `Origin` on state-changing calls (`/mcp`, `/api`) get `403`. If you reach the API through another host name, list it in `NGS_SECURITY_ALLOWED_HOSTS` (comma separated, no port); see [`SECURITY.md`](SECURITY.md) for `NGS_SECURITY_ALLOWED_ORIGINS`. With auth enabled the API also refuses to start while `NGS_JWT_SECRET` is missing, shorter than 32 bytes or the public default.
-
-With auth enabled, every `/api/**` call and `/mcp` need a token:
+Then every `/api/**` call and `/mcp` need a token:
 
 ```bash
+API=http://localhost:8080
 TOKEN=$(curl -s -X POST $API/api/auth/register -H 'Content-Type: application/json' \
   -d '{"email":"me@example.com","password":"change-me-123","displayName":"Me"}' | jq -r .token)
 # later: POST /api/auth/login with {"email","password"}
-claude mcp add --transport http genometrics http://localhost:8080/mcp --header "Authorization: Bearer $TOKEN"
+claude mcp add --transport http genometrics $API/mcp --header "Authorization: Bearer $TOKEN"
 ```
 
-Add `-H "Authorization: Bearer $TOKEN"` to the curl calls above.
+Requests with a foreign `Host` or `Origin` are rejected; to reach the API through another host name see [`SECURITY.md`](SECURITY.md).
+</details>
 
-### PostgreSQL (optional)
+<details>
+<summary><b>Use PostgreSQL instead of H2</b></summary>
 
-H2 is the default. To use your own PostgreSQL server (no container needed), run the `prod` profile:
+Point the `prod` profile at your own server:
 
 ```bash
 export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ngs
@@ -167,65 +144,46 @@ export NGS_AUTH_DISABLED=false NGS_JWT_SECRET="your-32-byte-minimum-secret"
 cd backend && mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
 ```
 
-The API listens on `127.0.0.1` only (`SERVER_ADDRESS` overrides it). Other variable: `NGS_STORAGE_LOCAL_DIR` (upload folder).
+Uploads go to `NGS_STORAGE_LOCAL_DIR`. Copy `.env.example` for the main options.
+</details>
 
----
-
-## 🧪 Tests
-
-```bash
-cd backend && mvn test     # in-memory H2
-./scripts/ci-check.sh      # same checks as CI
-```
-
----
-
-## 🔀 Git & CI
-
-**`main`** is the official branch. PRs target **`main`**; only the maintainer merges. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+<details>
+<summary><b>Run the API and explore it by hand</b></summary>
 
 ```bash
-git fetch origin && git checkout main && git pull
-git checkout -b feature/<name>
-git push -u origin HEAD
-# Open PR → main · CI · maintainer merges
+cd backend && mvn spring-boot:run
 ```
 
-| Event | Tests + demo |
-|-------|--------------|
-| PR → `main` | ✅ |
-| Push to `main`, `feature/*`, `fix/*`, `hotfix/*` | ✅ |
+| Service | URL |
+|---------|-----|
+| API | http://localhost:8080 |
+| MCP | http://localhost:8080/mcp |
+| Swagger | http://localhost:8080/swagger-ui.html |
 
-**`main`** is protected by a ruleset: PR only, squash merge, checks `backend` / `issue-link`, 1 code-owner approval for contributors. The maintainer can merge their own PRs without a review.
+Reports for a sample: `/api/reports/{sampleId}` (JSON), `/csv`, `/fastq/pdf` and `/fastq/html`.
+</details>
 
-Every PR closes a prioritized issue (`P0` / `P1` / `P2`) with `Closes #<n>`. See [`CONTRIBUTING.md`](CONTRIBUTING.md#issues-priorities-and-prs).
+<details>
+<summary><b>Run the tests</b></summary>
 
-AI agents: see [`AGENTS.md`](AGENTS.md) for project context.
+```bash
+cd backend && mvn test     # unit and integration tests (in-memory H2)
+./scripts/ci-check.sh      # everything CI runs, including the demo
+```
+</details>
 
----
+## Contributing
 
-## 🤝 Contributing & community
+Contributions are welcome. Start with the [contributing guide](CONTRIBUTING.md); see also the [Code of Conduct](CODE_OF_CONDUCT.md) and the [security policy](SECURITY.md). AI agents working on the code should read [`AGENTS.md`](AGENTS.md).
 
-- [Contributing guide](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Security policy](SECURITY.md)
-- **Research use only.** GENOMETRICS is not a medical device and must not be used for diagnosis.
-- Never commit or upload real patient data to this repository, issues or PRs.
+Never commit or upload real patient data to this repository, issues or PRs.
 
-## 📜 License
+## License
 
 [Apache License 2.0](LICENSE) © Bruno Omena
 
 ---
 
-## 💻 Hardware Notes
-
-| Resource | Guidance |
-|----------|----------|
-| **RAM** | API heap ~1 GB |
-| **Disk** | Use fixtures in `datasets/`; prune `data/uploads` periodically |
-| **GPU** | Not used |
-
----
-
 <p align="center">
-  <sub>GENOMETRICS · Bruno Omena · Local-first NGS analytics</sub>
+  <sub>GENOMETRICS · by Bruno Omena · Local-first NGS analytics for the agent era</sub>
 </p>
