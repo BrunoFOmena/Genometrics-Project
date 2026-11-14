@@ -161,10 +161,11 @@ H2 is the default. To use your own PostgreSQL server (no container needed), run 
 ```bash
 export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ngs
 export SPRING_DATASOURCE_USERNAME=ngs SPRING_DATASOURCE_PASSWORD=change-me
+export NGS_AUTH_DISABLED=false NGS_JWT_SECRET="your-32-byte-minimum-secret"
 cd backend && mvn spring-boot:run "-Dspring-boot.run.profiles=prod"
 ```
 
-Other variables: `NGS_JWT_SECRET` (required when auth is enabled), `NGS_STORAGE_LOCAL_DIR` (upload folder).
+The API listens on `127.0.0.1` only (`SERVER_ADDRESS` overrides it). Other variable: `NGS_STORAGE_LOCAL_DIR` (upload folder).
 
 ---
 

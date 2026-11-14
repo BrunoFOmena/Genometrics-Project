@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Same checks as .github/workflows/ci.yml (backend tests + package).
-# Does not push images. Run from anywhere: ./scripts/ci-check.sh
+# Same as the `backend` job of .github/workflows/ci.yml (tests + package).
+# The `demo` job is ./scripts/demo.sh (starts the API, leaves it running). Run from anywhere: ./scripts/ci-check.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

@@ -16,14 +16,15 @@ Requirements: JDK 21, Maven 3.9+, `curl`. Run commands from the repository root.
 ```
 
 - Starts the API in the background if it is not running. The first start downloads Maven dependencies and can take a few minutes; later starts take seconds.
-- Accepts FASTQ, VCF and FASTA, plain or `.gz`. Pass both mates (`_R1` / `_R2`) in one call to get a paired-end analysis.
+- File names must not contain `;`, `,` or `"`. Accepts FASTQ, VCF and FASTA, plain or `.gz`. Pass both mates (`_R1` / `_R2`) in one call to get a paired-end analysis.
+- A paired-end sample (R1 + R2) gets **two** analyses: a single-end run on R1 and the paired run. `analyze.sh` marks the paired one with `paired=yes`. When aggregating by `sample`, filter on that `analysisId`; otherwise R1 is counted twice.
 - Each call creates one sample. Pass `-P <project-id>` from a previous run to keep samples in the same project; samples in different projects can still be compared.
 
 Output:
 
 ```text
 project=<id> sample=<id>
-analysis=<id> qc=[{"key":"overall","status":"WARN",...},{"key":"meanQuality",...},...]
+analysis=<id> paired=no qc=[{"key":"overall","status":"WARN",...},{"key":"meanQuality",...},...]
 report=http://localhost:8080/api/reports/<sample-id>
 ```
 

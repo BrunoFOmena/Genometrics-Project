@@ -11,7 +11,9 @@ D="$ROOT/datasets"
 mcp() { curl -fsS -X POST -H 'Content-Type: application/json' -d "$1" "$API/mcp"; }
 
 # analyze.sh prints "project=<id> sample=<id>"; reuse the project for the other samples.
-project=$("$ANALYZE" -n "FASTQ single-end" "$D/sample.fastq" | sed -n 's/^project=\([^ ]*\) .*/\1/p')
+out=$("$ANALYZE" -n "FASTQ single-end" "$D/sample.fastq")
+project=$(echo "$out" | sed -n 's/^project=\([^ ]*\) .*/\1/p')
+[ -n "$project" ] || { echo "Could not read the project id from: $out" >&2; exit 1; }
 "$ANALYZE" -P "$project" -n "FASTQ paired-end" "$D/sample_R1.fastq" "$D/sample_R2.fastq" >/dev/null
 "$ANALYZE" -P "$project" -n "VCF variants" "$D/sample.vcf" >/dev/null
 
@@ -27,4 +29,4 @@ for metric in mean_quality variant_count; do
 done
 echo "  mean_quality and variant_count facts returned"
 
-echo "== demo ready: MCP at $API/mcp (stop the API: kill \$(cat data/api.pid)) =="
+echo "== demo ready: MCP at $API/mcp (if this script started the API: kill \$(cat data/api.pid)) =="

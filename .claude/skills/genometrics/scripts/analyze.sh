@@ -23,16 +23,23 @@ shift $((OPTIND - 1))
 [ $# -ge 1 ] || { echo "Usage: $0 [-n sample-name] [-P project-id] file..." >&2; exit 2; }
 for f in "$@"; do [ -f "$f" ] || { echo "File not found: $f" >&2; exit 2; }; done
 [ -n "$name" ] || name=$(basename "$1")
+case $project in *[!0-9a-f-]*) echo "-P must be a project id (UUID)" >&2; exit 2 ;; esac
+for f in "$@"; do
+  case $f in *[\;,\"]*) echo "File names with ; , or \" are not supported: $f" >&2; exit 2 ;; esac
+done
+# Sample names go into a JSON body: drop control characters, escape backslash and quote.
+name=$(printf '%s' "$name" | tr -d '\000-\037' | sed 's/\\/\\\\/g; s/"/\\"/g')
 
 healthy() { curl -fs "$API/actuator/health" 2>/dev/null | grep -q '"UP"'; }
 json_id() { sed -n 's/.*"id":"\([^"]*\)".*/\1/p'; }
 post_json() { curl -fsS -X POST -H 'Content-Type: application/json' -d "$2" "$API$1"; }
 
 if ! healthy; then
+  [ -z "${API_URL:-}" ] || { echo "No healthy API at $API_URL (the script only starts the default one on port 8080)" >&2; exit 1; }
   command -v mvn >/dev/null || { echo "Maven not found: install JDK 21 and Maven 3.9+" >&2; exit 1; }
   mkdir -p "$ROOT/data"
-  echo "== starting API (log: data/api.log, stop: kill \$(cat data/api.pid)) ==" >&2
-  (cd "$ROOT/backend" && nohup mvn -q spring-boot:run >"$ROOT/data/api.log" 2>&1 & echo $! >"$ROOT/data/api.pid")
+  echo "== starting API (log: data/api.log; stop it with: kill \$(cat data/api.pid)) ==" >&2
+  (cd "$ROOT/backend" && nohup mvn -q spring-boot:run >"$ROOT/data/api.log" 2>&1 </dev/null & echo $! >"$ROOT/data/api.pid")
   pid=$(cat "$ROOT/data/api.pid")
   i=0
   until healthy; do
@@ -45,8 +52,10 @@ fi
 [ -n "$project" ] || project=$(post_json /api/projects '{"name":"Agent analyses"}' | json_id)
 sample=$(post_json "/api/projects/$project/samples" "{\"name\":\"$name\"}" | json_id)
 [ -n "$sample" ] || { echo "Could not create sample in project $project" >&2; exit 1; }
+mkdir -p "$ROOT/data"
 for f in "$@"; do
-  out=$(curl -sS --fail-with-body -F "file=@$f" "$API/api/samples/$sample/files") || { echo "Upload of $f rejected: $out" >&2; exit 1; }
+  code=$(curl -sS -o "$ROOT/data/upload.out" -w '%{http_code}' -F "file=@$f" "$API/api/samples/$sample/files") || exit 1
+  [ "$code" = 200 ] || { echo "Upload of $f rejected (HTTP $code): $(cat "$ROOT/data/upload.out")" >&2; exit 1; }
   echo "uploaded $f" >&2
 done
 
@@ -61,7 +70,10 @@ while :; do
 done
 
 echo "project=$project sample=$sample"
-for analysis in $(echo "$analyses" | grep -o '{"id":"[^"]*"' | cut -d'"' -f4); do
-  echo "analysis=$analysis qc=$(curl -fsS "$API/api/analytics/analyses/$analysis/qc")"
+# One line per analysis. A paired-end sample has two: a single-end run on R1 and the paired run (paired=yes).
+echo "$analyses" | sed 's/},{/}\n{/g' | while IFS= read -r a; do
+  analysis=$(echo "$a" | sed -n 's/^[^{]*{"id":"\([^"]*\)".*/\1/p')
+  paired=no; echo "$a" | grep -q '"mateFileAssetId":"' && paired=yes
+  echo "analysis=$analysis paired=$paired qc=$(curl -fsS "$API/api/analytics/analyses/$analysis/qc")"
 done
 echo "report=$API/api/reports/$sample"
