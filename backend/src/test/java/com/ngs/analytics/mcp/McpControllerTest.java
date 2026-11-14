@@ -23,7 +23,8 @@ class McpControllerTest {
             mock(AnalyticsQueryService.class),
             mock(AiAnalystService.class),
             mock(AnalysisService.class),
-            mock(MetricFactRepository.class)
+            mock(MetricFactRepository.class),
+            mock(LocalFileAnalyzer.class)
     );
 
     @Test

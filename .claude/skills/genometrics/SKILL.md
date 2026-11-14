@@ -49,6 +49,7 @@ curl -s http://localhost:8080/mcp -H 'Content-Type: application/json' -d '{
 | `list_metrics` | none. Returns every metric key with unit and allowed aggregations |
 | `query_metrics` | `metrics` (required), `dimensions`, `filters`, `aggregation`, `limit` (max 1000) |
 | `get_analysis_context` | `analysisId`. All metric facts of one analysis |
+| `analyze_file` | `paths` (absolute; R1 and R2 together for paired-end). Listed only when the API runs with `NGS_MCP_ANALYZE_ROOTS`; otherwise use `analyze.sh` above |
 | `explain_qc` | `question`, optional `sampleIds`, `metrics`. Returns the matching facts with citations |
 
 - Metric keys: `read_count`, `average_length`, `gc_content`, `n_content`, `mean_quality`, `duplication_rate` (FASTQ); `variant_count`, `snp_count`, `indel_count`, `mean_variant_quality`, `mean_depth`, `ts_tv_ratio`, `pass_count` (VCF).

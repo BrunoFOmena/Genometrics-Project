@@ -38,7 +38,8 @@ class McpStdioRunnerTest {
                     mock(AnalyticsQueryService.class),
                     mock(AiAnalystService.class),
                     mock(AnalysisService.class),
-                    mock(MetricFactRepository.class)),
+                    mock(MetricFactRepository.class),
+                    mock(LocalFileAnalyzer.class)),
             objectMapper,
             users,
             new NgsProperties());

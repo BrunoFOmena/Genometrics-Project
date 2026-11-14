@@ -35,11 +35,16 @@ curl -s http://localhost:8080/mcp \
 | `list_metrics` | none | Metric catalog (key, label, unit) |
 | `query_metrics` | `metrics` (string array) | Rows from stored facts. Optional: `dimensions`, `filters`, `aggregation`, `limit` (max 1000) |
 | `explain_qc` | `question` | Grounded answer plus citations. Optional: `projectId`, `sampleIds`, `metrics` |
-| `get_analysis_context` | `analysisId` | One analysis and its metric facts |
+| `get_analysis_context` | `analysisId` | One analysis, its status (`QUEUED`, `RUNNING`, `DONE`, `FAILED`) and its metric facts |
+| `analyze_file` | `paths` (1 file, or R1 and R2) | Only when `NGS_MCP_ANALYZE_ROOTS` is set. Analyzes local files and returns `projectId`, `sampleId` and one entry per analysis (`analysisId`, `file`, `status`, `paired`). Optional: `sampleName`, `projectId` |
 
 `explain_qc` uses [Ollama](https://ollama.com) only when `NGS_AI_ENABLED=true` (off by default) and the model responds within the timeout. Otherwise `answer` is a deterministic summary: one block per analysis with its FASTQ QC verdict (PASS / WARN / FAIL), one line per metric and the checks that did not pass, then the requested metrics that have no data. `citations` lists every fact behind it. Missing facts are reported as unavailable; the tool does not invent a value. Treat model-phrased answers as untrusted text: check the cited facts.
 
 Ollama listens on `127.0.0.1` by default, which is what the API expects (`OLLAMA_BASE_URL=http://localhost:11434`). Do **not** expose Ollama on `0.0.0.0` on untrusted networks, since its API has no authentication.
+
+### Analyze a file from MCP
+
+Start the API with the directories the tool may read, for example `NGS_MCP_ANALYZE_ROOTS=/data/runs mvn spring-boot:run`, then call `analyze_file` with absolute paths. Pass the R1 and R2 FASTQ of one sample together for paired-end, in any order (the names must match apart from R1/R2); R1 also gets its own single-end analysis, so a pair returns two entries. Files are copied into storage during the call, so a multi-GB file takes a while before the tool answers. Analyses start as `QUEUED`; poll `get_analysis_context` until `status` is `DONE`, then query the metrics. Without the variable the tool is not listed (see `SECURITY.md`).
 
 To compare samples, group by sample and metric:
 

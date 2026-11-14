@@ -89,7 +89,8 @@ The script starts the API if needed, uploads the files (`.gz` works too), waits 
 | `list_metrics` | Lists every metric with its unit and description |
 | `query_metrics` | Queries and compares stored metrics with filters, grouping and aggregation |
 | `explain_qc` | Explains QC results with citations (phrased by a local [Ollama](https://ollama.com) model when `NGS_AI_ENABLED=true`, otherwise a readable summary of the facts with the QC verdict) |
-| `get_analysis_context` | Returns one analysis with all of its metrics |
+| `get_analysis_context` | Returns one analysis with its status and all of its metrics |
+| `analyze_file` | Analyzes local files by path, when you allow a directory with `NGS_MCP_ANALYZE_ROOTS` |
 
 ## What it is not
 
