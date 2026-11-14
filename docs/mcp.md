@@ -50,6 +50,8 @@ Ollama listens on `127.0.0.1` by default, which is what the API expects (`OLLAMA
 
 Start the API with the directories the tool may read, for example `NGS_MCP_ANALYZE_ROOTS=/data/runs mvn spring-boot:run`, then call `analyze_file` with absolute paths. Pass the R1 and R2 FASTQ of one sample together for paired-end, in any order (the names must match apart from R1/R2); R1 also gets its own single-end analysis, so a pair returns two entries. Files are copied into storage during the call, so a multi-GB file takes a while before the tool answers. Analyses start as `QUEUED`; poll `get_analysis_context` until `status` is `DONE`, then query the metrics. Without the variable the tool is not listed (see `SECURITY.md`).
 
+`tools/list` describes each tool with examples, lists the valid values (metric keys, dimensions, aggregations, statuses) as `enum`s in `inputSchema`, and marks `list_metrics`, `query_metrics` and `get_analysis_context` as read-only (`annotations.readOnlyHint`); `explain_qc` and `analyze_file` record new data and are not.
+
 To compare samples, group by sample and metric:
 
 ```json
