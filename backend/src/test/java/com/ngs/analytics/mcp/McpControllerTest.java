@@ -93,6 +93,30 @@ class McpControllerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void negotiatesTheProtocolVersion() throws Exception {
+        String supported = """
+                {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26"}}
+                """;
+        String unknown = """
+                {"jsonrpc":"2.0","id":2,"method":"initialize","params":{"protocolVersion":"1999-01-01"}}
+                """;
+        String missing = """
+                {"jsonrpc":"2.0","id":3,"method":"initialize"}
+                """;
+
+        assertThat(initializeVersion(supported)).isEqualTo("2025-03-26");
+        assertThat(initializeVersion(unknown)).isEqualTo(McpController.SUPPORTED_PROTOCOL_VERSIONS.get(0));
+        assertThat(initializeVersion(missing)).isEqualTo(McpController.SUPPORTED_PROTOCOL_VERSIONS.get(0));
+    }
+
+    @SuppressWarnings("unchecked")
+    private String initializeVersion(String request) throws Exception {
+        Map<String, Object> response = (Map<String, Object>) controller.handle(objectMapper.readTree(request)).getBody();
+        return (String) ((Map<String, Object>) response.get("result")).get("protocolVersion");
+    }
+
+    @Test
     void doesNotReplyToJsonRpcNotifications() throws Exception {
         var response = controller.handle(objectMapper.readTree("""
                 {"jsonrpc":"2.0","method":"notifications/initialized"}

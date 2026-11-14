@@ -20,6 +20,12 @@ import java.util.*;
 @RequestMapping("/mcp")
 public class McpController {
 
+    /**
+     * Protocol versions this server can speak, newest first. The tool shapes used here are compatible across them;
+     * older clients ignore structuredContent and outputSchema.
+     */
+    static final List<String> SUPPORTED_PROTOCOL_VERSIONS = List.of("2025-06-18", "2025-03-26", "2024-11-05");
+
     private static final Set<String> TOOL_NAMES = Set.of(
             "list_metrics", "query_metrics", "explain_qc", "get_analysis_context", "analyze_file");
 
@@ -64,7 +70,7 @@ public class McpController {
         try {
             Object result = switch (method) {
                 case "initialize" -> Map.of(
-                        "protocolVersion", "2025-06-18",
+                        "protocolVersion", negotiate(request.path("params").path("protocolVersion").asText(null)),
                         "capabilities", Map.of("tools", Map.of()),
                         "serverInfo", Map.of("name", "genometrics", "version", "1.0.0")
                 );
@@ -85,6 +91,11 @@ public class McpController {
         } catch (Exception ex) {
             return ResponseEntity.ok(error(id, -32603, "Internal MCP error"));
         }
+    }
+
+    /** Echo the client's version when supported, otherwise offer the newest one; the client decides whether to continue. */
+    static String negotiate(String requested) {
+        return requested != null && SUPPORTED_PROTOCOL_VERSIONS.contains(requested) ? requested : SUPPORTED_PROTOCOL_VERSIONS.get(0);
     }
 
     private Map<String, Object> error(Object id, int code, String message) {
