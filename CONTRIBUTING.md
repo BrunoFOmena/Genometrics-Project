@@ -45,19 +45,20 @@ Every pull request **must close an issue** with a closing keyword in the PR body
    git checkout -b feature/your-change
    ```
 3. Keep the change focused on one issue. Use [Conventional Commits](https://www.conventionalcommits.org/) in the PR title (`feat:`, `fix:`, `docs:`, `chore:` …); PRs are squash-merged.
-4. Run tests locally before opening a PR:
+4. Run the checks locally before opening a PR:
    ```bash
-   ./scripts/ci-check.sh
+   pip install pytest ruff
+   ruff check && ruff format --check && pytest
    ```
 5. Open a **pull request targeting `main`** using the template (`Closes #<issue>`, summary, test plan).
-6. Wait for CI (`backend`, `issue-link`) and maintainer review.
+6. Wait for CI (`skill`, `issue-link`) and maintainer review.
 
 **Only the maintainer merges PRs.**
 
 ## Maintainer setup (GitHub)
 
 - Default branch: **`main`**.
-- Branch protection on **`main`** (ruleset "Protect main"): changes only through a PR, squash merge only, linear history, no force-push or deletion, required checks (`backend`, `issue-link`; `demo` once it is on `main`) on an up-to-date branch, resolved review conversations.
+- Branch protection on **`main`** (ruleset "Protect main"): changes only through a PR, squash merge only, linear history, no force-push or deletion, required checks (`skill`, `issue-link`) on an up-to-date branch, resolved review conversations.
 - Review: PRs from contributors need **1 approval from a code owner** (`.github/CODEOWNERS`), re-requested after every new push. The maintainer may merge their own PRs without a review (repository-admin bypass, pull requests only; direct pushes stay blocked).
 - Private vulnerability reporting enabled (Settings → Code security).
 

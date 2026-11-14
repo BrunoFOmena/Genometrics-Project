@@ -1,6 +1,6 @@
 # AGENTS.md — GENOMETRICS
 
-**GENOMETRICS** by Bruno Omena — local-first FASTQ/VCF analytics exposed to AI agents via MCP (Spring Boot API, no UI).
+**GENOMETRICS** by Bruno Omena — local-first FASTQ/VCF quality control, packaged as an agent skill (Python, no server).
 
 Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 
@@ -10,26 +10,21 @@ Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 
 | Area | Path | Notes |
 |------|------|-------|
-| API | `backend/` | Java 21, Spring Boot 3, modular packages under `com.ngs.analytics.*` |
-| MCP | `backend/.../mcp/McpController.java` | JSON-RPC 2.0 over HTTP at `/mcp` (`tools/list`, `tools/call`) |
-| Business logic | `backend/.../fastq/FastqParser.java`, `vcf/VcfParser.java`, `analytics/AnalysisService.java` | Streaming parsers + async analysis |
-| Domain | `backend/.../domain/` | JPA entities and repositories |
-| Agent skill | `.claude/skills/genometrics/` | `SKILL.md` + `scripts/analyze.sh` (starts the API, uploads, waits, prints QC); `scripts/demo.sh` runs it on the fixtures |
-| Fixtures | `datasets/` | Tiny FASTQ/VCF/FASTA samples for manual tests |
+| Skill | `skills/genometrics/` | `SKILL.md` + `scripts/genometrics/` (Python 3.10+, no dependencies; CLI `python3 -m genometrics`) |
+| Marketplace | `.claude-plugin/marketplace.json` | Lists the skill for `/plugin marketplace add` |
+| Tests | `tests/` | pytest: behavior, golden parity, CLI |
+| Fixtures | `datasets/` | Tiny FASTQ/VCF/FASTA samples and `golden/` (frozen output of the removed Java backend) |
 | Local agent harness | `.agents/` | Not in git: maintainer rules (`rules/*.md`) and work logs / PR drafts (`work/`) for any AI agent |
-| CI | `.github/workflows/ci.yml` | Tests + demo on PR/push |
+| CI | `.github/workflows/ci.yml` | `skill` job (ruff + pytest) on PR/push |
 
 ### Run locally
 
-| Service | Command | URL |
-|---------|---------|-----|
-| API | `cd backend && mvn spring-boot:run` | http://localhost:8080 (Swagger `/swagger-ui.html`) |
-| Demo | `./scripts/demo.sh` | Starts the API if needed, loads `datasets/`, checks MCP |
+```bash
+PYTHONPATH=skills/genometrics/scripts python3 -m genometrics qc datasets/sample.fastq
+pip install pytest ruff && ruff check && ruff format --check && pytest
+```
 
-- DB: embedded H2 only (`dev-h2` profile). There is no PostgreSQL support.
-- **Auth is temporarily disabled** for dev: `ngs.auth.disabled=true`. Re-enable before exposing the API on a network.
-- H2/uploads persist in `data/` (gitignored). Delete to reset.
-- No `mvnw`; use system `mvn`. Nothing in this repo needs Docker.
+- No runtime dependencies, no server, no database, no account. Nothing leaves the machine.
 
 ---
 
@@ -76,16 +71,16 @@ Rules: [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, priorities, PR issue link
 
 1. **Smallest correct diff** — no drive-by refactors or new abstractions for one caller.
 2. **Match conventions** — package layout, naming, patterns already in the file you edit.
-3. **English only** — API and MCP messages, docs, commits, PR text.
+3. **English only** — CLI messages, docs, commits, PR text.
 4. **Reuse** — one upload flow, one metrics API shape; no duplicate parsers/DTOs FE↔BE.
-5. **Tests** — add/update only for behavior you changed; run `mvn test` (or `./scripts/ci-check.sh`) when touching the backend.
+5. **Tests** — add/update only for behavior you changed; run `ruff check && pytest` when touching the skill.
 6. **No secrets** — never commit `.env`, keys, or real credentials.
 
 ### Before finishing
 
 1. **Delete dead code** you replaced.
 2. **Local repository: you may edit freely.** Edit files, create branches, stage explicit paths and commit on `feature/*`, `fix/*`, `hotfix/*` without asking. Do not discard work you did not make (`reset --hard`, `clean`, `stash drop`, `branch -D`) without asking.
-   **Anything that leaves the machine needs Bruno's yes in the current chat, asked each time:** `git push` (every push, even to a branch already pushed) and `gh pr create`. Before asking, run `./scripts/ci-check.sh` (local CI: tests, package, demo); ask only if it passes, and say which branch and commits will be published. **Never merge**, never push to `main`, never force-push or push tags, never delete/rename remote branches or change repo settings unless Bruno asks for that specific action.
+   **Anything that leaves the machine needs Bruno's yes in the current chat, asked each time:** `git push` (every push, even to a branch already pushed) and `gh pr create`. Before asking, run `ruff check && ruff format --check && pytest`; ask only if it passes, and say which branch and commits will be published. **Never merge**, never push to `main`, never force-push or push tags, never delete/rename remote branches or change repo settings unless Bruno asks for that specific action.
 3. **Do not edit README/AGENTS** unless the task requires it.
 4. Summarize what changed, how to test, and any flags (auth, profiles).
 5. **Issue link** — every task maps to a GitHub issue labeled `P0`/`P1`/`P2` (see `CONTRIBUTING.md`). PR drafts start with `Closes #<issue>`; CI rejects PRs without it.
@@ -112,7 +107,7 @@ Rules: [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, priorities, PR issue link
 
 - Extend nearest class/component before adding files.
 - Colocate related logic.
-- Use `backend/...` modular packages under `com.ngs.analytics.*`.
+- Keep the skill's code in `skills/genometrics/scripts/genometrics/`.
 
 ### Do not
 
@@ -124,13 +119,9 @@ Rules: [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, priorities, PR issue link
 
 ## Stack reference
 
-> **Direction:** the core is moving to Python (MCP server first), with the Java backend kept as the reference implementation until parity. See [`docs/adr/0001-core-language.md`](docs/adr/0001-core-language.md). Until the cutover, only fix bugs or change contracts in Java; do not add new features there.
-
-- **Backend:** Java 21, Spring Boot 3, JWT (optional), JPA, in-process `@Async` jobs
-- **DB:** H2 (embedded)
-- **Run:** `mvn spring-boot:run` (H2). No container images are published.
-
----
+- **Skill:** Python 3.10+ standard library only; `scripts/genometrics/` (streaming FASTQ and VCF parsers, QC verdict, CLI)
+- **Tests:** pytest; **lint:** ruff
+- **Reference output:** `datasets/golden/` is frozen; the Java backend that produced it was removed (ADR 0001, amended)
 
 ## AI assistants
 

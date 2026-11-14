@@ -10,17 +10,9 @@ Desktop.ini
 *.swp
 *.swo
 
-# Java / Maven
-backend/target/
-*.class
-*.jar
-*.war
-.mvn/wrapper/maven-wrapper.jar
-
 # Maintainer-local files (not published)
 plan.md
 docs/*
-!docs/mcp.md
 !docs/adr/
 AGENT.md
 # Local agent harness (rules + work logs for any AI agent) and IDE-specific folders

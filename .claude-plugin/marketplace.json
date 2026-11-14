@@ -5,8 +5,10 @@
   "plugins": [
     {
       "name": "genometrics",
-      "source": "./plugin",
-      "description": "Local FASTQ and VCF quality control for AI agents. Nothing leaves your machine."
+      "description": "Quality control of FASTQ files and summaries of VCF files, on your machine.",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/genometrics"]
     }
   ]
 }

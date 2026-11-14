@@ -19,16 +19,15 @@ body:
     attributes:
       label: Steps to reproduce
       placeholder: |
-        1. cd backend && mvn spring-boot:run
-        2. Upload datasets/sample.vcf
-        3. ...
+        1. PYTHONPATH=skills/genometrics/scripts python3 -m genometrics vcf datasets/sample.vcf
+        2. ...
     validations:
       required: true
   - type: dropdown
     id: area
     attributes:
       label: Area
-      options: [Backend / API, MCP / agents, Setup / build, CI, Other]
+      options: [Skill / CLI, Setup / plugin, CI, Other]
     validations:
       required: true
   - type: textarea
