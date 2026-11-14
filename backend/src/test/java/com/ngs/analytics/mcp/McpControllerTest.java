@@ -117,6 +117,53 @@ class McpControllerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void toolSchemasStayInSyncWithTheCatalogAndTheQueryVocabulary() throws Exception {
+        Map<String, Map<String, Object>> tools = toolsByName();
+        List<String> metricKeys = new MetricCatalog().all().stream().map(MetricCatalog.Definition::key).toList();
+
+        Map<String, Object> query = (Map<String, Object>) ((Map<String, Object>) tools.get("query_metrics").get("inputSchema")).get("properties");
+        assertThat(enumOf(((Map<String, Object>) query.get("metrics")).get("items"))).isEqualTo(metricKeys);
+        assertThat(enumOf(((Map<String, Object>) query.get("dimensions")).get("items"))).isEqualTo(AnalyticsQueryService.DIMENSIONS);
+        assertThat(enumOf(query.get("aggregation"))).isEqualTo(AnalyticsQueryService.AGGREGATIONS);
+        Map<String, Object> filters = (Map<String, Object>) ((Map<String, Object>) query.get("filters")).get("properties");
+        assertThat(filters).containsOnlyKeys("projectId", "sampleIds", "statuses", "from", "to");
+
+        Map<String, Object> explain = (Map<String, Object>) ((Map<String, Object>) tools.get("explain_qc").get("inputSchema")).get("properties");
+        assertThat(enumOf(((Map<String, Object>) explain.get("metrics")).get("items"))).isEqualTo(metricKeys);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void annotatesQueryToolsAsReadOnlyAndExplainQcAsRecording() throws Exception {
+        Map<String, Map<String, Object>> tools = toolsByName();
+
+        for (String name : List.of("list_metrics", "query_metrics", "get_analysis_context")) {
+            assertThat((Map<String, Object>) tools.get(name).get("annotations")).as(name)
+                    .containsEntry("readOnlyHint", true).containsEntry("idempotentHint", true);
+        }
+        assertThat((Map<String, Object>) tools.get("explain_qc").get("annotations"))
+                .containsEntry("readOnlyHint", false).containsEntry("destructiveHint", false);
+        assertThat(tools.values()).allSatisfy(tool -> assertThat((String) tool.get("description")).hasSizeGreaterThan(80));
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Map<String, Object>> toolsByName() throws Exception {
+        Map<String, Object> response = (Map<String, Object>) controller.handle(objectMapper.readTree("""
+                {"jsonrpc":"2.0","id":1,"method":"tools/list"}
+                """)).getBody();
+        List<Map<String, Object>> tools = (List<Map<String, Object>>) ((Map<String, Object>) response.get("result")).get("tools");
+        Map<String, Map<String, Object>> byName = new java.util.LinkedHashMap<>();
+        tools.forEach(tool -> byName.put((String) tool.get("name"), tool));
+        return byName;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<String> enumOf(Object schema) {
+        return (List<String>) ((Map<String, Object>) schema).get("enum");
+    }
+
+    @Test
     void doesNotReplyToJsonRpcNotifications() throws Exception {
         var response = controller.handle(objectMapper.readTree("""
                 {"jsonrpc":"2.0","method":"notifications/initialized"}

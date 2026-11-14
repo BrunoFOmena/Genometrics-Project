@@ -16,9 +16,9 @@ import java.util.stream.Collectors;
 @Service
 public class AnalyticsQueryService {
 
-    private static final Set<String> DIMENSIONS =
-            Set.of("project", "sample", "analysis", "metric", "status", "fileType");
-    private static final Set<String> AGGREGATIONS = Set.of("NONE", "AVG", "SUM", "MIN", "MAX");
+    /** Valid query vocabularies; also published as enums in the MCP tool schemas. */
+    public static final List<String> DIMENSIONS = List.of("project", "sample", "analysis", "metric", "status", "fileType");
+    public static final List<String> AGGREGATIONS = List.of("NONE", "AVG", "SUM", "MIN", "MAX");
 
     private final MetricFactRepository metricFactRepository;
     private final MetricCatalog catalog;

@@ -165,102 +165,144 @@ public class McpController {
         );
     }
 
+    /** Pure reads: same arguments, same answer, nothing changes. */
+    private static final Map<String, Object> READ_ONLY = Map.of(
+            "readOnlyHint", true, "idempotentHint", true, "destructiveHint", false, "openWorldHint", false);
+    /** Records something new (history, uploads, analyses) but never deletes or overwrites. */
+    private static final Map<String, Object> ADDITIVE = Map.of(
+            "readOnlyHint", false, "idempotentHint", false, "destructiveHint", false, "openWorldHint", false);
+
     private List<Map<String, Object>> tools() {
         List<Map<String, Object>> tools = new ArrayList<>(baseTools());
         if (localFileAnalyzer.enabled()) {
-            tools.add(tool("analyze_file", "Analyze local FASTQ, VCF or FASTA files (absolute paths inside "
-                    + "NGS_MCP_ANALYZE_ROOTS). Pass the R1 and R2 FASTQ of one sample together for paired-end; R1 also "
-                    + "gets its own single-end analysis. Returns analysis ids with status QUEUED; poll "
-                    + "get_analysis_context until status is DONE, then query the metrics", Map.of(
-                    "type", "object",
-                    "properties", Map.of(
-                            "paths", Map.of("type", "array", "items", type("string"), "minItems", 1, "maxItems", 2),
-                            "sampleName", type("string"),
-                            "projectId", type("string")),
-                    "required", List.of("paths")
-            ), object(List.of("projectId", "sampleId", "analyses"), Map.of(
-                    "projectId", type("string"),
-                    "sampleId", type("string"),
-                    "analyses", arrayOf(object(List.of("analysisId", "file", "status", "paired"), Map.of(
-                            "analysisId", type("string"),
-                            "file", type("string"),
-                            "status", type("string"),
-                            "paired", type("boolean"))))))));
+            tools.add(tool("analyze_file",
+                    "Analyze local FASTQ, VCF or FASTA files by absolute path (only inside NGS_MCP_ANALYZE_ROOTS). "
+                            + "Use it when the user points at a file on this machine. Pass the R1 and R2 FASTQ of one sample "
+                            + "together for paired-end; R1 also gets its own single-end analysis. Returns the analysis ids "
+                            + "with status QUEUED: poll get_analysis_context until status is DONE, then use query_metrics or "
+                            + "explain_qc. Example: {\"paths\": [\"/data/runs/s1_R1.fastq.gz\", \"/data/runs/s1_R2.fastq.gz\"]}",
+                    object(List.of("paths"), Map.of(
+                            "paths", described(Map.of("type", "array", "items", type("string"), "minItems", 1, "maxItems", 2),
+                                    "Absolute paths: one file, or the R1 and R2 FASTQ of one sample"),
+                            "sampleName", described(Map.of("type", "string", "maxLength", 200), "Defaults to the first file name"),
+                            "projectId", described(uuid(), "Existing project; defaults to the \"Agent analyses\" project"))),
+                    object(List.of("projectId", "sampleId", "analyses"), Map.of(
+                            "projectId", type("string"),
+                            "sampleId", type("string"),
+                            "analyses", arrayOf(object(List.of("analysisId", "file", "status", "paired"), Map.of(
+                                    "analysisId", type("string"),
+                                    "file", type("string"),
+                                    "status", type("string"),
+                                    "paired", type("boolean")))))),
+                    ADDITIVE));
         }
         return tools;
     }
 
     private List<Map<String, Object>> baseTools() {
+        List<String> metricKeys = catalog.all().stream().map(MetricCatalog.Definition::key).toList();
         return List.of(
-                tool("list_metrics", "List metric definitions", Map.of("type", "object"), object(List.of("metrics"), Map.of(
-                        "metrics", arrayOf(object(List.of("key", "label", "unit"), Map.of(
-                                "key", type("string"),
-                                "label", type("string"),
-                                "domain", type("string"),
-                                "unit", type("string"),
-                                "description", type("string"),
-                                "aggregations", arrayOf(type("string")),
-                                "version", type("integer"))))))),
-                tool("query_metrics", "Query grounded metric facts. To compare samples, group by "
-                        + "dimensions [\"sample\", \"metric\"] with an aggregation such as AVG", querySchema(),
+                tool("list_metrics",
+                        "List every metric GENOMETRICS stores, with its unit, description, domain (FASTQ or VCF) and "
+                                + "allowed aggregations. Call it to learn the metric keys before query_metrics or explain_qc.",
+                        object(List.of(), Map.of()),
+                        object(List.of("metrics"), Map.of(
+                                "metrics", arrayOf(object(List.of("key", "label", "unit"), Map.of(
+                                        "key", type("string"),
+                                        "label", type("string"),
+                                        "domain", type("string"),
+                                        "unit", type("string"),
+                                        "description", type("string"),
+                                        "aggregations", arrayOf(type("string")),
+                                        "version", type("integer")))))),
+                        READ_ONLY),
+                tool("query_metrics",
+                        "Query stored metric facts, one row per fact by default, with sample, analysis and unit. Filter by "
+                                + "project, samples, status or date; group with dimensions and aggregate. To compare samples use "
+                                + "dimensions [\"sample\", \"metric\"] with an aggregation. Example: {\"metrics\": [\"mean_quality\", "
+                                + "\"gc_content\"], \"dimensions\": [\"sample\", \"metric\"], \"aggregation\": \"AVG\"}",
+                        querySchema(metricKeys),
                         object(List.of("columns", "rows", "total", "truncated"), Map.of(
                                 "columns", arrayOf(type("string")),
                                 "rows", arrayOf(type("object")),
                                 "total", type("integer"),
-                                "truncated", type("boolean")))),
-                tool("explain_qc", "Explain quality metrics with citations", Map.of(
-                        "type", "object",
-                        "properties", Map.of(
-                                "question", Map.of("type", "string"),
-                                "projectId", Map.of("type", "string"),
-                                "sampleIds", Map.of("type", "array", "items", Map.of("type", "string")),
-                                "metrics", Map.of("type", "array", "items", Map.of("type", "string"))
-                        ),
-                        "required", List.of("question")
-                ), object(List.of("answer", "model", "citations"), Map.of(
-                        "interactionId", type("string"),
-                        "answer", type("string"),
-                        "model", type("string"),
-                        "tools", arrayOf(type("string")),
-                        "citations", arrayOf(object(List.of("analysisId", "sampleId", "metric", "unit"), Map.of(
+                                "truncated", type("boolean"))),
+                        READ_ONLY),
+                tool("explain_qc",
+                        "Answer a quality-control question from stored facts only, with citations. Returns a readable "
+                                + "summary (per analysis: FASTQ QC verdict PASS/WARN/FAIL, metric values, failing checks, and "
+                                + "requested metrics that have no data) and the facts behind it. Records the question in the "
+                                + "history. Example: {\"question\": \"Is this run good enough to align?\", \"metrics\": [\"mean_quality\"]}",
+                        object(List.of("question"), Map.of(
+                                "question", described(type("string"), "The question in plain language"),
+                                "projectId", described(uuid(), "Limit to one project"),
+                                "sampleIds", described(arrayOf(uuid()), "Limit to these samples"),
+                                "metrics", described(arrayOf(Map.of("type", "string", "enum", metricKeys)),
+                                        "Metrics to use; when omitted they are picked from the question"))),
+                        object(List.of("answer", "model", "citations"), Map.of(
+                                "interactionId", type("string"),
+                                "answer", type("string"),
+                                "model", type("string"),
+                                "tools", arrayOf(type("string")),
+                                "citations", arrayOf(object(List.of("analysisId", "sampleId", "metric", "unit"), Map.of(
+                                        "analysisId", type("string"),
+                                        "sampleId", type("string"),
+                                        "metric", type("string"),
+                                        "value", Map.of("type", List.of("number", "null")),
+                                        "unit", type("string")))))),
+                        ADDITIVE),
+                tool("get_analysis_context",
+                        "Get one analysis: its sample, status (QUEUED, RUNNING, DONE or FAILED) and every metric fact. Use it "
+                                + "to poll an analysis until DONE or to read all metrics of one run. Example: {\"analysisId\": "
+                                + "\"<uuid from query_metrics or analyze_file>\"}",
+                        object(List.of("analysisId"), Map.of("analysisId", uuid())),
+                        object(List.of("analysisId", "sampleId", "sample", "status", "metrics"), Map.of(
                                 "analysisId", type("string"),
                                 "sampleId", type("string"),
-                                "metric", type("string"),
-                                "value", Map.of("type", List.of("number", "null")),
-                                "unit", type("string"))))))),
-                tool("get_analysis_context", "Get one analysis and its metric facts", Map.of(
-                        "type", "object",
-                        "properties", Map.of("analysisId", Map.of("type", "string")),
-                        "required", List.of("analysisId")
-                ), object(List.of("analysisId", "sampleId", "sample", "status", "metrics"), Map.of(
-                        "analysisId", type("string"),
-                        "sampleId", type("string"),
-                        "sample", type("string"),
-                        "status", type("string"),
-                        "metrics", arrayOf(object(List.of("key", "unit"), Map.of(
-                                "key", type("string"),
-                                "value", Map.of("type", List.of("number", "null")),
-                                "unit", type("string")))))))
+                                "sample", type("string"),
+                                "status", type("string"),
+                                "metrics", arrayOf(object(List.of("key", "unit"), Map.of(
+                                        "key", type("string"),
+                                        "value", Map.of("type", List.of("number", "null")),
+                                        "unit", type("string")))))),
+                        READ_ONLY)
         );
     }
 
-    private Map<String, Object> querySchema() {
-        return Map.of(
-                "type", "object",
-                "properties", Map.of(
-                        "metrics", Map.of("type", "array", "items", Map.of("type", "string")),
-                        "dimensions", Map.of("type", "array", "items", Map.of("type", "string")),
-                        "filters", Map.of("type", "object"),
-                        "aggregation", Map.of("type", "string"),
-                        "limit", Map.of("type", "integer", "maximum", 1000)
-                ),
-                "required", List.of("metrics")
-        );
+    private Map<String, Object> querySchema(List<String> metricKeys) {
+        List<String> statuses = Arrays.stream(com.ngs.analytics.domain.AnalysisStatus.values()).map(Enum::name).toList();
+        return object(List.of("metrics"), Map.of(
+                "metrics", described(Map.of("type", "array", "minItems", 1, "items", Map.of("type", "string", "enum", metricKeys)),
+                        "Metric keys (see list_metrics)"),
+                "dimensions", described(arrayOf(Map.of("type", "string", "enum", AnalyticsQueryService.DIMENSIONS)),
+                        "Group rows by these; include \"metric\" when aggregating several metrics"),
+                "aggregation", described(Map.of("type", "string", "enum", AnalyticsQueryService.AGGREGATIONS),
+                        "NONE (default) returns one row per fact"),
+                "filters", described(object(List.of(), Map.of(
+                        "projectId", uuid(),
+                        "sampleIds", arrayOf(uuid()),
+                        "statuses", arrayOf(Map.of("type", "string", "enum", statuses)),
+                        "from", described(Map.of("type", "string", "format", "date-time"), "Analyses created at or after"),
+                        "to", described(Map.of("type", "string", "format", "date-time"), "Analyses created at or before"))),
+                        "All optional"),
+                "limit", Map.of("type", "integer", "minimum", 1, "maximum", 1000, "description", "Default 200")
+        ));
     }
 
     private Map<String, Object> tool(String name, String description, Map<String, Object> schema,
-                                     Map<String, Object> outputSchema) {
-        return Map.of("name", name, "description", description, "inputSchema", schema, "outputSchema", outputSchema);
+                                     Map<String, Object> outputSchema, Map<String, Object> annotations) {
+        return Map.of("name", name, "description", description, "inputSchema", schema, "outputSchema", outputSchema,
+                "annotations", annotations);
+    }
+
+    private static Map<String, Object> described(Map<String, Object> schema, String description) {
+        Map<String, Object> out = new LinkedHashMap<>(schema);
+        out.put("description", description);
+        return out;
+    }
+
+    private static Map<String, Object> uuid() {
+        return Map.of("type", "string", "format", "uuid");
     }
 
     private static Map<String, Object> object(List<String> required, Map<String, Object> properties) {
