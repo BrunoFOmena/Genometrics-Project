@@ -8,6 +8,8 @@ POST http://localhost:8080/mcp
 
 This is the HTTP transport, which Claude Code and Cursor speak directly. For clients that only support stdio, see [Clients that only support stdio](#clients-that-only-support-stdio). With the default setup, authentication is off and the API uses the built-in dev user. If you set `NGS_AUTH_DISABLED=false`, send `Authorization: Bearer <jwt>` (see the README for how to get a token).
 
+The endpoint rejects requests with a foreign `Host` header (auth off) and requests with a foreign `Origin` header, which protects against web pages in your browser. Clients that run outside a browser send neither and work unchanged. For a browser-based client or another host name set `NGS_SECURITY_ALLOWED_ORIGINS` / `NGS_SECURITY_ALLOWED_HOSTS` (see `SECURITY.md`).
+
 Tools query stored facts; they do not upload files or start analyses (`explain_qc` only records the question and answer in its history). Load data through the REST API first (README, "Load data").
 
 ## Handshake

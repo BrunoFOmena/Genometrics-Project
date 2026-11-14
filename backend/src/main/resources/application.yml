@@ -75,6 +75,8 @@ spring:
       ddl-auto: create-drop
 
 ngs:
+  jwt:
+    secret: "test-only-secret-ngs-analytics-platform-jwt-key-32bytes-min"
   storage:
     local-dir: ${java.io.tmpdir}/ngs-test-uploads
 
