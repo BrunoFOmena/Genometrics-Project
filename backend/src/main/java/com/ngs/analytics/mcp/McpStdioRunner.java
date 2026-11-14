@@ -13,14 +13,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * MCP over stdio (profile {@code mcp-stdio}, started by scripts/mcp-stdio.sh): one JSON-RPC message per line on
@@ -50,7 +50,8 @@ public class McpStdioRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws IOException {
-        PrintStream protocolOut = System.out;
+        // Explicit UTF-8: System.out would use the locale charset (e.g. ASCII under LANG=C) and corrupt non-ASCII names.
+        PrintStream protocolOut = new PrintStream(new FileOutputStream(FileDescriptor.out), false, StandardCharsets.UTF_8);
         System.setOut(System.err);
         serve(System.in, protocolOut);
     }
@@ -66,6 +67,9 @@ public class McpStdioRunner implements CommandLineRunner {
             while ((line = reader.readLine()) != null) {
                 if (!line.isBlank()) {
                     handleLine(line, out);
+                    if (out.checkError()) {
+                        return; // the client closed our stdout
+                    }
                 }
             }
         } finally {
@@ -73,21 +77,26 @@ public class McpStdioRunner implements CommandLineRunner {
         }
     }
 
-    private void handleLine(String line, PrintStream out) throws JsonProcessingException {
+    private void handleLine(String line, PrintStream out) {
         Object reply;
         try {
             JsonNode request = objectMapper.readTree(line);
             reply = controller.handle(request).getBody();
+            if (reply != null) {
+                reply = objectMapper.writeValueAsString(reply);
+            }
         } catch (JsonProcessingException ex) {
-            Map<String, Object> error = new LinkedHashMap<>();
-            error.put("jsonrpc", "2.0");
-            error.put("id", null);
-            error.put("error", Map.of("code", -32700, "message", "Parse error"));
-            reply = error;
+            reply = error(-32700, "Parse error");
+        } catch (RuntimeException ex) {
+            reply = error(-32603, "Internal MCP error");
         }
         if (reply != null) {
-            out.print(objectMapper.writeValueAsString(reply) + "\n");
+            out.print(reply + "\n");
             out.flush();
         }
+    }
+
+    private String error(int code, String message) {
+        return "{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":" + code + ",\"message\":\"" + message + "\"}}";
     }
 }

@@ -119,7 +119,7 @@ With auth enabled, add `"headers": {"Authorization": "Bearer <jwt>"}` next to `u
 }
 ```
 
-- Needs JDK 21 and Maven; the first start builds `backend/target/*.jar` (build output goes to stderr, and the script rebuilds when sources change).
+- Needs JDK 21 and Maven. Build once before configuring the client, because clients wait only a few seconds for the server to start: `cd backend && mvn -DskipTests package`. If the jar is missing the script builds it (output on stderr); if sources are newer than the jar it only warns on stderr, so rebuild after pulling changes.
 - It uses the same H2 database as `mvn spring-boot:run` (`data/`), so data loaded through the HTTP API is visible over stdio, and both can run at the same time.
 - The process is local and runs as the built-in dev user, so no token is needed. It only exposes the read-only tools; loading data still goes through the REST API (or `analyze.sh`).
 - stdout carries only protocol messages; all logs go to stderr.

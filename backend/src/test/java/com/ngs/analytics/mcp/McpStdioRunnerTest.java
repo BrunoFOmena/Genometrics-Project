@@ -85,6 +85,22 @@ class McpStdioRunnerTest {
     }
 
     @Test
+    void echoesNonAsciiIdsAndSurvivesNonObjectInput() throws Exception {
+        devUserExists();
+
+        List<JsonNode> replies = serve("""
+                {"jsonrpc":"2.0","id":"São μ","method":"tools/list"}
+                [{"jsonrpc":"2.0","id":3,"method":"tools/list"}]
+                5
+                """);
+
+        assertThat(replies).hasSize(3);
+        assertThat(replies.get(0).path("id").asText()).isEqualTo("São μ");
+        assertThat(replies.get(1).path("error").path("code").asInt()).isEqualTo(-32600);
+        assertThat(replies.get(2).path("error").path("code").asInt()).isEqualTo(-32600);
+    }
+
+    @Test
     void clearsTheSecurityContextWhenInputEnds() throws Exception {
         devUserExists();
 
