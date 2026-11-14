@@ -3,10 +3,10 @@
 ## Use it from an agent
 
 ```bash
-claude mcp add genometrics -- uvx genometrics-mcp
+claude mcp add genometrics -- uvx --from "git+https://github.com/BrunoFOmena/Genometrics-Project#subdirectory=python" genometrics-mcp
 ```
 
-Then ask "QC this file". The server speaks MCP over stdio: no port, no account, nothing leaves the machine. Tools (all read-only, synchronous, absolute paths only):
+Or install the Claude Code plugin from this repository (see the root README). Then ask "QC this file". The server speaks MCP over stdio: no port, no account, nothing leaves the machine. Tools (all read-only, synchronous, absolute paths only):
 
 | Tool | Returns |
 |------|---------|

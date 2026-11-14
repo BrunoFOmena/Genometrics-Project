@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "genometrics": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/BrunoFOmena/Genometrics-Project#subdirectory=python",
+        "genometrics-mcp"
+      ]
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "genometrics",
+  "description": "Local-first FASTQ and VCF analytics for AI agents.",
+  "owner": { "name": "Bruno Omena" },
+  "plugins": [
+    {
+      "name": "genometrics",
+      "source": "./plugin",
+      "description": "Local FASTQ and VCF quality control for AI agents. Nothing leaves your machine."
+    }
+  ]
+}
