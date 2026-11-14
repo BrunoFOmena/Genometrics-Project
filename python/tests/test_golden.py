@@ -1,4 +1,4 @@
-"""Parity with the Java backend: every value in datasets/golden/*.fastq.json (rules in datasets/golden/README.md)."""
+"""Parity with the Java backend: every value in datasets/golden/*.json (rules in datasets/golden/README.md)."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from genometrics import fastq, qc
+from genometrics import fastq, qc, vcf
 
 DATASETS = Path(__file__).resolve().parents[2] / "datasets"
 GOLDEN = DATASETS / "golden"
@@ -54,3 +54,17 @@ def test_matches_the_java_golden_output(golden_file):
     assert_same(result["recommendations"], golden["recommendations"], "$.recommendations")
     assert_same(fastq.metric_facts(metrics), golden["metricFacts"], "$.metricFacts")
     assert_same(qc.stored_checks(result), golden["qcChecks"], "$.qcChecks")
+
+
+def test_vcf_matches_the_java_golden_output():
+    golden = json.loads((GOLDEN / "sample.vcf.json").read_text(encoding="utf-8"))
+    metrics = vcf.parse(DATASETS / "sample.vcf")
+
+    assert golden["kind"] == "vcf"
+    assert_same(metrics, golden["metrics"], "$.metrics")
+    assert_same(vcf.metric_facts(metrics), golden["metricFacts"], "$.metricFacts")
+
+
+def test_every_golden_file_is_covered():
+    covered = set(CASES) | {"sample.vcf.json"}
+    assert {p.name for p in GOLDEN.glob("*.json")} == covered
