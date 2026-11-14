@@ -47,12 +47,12 @@ curl -s http://localhost:8080/mcp -H 'Content-Type: application/json' -d '{
 | Tool | Arguments |
 |------|-----------|
 | `list_metrics` | none. Returns every metric key with unit and allowed aggregations |
-| `query_metrics`, `compare_analyses` | `metrics` (required), `dimensions`, `filters`, `aggregation`, `limit` (max 1000) |
+| `query_metrics` | `metrics` (required), `dimensions`, `filters`, `aggregation`, `limit` (max 1000) |
 | `get_analysis_context` | `analysisId`. All metric facts of one analysis |
 | `explain_qc` | `question`, optional `sampleIds`, `metrics`. Returns the matching facts with citations |
 
 - Metric keys: `read_count`, `average_length`, `gc_content`, `n_content`, `mean_quality`, `duplication_rate` (FASTQ); `variant_count`, `snp_count`, `indel_count`, `mean_variant_quality`, `mean_depth`, `ts_tv_ratio`, `pass_count` (VCF).
-- Dimensions: `project`, `sample`, `analysis`, `metric`, `status`, `fileType`.
+- Dimensions: `project`, `sample`, `analysis`, `metric`, `status`, `fileType`. To compare samples, use `dimensions: ["sample", "metric"]` with an aggregation.
 - Aggregations: `NONE` (default, one row per fact), `AVG`, `SUM`, `MIN`, `MAX`. When aggregating more than one metric, always include `metric` in `dimensions`; otherwise different metrics are averaged together.
 - Filters: `projectId`, `sampleIds`, `statuses`, `from`, `to` (ISO-8601 instants).
 
