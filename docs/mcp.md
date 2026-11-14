@@ -1,4 +1,4 @@
-# MCP over HTTP
+# MCP over HTTP and stdio
 
 GENOMETRICS exposes read-only metric tools to AI agents. The endpoint is JSON-RPC 2.0 on the API process:
 
@@ -6,7 +6,7 @@ GENOMETRICS exposes read-only metric tools to AI agents. The endpoint is JSON-RP
 POST http://localhost:8080/mcp
 ```
 
-This is not a stdio MCP server: clients need an HTTP MCP transport (or a small stdio bridge) pointed at that URL. With the default setup, authentication is off and the API uses the built-in dev user. If you set `NGS_AUTH_DISABLED=false`, send `Authorization: Bearer <jwt>` (see the README for how to get a token).
+This is the HTTP transport, which Claude Code and Cursor speak directly. For clients that only support stdio, see [Clients that only support stdio](#clients-that-only-support-stdio). With the default setup, authentication is off and the API uses the built-in dev user. If you set `NGS_AUTH_DISABLED=false`, send `Authorization: Bearer <jwt>` (see the README for how to get a token).
 
 Tools query stored facts; they do not upload files or start analyses (`explain_qc` only records the question and answer in its history). Load data through the REST API first (README, "Load data").
 
@@ -107,17 +107,25 @@ With auth enabled, add `"headers": {"Authorization": "Bearer <jwt>"}` next to `u
 
 ## Clients that only support stdio
 
-Claude Code and Cursor speak HTTP directly; a bridge is only needed for stdio-only clients. Use one, for example [`mcp-remote`](https://www.npmjs.com/package/mcp-remote), only if you trust that package, and pin a reviewed version:
+`scripts/mcp-stdio.sh` runs the same tools over stdio (one JSON-RPC message per line), with no HTTP port and no bridge package. Point the client at its absolute path:
 
 ```json
 {
   "mcpServers": {
     "genometrics": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote@0.15.2", "http://localhost:8080/mcp"]
+      "command": "/absolute/path/to/Genometrics-Project/scripts/mcp-stdio.sh"
     }
   }
 }
 ```
 
-Start the API first (`mvn spring-boot:run` or `./scripts/demo.sh`).
+- Needs JDK 21 and Maven; the first start builds `backend/target/*.jar` (build output goes to stderr, and the script rebuilds when sources change).
+- It uses the same H2 database as `mvn spring-boot:run` (`data/`), so data loaded through the HTTP API is visible over stdio, and both can run at the same time.
+- The process is local and runs as the built-in dev user, so no token is needed. It only exposes the read-only tools; loading data still goes through the REST API (or `analyze.sh`).
+- stdout carries only protocol messages; all logs go to stderr.
+
+Try it from a shell:
+
+```bash
+printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | ./scripts/mcp-stdio.sh
+```

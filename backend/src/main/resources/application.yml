@@ -97,3 +97,18 @@ spring:
     enabled: true
     baseline-on-migrate: true
     baseline-version: 0
+
+---
+# MCP over stdio (scripts/mcp-stdio.sh): no web server, no banner, logs on stderr (stdout is the protocol).
+spring:
+  config:
+    activate:
+      on-profile: mcp-stdio
+  main:
+    web-application-type: none
+    banner-mode: "off"
+logging:
+  config: classpath:logback-mcp-stdio.xml
+ngs:
+  auth:
+    disabled: true
