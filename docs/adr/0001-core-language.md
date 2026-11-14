@@ -51,22 +51,32 @@ Strangler, not big-bang. The `backend` CI job and its required check stay green 
 
 ### Steps
 
-1. **Freeze the contract.** Export the Java output for every `datasets/` fixture (parse results, QC checks, metric facts) as golden files, and keep the evals. These become the Python acceptance tests.
-2. **`core/` package.** `pyproject.toml`, `uv`, `pytest`, `ruff`. Port FASTQ, QC and VCF with golden-file parity tests (exact for counts, small tolerance for floats). Benchmark the FASTQ reader on a multi-GB file and record the result.
-3. **Analysis and data layer.** Port the analysis pipeline on top of #31, with idempotent runs.
-4. **MCP server.** The five tools over stdio, then HTTP, then the REST endpoints; port the Host/Origin guard and tests.
-5. **Switch consumers.** Skill scripts, `demo.sh`, `ci-check.sh`, `.mcp.json`, README and AGENTS.md move to Python. CI gets a `core` job; the ruleset's required checks change in the same step (a settings change for the maintainer).
-6. **Retire Java.** Mark `backend/` deprecated for one release, then delete it (git history keeps it).
+**Amended 2026-11-14: vertical slice.** Instead of porting every component before publishing, ship a small Python MCP server that people can install in one line, then grow it. The previous step list is replaced by:
+
+1. **Freeze the contract** (#62, done): golden files in `datasets/golden/` with the Java output for every fixture.
+2. **v0.1, FASTQ** (#63): `python/` package (`uv`, `pytest`, `ruff`, CI job `python`), pure-Python FASTQ parser and QC evaluator with golden parity. No native dependencies, so `pip` works on Windows too.
+3. **v0.1, VCF** (#64): pure-Python VCF summary with golden parity.
+4. **v0.1, MCP server** (#65): stdio only, installed with `uvx`, **synchronous** tools designed for the user (`qc_fastq`, `summarize_vcf`, `compare`, `explain_check`), results cached by file hash, a report to hand over. No HTTP, REST, auth, projects or samples in v0.1.
+5. **Validate and switch** (#66): compare our numbers with FastQC / fastp / bcftools on public datasets; move the demo, skill, CI and docs to Python; the ruleset's required checks change in the same step.
+6. **Retire Java** (#67).
+
+The Parquet + DuckDB data layer (#31) is no longer on the v0.1 path: a JSON cache per file hash is enough until cohort queries are needed.
+
+The contract changes accordingly: **metric values, QC verdicts, messages and recommendations stay identical to the golden files**; the MCP tool names and shapes are redesigned in #65 (the Java tools are not ported 1:1).
+
+### Measured so far
+
+Pure-Python FASTQ reader (#63), one core, 200,000 reads of 150 bp: about 48,000 reads/s (7 Mbases/s), plain or gzip. A 10-million-read file takes about 3.5 minutes, so "answer in seconds" needs a decision in #65: sample the first reads for a quick verdict, add an optional native reader, or both.
 
 ### Done when
 
 - Every golden fixture and eval passes against the Python core.
-- `git clone` plus one command runs the demo with Python only.
+- `uvx genometrics-mcp` (one line) gives a QC answer, with Python only.
 - CI is green on the new jobs and the ruleset points at them.
 
 ## Open questions
 
-- FASTQ reader library (decided by the step 2 benchmark).
+- FASTQ speed on large files: quick verdict from the first reads, an optional native reader, or both (see "Measured so far").
 - REST framework (FastAPI or something smaller) and whether Swagger-style docs are kept.
 - Windows policy: WSL only, or a pure-Python VCF fallback.
 - PDF report library.
