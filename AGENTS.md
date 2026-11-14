@@ -85,7 +85,7 @@ Rules: [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, priorities, PR issue link
 
 1. **Delete dead code** you replaced.
 2. **Local repository: you may edit freely.** Edit files, create branches, stage explicit paths and commit on `feature/*`, `fix/*`, `hotfix/*` without asking. Do not discard work you did not make (`reset --hard`, `clean`, `stash drop`, `branch -D`) without asking.
-   **Anything that leaves the machine needs Bruno's yes in the current chat, asked each time:** `git push` (every push, even to a branch already pushed) and `gh pr create`. Say which branch and commits will be published. **Never merge**, never push to `main`, never force-push or push tags, never delete/rename remote branches or change repo settings unless Bruno asks for that specific action.
+   **Anything that leaves the machine needs Bruno's yes in the current chat, asked each time:** `git push` (every push, even to a branch already pushed) and `gh pr create`. Before asking, run `./scripts/ci-check.sh` (local CI: tests, package, demo); ask only if it passes, and say which branch and commits will be published. **Never merge**, never push to `main`, never force-push or push tags, never delete/rename remote branches or change repo settings unless Bruno asks for that specific action.
 3. **Do not edit README/AGENTS** unless the task requires it.
 4. Summarize what changed, how to test, and any flags (auth, profiles).
 5. **Issue link** — every task maps to a GitHub issue labeled `P0`/`P1`/`P2` (see `CONTRIBUTING.md`). PR drafts start with `Closes #<issue>`; CI rejects PRs without it.
