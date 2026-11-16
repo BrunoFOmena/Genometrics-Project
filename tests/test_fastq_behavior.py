@@ -82,3 +82,14 @@ def test_trailing_quality_drop_recommends_a_trim_cycle(tmp_path):
     per_position = next(c for c in result["checks"] if c["id"] == "perPositionQuality")
     assert per_position["status"] == "WARN"
     assert any("cycle 9" in r["detail"] for r in result["recommendations"])
+
+
+def test_no_trim_cycle_when_the_last_cycle_is_not_low(tmp_path):
+    path = tmp_path / "s.fastq"
+    path.write_text("".join(f"@r{i}\nACGTACGTAC\n+\n#IIIIIIIII\n" for i in range(3)))
+
+    result = qc.evaluate(fastq.parse(path))
+
+    details = [r["detail"] for r in result["recommendations"]]
+    assert not any("3' trimming" in d for d in details)
+    assert any("cycles to trim" in d for d in details)
