@@ -1,7 +1,11 @@
 # GENOMETRICS
 
-Local-first quality control for FASTQ files and summaries for VCF files. It runs on your machine: no server, no account, nothing leaves your computer. It is packaged as an agent skill for Claude Code.
+[![CI](https://github.com/BrunoFOmena/Genometrics-Project/actions/workflows/ci.yml/badge.svg)](https://github.com/BrunoFOmena/Genometrics-Project/actions/workflows/ci.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
+Local-first quality control for FASTQ files and summaries for VCF files, packaged as an agent skill for Claude Code.
+
+Sequencing data is sensitive and often cannot be uploaded to a cloud service. GENOMETRICS runs entirely on your machine: no server, no account, no dependencies beyond Python. Nothing leaves your computer. Instead of reading a wall of numbers, you ask in plain language and get a PASS/WARN/FAIL verdict with the metric behind each check.
 ## Install
 
 Needs Python 3.10 or newer. In Claude Code:
@@ -27,6 +31,24 @@ Or run the CLI directly:
 
 ```bash
 PYTHONPATH=skills/genometrics/scripts python3 -m genometrics qc datasets/sample.fastq
+```
+
+## Example
+
+Ask Claude Code "QC this file: datasets/sample.fastq", or run the CLI. The output is JSON; this is an abridged result:
+
+```json
+{
+  "verdict": "WARN",
+  "checks": [
+    { "id": "meanQuality", "status": "WARN", "message": "Mean quality 24.4 below 28" },
+    { "id": "gcContent", "status": "WARN", "message": "GC 38.7% outside 40–60%" },
+    { "id": "nContent", "status": "PASS", "message": "N content 0.83% is low" },
+    { "id": "duplicationRate", "status": "PASS", "message": "Duplication 12.5% is acceptable" },
+    { "id": "readCount", "status": "WARN", "message": "Read count 8 is very low (fixture or failed run?)" }
+  ],
+  "metrics": { "read_count": 8.0, "average_length": 60.125, "gc_content": 38.67, "mean_quality": 24.42 }
+}
 ```
 
 ## Layout
