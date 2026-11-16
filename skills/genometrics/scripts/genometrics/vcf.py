@@ -62,6 +62,10 @@ def parse(path: str | Path) -> dict:
             cols = _java_split(line, "\t")
             if len(cols) < 8:
                 raise VcfError("Invalid VCF row: expected at least 8 columns")
+            if not cols[1].strip().isdigit():
+                raise VcfError(f"Invalid VCF row: POS '{cols[1]}' is not a number")
+            if cols[5] != "." and _java_double(cols[5]) is None:
+                raise VcfError(f"Invalid VCF row: QUAL '{cols[5]}' is not a number or '.'")
             chrom, ref, alt_field, qual_text, filt, info = (
                 cols[0],
                 cols[3].upper(),

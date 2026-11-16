@@ -38,6 +38,8 @@ Every file is a JSON object with sorted keys:
 
 Then review the diff and commit it together with the code change.
 
+Deliberate change (#97): the parsers now reject a FASTQ record whose quality length differs from its sequence length, and a VCF row with a non-numeric POS or QUAL. The fixtures had a few such reads, so they were corrected (quality padded or trimmed to the sequence length) and the FASTQ golden files regenerated from the Python core. Only mean quality (24.42, 21.31) and a position 61 entry changed; no status or message did.
+
 ## Limits
 
 The fixtures are tiny (8 reads, 10 variants). They pin down formulas, thresholds and formats, but not behavior that only shows on real data: the 50,000-read sampling limit for duplication and adapters, gzip input, reads longer than 150 bp, multi-sample VCFs. The Python port needs a larger synthetic fixture for those (migration step 2).

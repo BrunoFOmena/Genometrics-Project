@@ -102,6 +102,8 @@ def _records(path: str | Path) -> Iterator[tuple[str, str]]:
                 raise FastqError("Truncated FASTQ record")
             if not plus.startswith("+"):
                 raise FastqError("Invalid FASTQ: expected '+' line")
+            if len(qual) != len(seq):
+                raise FastqError(f"Invalid FASTQ: quality length {len(qual)} != sequence length {len(seq)}")
             yield seq, qual
 
 
