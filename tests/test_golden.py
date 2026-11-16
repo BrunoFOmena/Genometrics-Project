@@ -1,4 +1,4 @@
-"""Parity with the Java backend: every value in datasets/golden/*.json (rules in datasets/golden/README.md)."""
+"""Every value in datasets/golden/*.json (rules in datasets/golden/README.md)."""
 
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ CASES = {
 
 
 @pytest.mark.parametrize("golden_file", sorted(CASES))
-def test_matches_the_java_golden_output(golden_file):
+def test_matches_the_golden_output(golden_file):
     golden = json.loads((GOLDEN / golden_file).read_text(encoding="utf-8"))
     metrics = CASES[golden_file]()
     result = qc.evaluate(metrics)
@@ -55,7 +55,7 @@ def test_matches_the_java_golden_output(golden_file):
     assert_same(qc.stored_checks(result), golden["qcChecks"], "$.qcChecks")
 
 
-def test_vcf_matches_the_java_golden_output():
+def test_vcf_matches_the_golden_output():
     golden = json.loads((GOLDEN / "sample.vcf.json").read_text(encoding="utf-8"))
     metrics = vcf.parse(DATASETS / "sample.vcf")
 

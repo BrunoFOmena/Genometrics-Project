@@ -1,6 +1,6 @@
-"""VCF summary: a port of the Java VcfParser. Pure Python, plain or bgzip/gzip input.
+"""VCF summary. Pure Python, plain or bgzip/gzip input.
 
-Output keys match the Java backend's API (camelCase) so results can be compared with datasets/golden/sample.vcf.json.
+Output keys are camelCase and match datasets/golden/sample.vcf.json.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ MAX_CONTIGS = 50
 MAX_TAG_IDS = 40
 MAX_SAMPLES = 20
 
-_JAVA_INT = re.compile(r"[+-]?\d+")
+_INT = re.compile(r"[+-]?\d+")
 
 
 class VcfError(ValueError):
@@ -59,12 +59,12 @@ def parse(path: str | Path) -> dict:
                 continue
             if line.startswith("#"):
                 continue
-            cols = _java_split(line, "\t")
+            cols = _split_tabs(line, "\t")
             if len(cols) < 8:
                 raise VcfError("Invalid VCF row: expected at least 8 columns")
             if not cols[1].strip().isdigit():
                 raise VcfError(f"Invalid VCF row: POS '{cols[1]}' is not a number")
-            if cols[5] != "." and _java_double(cols[5]) is None:
+            if cols[5] != "." and _to_float(cols[5]) is None:
                 raise VcfError(f"Invalid VCF row: QUAL '{cols[5]}' is not a number or '.'")
             chrom, ref, alt_field, qual_text, filt, info = (
                 cols[0],
@@ -84,9 +84,9 @@ def parse(path: str | Path) -> dict:
                 failed += 1
 
             if qual_text != ".":
-                qual = _java_double(qual_text)
+                qual = _to_float(qual_text)
                 if qual is not None:
-                    qual_sum += qual  # sequential sum, as in Java
+                    qual_sum += qual  # sequential sum
                     qual_count += 1
                     qual_hist.add(qual)
 
@@ -169,7 +169,7 @@ def parse(path: str | Path) -> dict:
 
 
 def metric_facts(metrics: dict) -> list[dict]:
-    """The facts the MCP tools query, with the keys and units of the Java MetricCatalog."""
+    """The headline metrics as key, value and unit."""
     return [
         {"key": "variant_count", "value": float(metrics["variantCount"]), "unit": "variants"},
         {"key": "snp_count", "value": float(metrics["snpCount"]), "unit": "variants"},
@@ -185,15 +185,15 @@ def _ratio(ts: int, tv: int) -> float:
     return float(ts) if tv == 0 else ts / tv
 
 
-def _java_split(text: str, sep: str) -> list[str]:
-    """Java's String.split drops trailing empty strings."""
+def _split_tabs(text: str, sep: str) -> list[str]:
+    """str.split, but trailing empty strings are dropped."""
     parts = text.split(sep)
     while len(parts) > 1 and parts[-1] == "":
         parts.pop()
     return parts
 
 
-def _java_double(text: str) -> float | None:
+def _to_float(text: str) -> float | None:
     try:
         return float(text.strip())
     except ValueError:
@@ -213,12 +213,12 @@ def _int_info(info: str, key: str) -> int | None:
     if value is None:
         return None
     first = value.split(",")[0]
-    return int(first) if _JAVA_INT.fullmatch(first) else None
+    return int(first) if _INT.fullmatch(first) else None
 
 
 def _float_info(info: str, key: str) -> float | None:
     value = _info(info, key)
-    return None if value is None else _java_double(value.split(",")[0])
+    return None if value is None else _to_float(value.split(",")[0])
 
 
 class _Histogram:
@@ -233,7 +233,7 @@ class _Histogram:
             return
         if value < 0:
             return
-        index = 0 if math.isnan(value) else int(value / BIN_WIDTH)  # Java casts NaN to 0
+        index = 0 if math.isnan(value) else int(value / BIN_WIDTH)  # NaN lands in the first bin
         self.bins[min(index, len(self.bins) - 1)] += 1
 
     def as_dict(self) -> dict:
@@ -272,7 +272,7 @@ class _Header:
             _add_capped(self.format_ids, _angle_id(line), MAX_TAG_IDS)
 
     def columns(self, line: str) -> None:
-        for name in _java_split(line, "\t")[9:]:
+        for name in _split_tabs(line, "\t")[9:]:
             if len(self.samples) >= MAX_SAMPLES:
                 break
             name = name.strip()

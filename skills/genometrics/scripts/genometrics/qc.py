@@ -1,6 +1,6 @@
-"""FASTQ quality-control verdict: a port of the Java FastqQcEvaluator and FastqQcThresholds.
+"""FASTQ quality-control verdict: checks, thresholds, messages and recommendations.
 
-Same checks, thresholds, messages and recommendations, so results match the golden files.
+Results are pinned by the golden files in datasets/golden/.
 """
 
 from __future__ import annotations
@@ -8,7 +8,7 @@ from __future__ import annotations
 import math
 
 from .fastq import SAMPLE_LIMIT
-from .javafmt import fixed, grouped
+from .numfmt import fixed, grouped
 
 MEAN_Q_PASS, MEAN_Q_WARN = 28.0, 20.0
 GC_PASS_MIN, GC_PASS_MAX = 40.0, 60.0

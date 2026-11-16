@@ -32,7 +32,7 @@ def test_rejects_short_rows_and_empty_files(tmp_path):
         vcf.parse(write(tmp_path, ""))
 
 
-def test_trailing_empty_columns_are_dropped_like_java(tmp_path):
+def test_trailing_empty_columns_are_dropped(tmp_path):
     with pytest.raises(vcf.VcfError, match="at least 8 columns"):
         vcf.parse(write(tmp_path, "chr1\t1\t.\tA\tG\t50\tPASS\t\t\n"))
 
@@ -65,10 +65,10 @@ def test_ts_tv_ratio_without_transversions_is_the_transition_count(tmp_path):
     assert m["tsTvByChromosome"]["chr1"] == {"ts": 2, "tv": 0, "tsTvRatio": 2.0}
 
 
-def test_info_values_parse_like_java(tmp_path):
+def test_info_values_parse_as_numbers(tmp_path):
     body = (
         "chr1\t1\t.\tA\tG\tNaN\tPASS\tdp=7;AF=0.25,0.5;GENE=TP53\n"  # keys are case-insensitive; first value wins
-        "chr1\t2\t.\tA\tG\t.\tPASS\tDP=1_000;AF=x\n"  # Java rejects 1_000 and x
+        "chr1\t2\t.\tA\tG\t.\tPASS\tDP=1_000;AF=x\n"  # 1_000 and x are not valid numbers
     )
 
     m = vcf.parse(write(tmp_path, body))
@@ -76,7 +76,7 @@ def test_info_values_parse_like_java(tmp_path):
     assert m["meanDepth"] == 7.0
     assert m["alleleFrequency"] == {"count": 1, "mean": 0.25, "min": 0.25, "max": 0.25, "values": [0.25]}
     assert m["geneDistribution"] == {"TP53": 1}
-    assert m["qualityHistogram"]["counts"][0] == 1  # NaN lands in the first bin, as in Java
+    assert m["qualityHistogram"]["counts"][0] == 1  # NaN lands in the first bin
 
 
 def test_header_caps_and_dedupes_samples(tmp_path):
