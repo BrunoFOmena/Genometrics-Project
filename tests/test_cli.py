@@ -62,3 +62,22 @@ def test_errors_go_to_stderr_with_exit_code_1(args, message):
     assert result.returncode == 1
     assert result.stdout == ""
     assert message in result.stderr
+
+
+def test_truncated_gzip_is_a_clean_error(tmp_path):
+    import gzip
+
+    path = tmp_path / "cut.fastq.gz"
+    path.write_bytes(gzip.compress((DATASETS / "sample.fastq").read_bytes())[:40])
+    result = cli("qc", str(path))
+    assert result.returncode == 1
+    assert result.stderr.startswith("error: truncated or corrupt gzip file")
+    assert "Traceback" not in result.stderr
+
+
+def test_non_utf8_input_is_a_clean_error(tmp_path):
+    path = tmp_path / "bad.fastq"
+    path.write_bytes(b"@r1\nACGT\n+\nI\xe9II\n")
+    result = cli("qc", str(path))
+    assert result.returncode == 1
+    assert result.stderr.startswith("error: not valid UTF-8 text")
