@@ -99,6 +99,10 @@ Files checked: sample_R1.fastq (537 bytes) and sample_R2.fastq (530 bytes), each
 Research use only: these results are not a diagnosis and are not clinical findings.
 ```
 
+## What it covers
+
+A quick FASTQ summary, not a replacement for [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/). It runs eight checks: mean quality, GC content, N content, duplication, read count, per-position quality, overrepresented sequences and adapter content. It has no equivalent of FastQC's per-base sequence content, per-sequence GC distribution or per-tile quality, so it can return PASS where FastQC warns (for example on tagmentation libraries). On a public E. coli run it agreed with FastQC on every check it shares.
+
 ## Layout
 
 ```text
