@@ -6,14 +6,20 @@
 Local-first quality control for FASTQ files and summaries for VCF files, packaged as an agent skill for Claude Code.
 
 Sequencing data is sensitive and often cannot be uploaded to a cloud service. GENOMETRICS runs entirely on your machine: no server, no account, no dependencies beyond Python. Nothing leaves your computer. Instead of reading a wall of numbers, you ask in plain language and get a PASS/WARN/FAIL verdict with the metric behind each check.
+
 ## Install
 
-Needs Python 3.10 or newer. In Claude Code:
+Needs Python 3.10 or newer. In Claude Code, enter each command on its own line (pasting both at once fails):
 
 ```text
 /plugin marketplace add BrunoFOmena/Genometrics-Project
+```
+
+```text
 /plugin install genometrics@genometrics
 ```
+
+Then run `/reload-plugins`; the skill is available after the reload.
 
 Or copy [`skills/genometrics/`](skills/genometrics/) into `~/.claude/skills/`.
 
