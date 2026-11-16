@@ -56,7 +56,7 @@ def evaluate(metrics: dict) -> dict:
     ]
     statuses = {c["status"] for c in checks}
     overall = "FAIL" if "FAIL" in statuses else "WARN" if "WARN" in statuses else "PASS"
-    trim_cycle = next((p for p in sorted(per_position) if per_position[p] < PER_POSITION_Q_WARN), None)
+    trim_cycle = _trim_cycle(per_position)
     return {"overall": overall, "checks": checks, "recommendations": _recommendations(checks, trim_cycle)}
 
 
@@ -111,6 +111,16 @@ def _read_count(n: int) -> dict:
     if n >= READ_COUNT_WARN:
         return _check("readCount", "WARN", float(n), f"Read count {grouped(n)} below 100k")
     return _check("readCount", "WARN", float(n), f"Read count {grouped(n)} is very low (fixture or failed run?)")
+
+
+def _trim_cycle(per_position: dict[int, float]) -> int | None:
+    """First cycle of the trailing run below the threshold; None if the last cycle is not below it."""
+    trim = None
+    for p in sorted(per_position, reverse=True):
+        if per_position[p] >= PER_POSITION_Q_WARN:
+            break
+        trim = p
+    return trim
 
 
 def _per_position(per_position: dict[int, float]) -> dict:
@@ -169,9 +179,8 @@ def _recommendations(checks: list[dict], trim_cycle: int | None) -> list[dict]:
         if check["id"] == "perPositionQuality":
             if trim_cycle is not None:
                 title = "Quality drop at 3' end"
-                detail = (
-                    f"Consider 3' trimming to cycle {trim_cycle} where quality falls below {int(PER_POSITION_Q_WARN)}."
-                )
+                q = int(PER_POSITION_Q_WARN)
+                detail = f"Consider 3' trimming from cycle {trim_cycle}, where quality stays below {q}."
             else:
                 title, detail = (
                     "Per-position quality issue",

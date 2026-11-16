@@ -237,9 +237,9 @@
     "severity" : "WARN",
     "title" : "Low read count"
   }, {
-    "detail" : "Consider 3' trimming to cycle 1 where quality falls below 20.",
+    "detail" : "Inspect the quality-by-position chart for cycles to trim.",
     "severity" : "WARN",
-    "title" : "Quality drop at 3' end"
+    "title" : "Per-position quality issue"
   }, {
     "detail" : "Inspect the Overrepresented sequences table; consider adapter trimming.",
     "severity" : "WARN",
