@@ -93,3 +93,11 @@ def test_no_trim_cycle_when_the_last_cycle_is_not_low(tmp_path):
     details = [r["detail"] for r in result["recommendations"]]
     assert not any("3' trimming" in d for d in details)
     assert any("cycles to trim" in d for d in details)
+
+
+def test_quality_shorter_than_sequence_is_rejected(tmp_path):
+    path = tmp_path / "s.fastq"
+    path.write_text("@r1\nACGT\n+\nII\n")
+
+    with pytest.raises(fastq.FastqError, match="quality length 2 != sequence length 4"):
+        fastq.parse(path)

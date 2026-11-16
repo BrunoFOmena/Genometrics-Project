@@ -68,7 +68,7 @@ def test_ts_tv_ratio_without_transversions_is_the_transition_count(tmp_path):
 def test_info_values_parse_like_java(tmp_path):
     body = (
         "chr1\t1\t.\tA\tG\tNaN\tPASS\tdp=7;AF=0.25,0.5;GENE=TP53\n"  # keys are case-insensitive; first value wins
-        "chr1\t2\t.\tA\tG\tabc\tPASS\tDP=1_000;AF=x\n"  # Java rejects 1_000 and x
+        "chr1\t2\t.\tA\tG\t.\tPASS\tDP=1_000;AF=x\n"  # Java rejects 1_000 and x
     )
 
     m = vcf.parse(write(tmp_path, body))
@@ -91,3 +91,15 @@ def test_header_caps_and_dedupes_samples(tmp_path):
     assert h["reference"] == "hg38"
     assert h["contigs"] == ["chr1"] and h["infoIds"] == ["DP"]
     assert len(h["samples"]) == 20 and h["samples"][0] == "S0"
+
+
+_VCF_HEAD = "##fileformat=VCFv4.2\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n"
+
+
+@pytest.mark.parametrize("row", ["chr1\tabc\t.\tA\tG\t50\tPASS\t.", "chr1\t100\t.\tA\tG\tx\tPASS\t."])
+def test_non_numeric_pos_or_qual_is_rejected(tmp_path, row):
+    path = tmp_path / "bad.vcf"
+    path.write_text(_VCF_HEAD + row + "\n")
+
+    with pytest.raises(vcf.VcfError, match="Invalid VCF row"):
+        vcf.parse(path)
