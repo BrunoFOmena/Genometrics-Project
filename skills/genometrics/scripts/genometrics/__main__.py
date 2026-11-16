@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import sys
+import zlib
 from pathlib import Path
 
 from . import explain, fastq, qc, vcf
@@ -31,6 +32,18 @@ def file_info(raw: str) -> tuple[Path, dict]:
     return path, {"path": str(path.resolve()), "size_bytes": path.stat().st_size, "sha256": digest.hexdigest()}
 
 
+def read_with_context(parse, *paths: Path) -> dict:
+    """Run a parser; unreadable input becomes a one-line error that names the file(s)."""
+    names = ", ".join(str(p) for p in paths)
+    try:
+        return parse(*paths)
+    except (EOFError, zlib.error):
+        die(f"truncated or corrupt gzip file: {names}")
+    except UnicodeDecodeError:
+        die(f"not valid UTF-8 text: {names}")
+    raise AssertionError  # unreachable: die() exits
+
+
 def kind_of(path: Path) -> str:
     name = path.name.lower()
     if name.endswith(FASTQ_SUFFIXES):
@@ -53,7 +66,7 @@ def run_qc(raws: list[str]) -> dict:
         if [fastq.read_end(path.name) for path, _ in found] != ["R1", "R2"]:
             die("for a pair, one file name must mark R1 and the other R2 (e.g. _R1 / _R2)")
     paths = [path for path, _ in found]
-    metrics = fastq.parse(paths[0]) if len(paths) == 1 else fastq.parse_paired(*paths)
+    metrics = read_with_context(fastq.parse if len(paths) == 1 else fastq.parse_paired, *paths)
     result = qc.evaluate(metrics)
     recs = result["recommendations"]
     return {
@@ -78,7 +91,7 @@ def run_vcf(raw: str) -> dict:
     path, info = file_info(raw)
     if kind_of(path) != "vcf":
         die(f"not a VCF file: {path}")
-    m = vcf.parse(path)
+    m = read_with_context(vcf.parse, path)
     return {
         "metrics": {
             "variant_count": m["variantCount"],
