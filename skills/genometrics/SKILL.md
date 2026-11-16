@@ -26,6 +26,6 @@ PYTHONPATH=<skill>/scripts python3 -m genometrics explain <check>      # gcConte
 - Quote the verdict and check messages from the output. Do not re-derive thresholds; use `explain` to explain one.
 - Report only values the command returned. If a metric is missing, say it is not available.
 - Add no conclusions, next steps or advice (for example about alignment or trimming) beyond what the output contains; the `next_step` and `recommendations` fields are the only advice you may relay.
-- The thresholds are rules of thumb from the Java reference implementation, not calibrated to an instrument or species.
+- The thresholds are fixed rules of thumb, not calibrated to an instrument or species.
 - End every answer with a short research-use note: the results are not a diagnosis and are not clinical findings. Never present them as diagnostic.
 - Do not copy the user's sequencing data or results to external services.

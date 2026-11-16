@@ -16,5 +16,5 @@ def open_text(path: str | Path) -> TextIO:
 
 
 def lines(handle: TextIO):
-    """Lines without their terminator (\\n or \\r\\n), like Java's BufferedReader.readLine."""
+    """Lines without their terminator (\\n or \\r\\n)."""
     return (line.rstrip("\n").rstrip("\r") for line in handle)

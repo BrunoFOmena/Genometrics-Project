@@ -1,7 +1,6 @@
-"""Streaming FASTQ metrics: a port of the Java FastqParser, FastqMateDetector and AdapterCatalog.
+"""Streaming FASTQ metrics, in one pass over the reads.
 
-One pass over the reads. Output keys match the Java backend's API map (camelCase) so results can be compared with the
-golden files in datasets/golden/.
+Output keys are camelCase and match the golden files in datasets/golden/.
 """
 
 from __future__ import annotations
@@ -38,7 +37,7 @@ class FastqError(ValueError):
 
 
 def read_end(filename: str) -> str:
-    """ "R1", "R2" or "SINGLE", from the file name (same rules as the Java mate detector)."""
+    """ "R1", "R2" or "SINGLE", from the file name."""
     if _R2.search(filename):
         return "R2"
     if _R1.search(filename):
@@ -77,7 +76,7 @@ def parse_paired(r1_path: str | Path, r2_path: str | Path) -> dict:
 
 
 def metric_facts(metrics: dict) -> list[dict]:
-    """The facts the MCP tools query, with the keys and units of the Java MetricCatalog."""
+    """The headline metrics as key, value and unit."""
     return [
         {"key": "read_count", "value": float(metrics["readCount"]), "unit": "reads"},
         {"key": "average_length", "value": float(metrics["avgLength"]), "unit": "bp"},
@@ -89,7 +88,7 @@ def metric_facts(metrics: dict) -> list[dict]:
 
 
 def _records(path: str | Path) -> Iterator[tuple[str, str]]:
-    """(sequence, quality) per record; blank lines between records are skipped, as in the Java reader."""
+    """(sequence, quality) per record; blank lines between records are skipped."""
     with open_text(path) as handle:
         rows = lines(handle)
         for header in rows:

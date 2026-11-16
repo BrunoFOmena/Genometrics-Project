@@ -5,7 +5,7 @@ from __future__ import annotations
 from . import qc
 
 _RATIONALE = (
-    "Fixed rules of thumb, carried over unchanged from the Java backend and checked against its output. "
+    "Fixed rules of thumb. "
     "They are not calibrated to an instrument, library type or species, so treat a WARN as a prompt to look, "
     "not as a verdict on the run."
 )

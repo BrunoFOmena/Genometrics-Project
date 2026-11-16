@@ -117,7 +117,7 @@ ruff check && ruff format --check
 pytest
 ```
 
-The golden files in [`datasets/golden/`](datasets/golden/) hold the output of the Java reference implementation, removed in this version; the tests check the Python core against them. See [ADR 0001](docs/adr/0001-core-language.md).
+The golden files in [`datasets/golden/`](datasets/golden/) hold the expected output for the fixtures; the tests check the core against them.
 
 Research use only. Not a diagnostic tool.
 

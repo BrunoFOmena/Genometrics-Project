@@ -1,4 +1,4 @@
-"""Behavior the tiny golden fixtures cannot show: gzip, errors, sampling, mate detection, Java number formatting."""
+"""Behavior the tiny golden fixtures cannot show: gzip, errors, sampling, mate detection, number formatting."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 from genometrics import fastq, qc
-from genometrics.javafmt import fixed, grouped
+from genometrics.numfmt import fixed, grouped
 
 DATASETS = Path(__file__).resolve().parents[1] / "datasets"
 
@@ -66,7 +66,7 @@ def test_read_end_from_file_name(name, end):
     assert fastq.read_end(name) == end
 
 
-def test_java_compatible_number_formatting():
+def test_number_formatting():
     assert fixed(0.125, 2) == "0.13"  # HALF_UP on the decimal form; Python's format() gives 0.12
     assert fixed(2.675, 2) == "2.68"
     assert fixed(24.416666666666668, 1) == "24.4"

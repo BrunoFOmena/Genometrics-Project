@@ -13,7 +13,7 @@ Read this file first. Keep diffs small and aligned with GitHub Flow (see below).
 | Skill | `skills/genometrics/` | `SKILL.md` + `scripts/genometrics/` (Python 3.10+, no dependencies; CLI `python3 -m genometrics`) |
 | Marketplace | `.claude-plugin/marketplace.json` | Lists the skill for `/plugin marketplace add` |
 | Tests | `tests/` | pytest: behavior, golden parity, CLI |
-| Fixtures | `datasets/` | Tiny FASTQ/VCF/FASTA samples and `golden/` (frozen output of the removed Java backend) |
+| Fixtures | `datasets/` | Tiny FASTQ/VCF/FASTA samples and `golden/` (expected output) |
 | Local agent harness | `.agents/` | Not in git: maintainer rules (`rules/*.md`) and work logs / PR drafts (`work/`) for any AI agent |
 | CI | `.github/workflows/ci.yml` | `skill` job (ruff + pytest) on PR/push |
 
@@ -80,7 +80,7 @@ Rules: [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, priorities, PR issue link
 
 1. **Delete dead code** you replaced.
 2. **Local repository: you may edit freely.** Edit files, create branches, stage explicit paths and commit on `feature/*`, `fix/*`, `hotfix/*` without asking. Do not discard work you did not make (`reset --hard`, `clean`, `stash drop`, `branch -D`) without asking.
-   **Anything that leaves the machine needs Bruno's yes in the current chat, asked each time:** `git push` (every push, even to a branch already pushed) and `gh pr create`. Before asking, run `ruff check && ruff format --check && pytest`; ask only if it passes, and say which branch and commits will be published. **Never merge**, never push to `main`, never force-push or push tags, never delete/rename remote branches or change repo settings unless Bruno asks for that specific action.
+   **Anything that leaves the machine needs Bruno's yes in the current chat, asked each time:** `git push` (every push, even to a branch already pushed) and `gh pr create`. Before asking, run `ruff check && ruff format --check && pytest`; ask only if it passes, and say which branch and commits will be published. **Merge only when Bruno asks for it in the current chat:** the agent may run `gh pr merge <n> --squash --admin` (the `Protect main` ruleset requires a review the maintainer waives) once the checks are green, and never with `--delete-branch`. Never push to `main`, never force-push or push tags, never delete/rename remote branches or change repo settings unless Bruno asks for that specific action.
 3. **Do not edit README/AGENTS** unless the task requires it.
 4. Summarize what changed, how to test, and any flags (auth, profiles).
 5. **Issue link** — every task maps to a GitHub issue labeled `P0`/`P1`/`P2` (see `CONTRIBUTING.md`). PR drafts start with `Closes #<issue>`; CI rejects PRs without it.
@@ -121,7 +121,7 @@ Rules: [`CONTRIBUTING.md`](CONTRIBUTING.md) (branches, priorities, PR issue link
 
 - **Skill:** Python 3.10+ standard library only; `scripts/genometrics/` (streaming FASTQ and VCF parsers, QC verdict, CLI)
 - **Tests:** pytest; **lint:** ruff
-- **Reference output:** `datasets/golden/` is frozen; the Java backend that produced it was removed (ADR 0001, amended)
+- **Reference output:** `datasets/golden/` pins the expected output; change it only on purpose, with the code change
 
 ## AI assistants
 
