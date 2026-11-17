@@ -1,7 +1,11 @@
-# GENOMETRICS
+<h1 align="center"><img src="assets/logo.svg" alt="GENOMETRICS" width="720"></h1>
+
+<p align="center">
 
 [![CI](https://github.com/BrunoFOmena/Genometrics-Project/actions/workflows/ci.yml/badge.svg)](https://github.com/BrunoFOmena/Genometrics-Project/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
+</p>
 
 Local-first quality control for FASTQ files and summaries for VCF files, packaged as an agent skill for Claude Code.
 
